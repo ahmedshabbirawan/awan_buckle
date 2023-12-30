@@ -1,0 +1,480 @@
+<?php
+
+namespace App\Http\Controllers\Sale;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+
+use App\Models\ReturnDetail;
+use Yajra\DataTables\DataTables;
+
+use App\Models\Products;
+use App\Models\Employee;
+use App\Models\Product;
+use App\Models\ProductAvailable;
+use App\Models\SaleCart;
+use App\Models\Customer;
+use App\Models\SaleItem;
+use App\Models\SaleOrder;
+use App\Models\SaleOrderItem;
+use App\Models\StockItem;
+use Illuminate\Support\Facades\DB;
+
+use Illuminate\Support\Facades\Validator;
+
+class SaleCartController extends Controller{
+    
+
+
+
+
+    function index(Request $request){
+        $for = $request->get('for');
+        if($request->ajax()){
+            if($for == 'ajax'){
+                $results = SaleCart::all();
+                return response()->json(['status' => true, 'data' => $results]);
+            }elseif($for == 'datatable'){
+
+                $saleKey = $request->get('sale_key');
+
+                $items = SaleCart::where('sale_key', $saleKey)->where(function($query) use ($request) {
+                    //     $empID      = $request->get('emp_id');
+                    //     if( $empID != '' ){
+                    //         $query->where('emp_id',$empID);
+                    //     }
+                });
+                
+                $items = $items->get();
+
+                $totalBill = 0; 
+                $totalDiscount = 0;
+                $subTotal = 0;
+                $billAmount = 0;
+
+                foreach($items as $res ){
+                    $subTotal       += $res->price * $res->qty;
+                    $grandTotal     =  ( ($res->offer_price - $res->discount) * $res->qty);
+                    $totalDiscount  += $res->discount;
+
+                }
+
+                $billAmount = $subTotal - $totalDiscount; 
+
+
+                return Datatables::of($items)
+                ->addColumn('discount', function ($row){
+                    return ($row->discount)?$row->discount:0;
+                })->addColumn('offer_price', function ($row) {
+                    return $row->offer_price; // ( ($row->offer_price - $row->discount) * $row->qty);    
+                })->addColumn('product_total_price', function ($row) {
+                    return ( ($row->price - $row->discount) * $row->qty);    
+                })
+                ->addColumn('action', function ($row) {
+                })->rawColumns(['item_count'])
+                ->with('totalPrice', function() use ($totalBill) {
+                    return $totalBill;
+                })->with('billAmount', function() use ($billAmount) {
+                    return $billAmount;
+                })->with('subTotal', function() use ($subTotal) {
+                    return $subTotal;
+                })->with('totalDiscount', function() use ($totalDiscount) {
+                    return $totalDiscount;
+                })
+                ->make(true);
+            }
+        }
+        
+    }
+
+    
+    
+    public function addToCart(Request $request){
+
+        $validator = Validator::make($request->all(), [
+            'product_id'    => 'required',
+            'qty'           => 'required',
+            'action'        => 'required',
+            'sale_key'      => 'required'
+        ]);
+ 
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()],406);
+        }
+        $productID  = $request->get('product_id');
+        $qty        = (int) $request->get('qty');
+        $action     = $request->get('action');
+        $saleKey    = $request->get('sale_key');
+        $shopID     = auth()->user()->shop_id;
+
+        if(!($shopID)){
+            return response()->json(['status' => false, 'message' => 'User have no shop assign. Please select shop first'],406);
+        }
+
+
+        $prodcutAvail = ProductAvailable::where(['product_id' => $productID, 'shop_id' => $shopID ])->first();
+
+        
+
+
+        if( !($prodcutAvail->product_id) || ($prodcutAvail->qty < 1) ){
+            return response()->json(['status' => false, 'message' => 'Product not available'],406);
+        }
+
+
+
+        $product = Product::find($productID);        
+        $itemObj = SaleCart::where('product_id', $productID)->where('sale_key',$saleKey)->first();
+
+        $shopID = auth()->user()->shop_id;
+
+        /*
+        Please check the is item available in Product_Available
+        */
+        if($itemObj){
+            if($action  == 'add' ){
+                $qty = $itemObj->qty  + $qty;
+            }
+            $item = SaleCart::where(['product_id' => $productID, 'sale_key'=> $saleKey])->update([
+                'product_id'    => $product->id,
+                'product_name'  => $product->name,
+                'price'   => $product->price,
+                'offer_price'   => $product->price,
+                // 'item_id'       => $itemID,
+                'qty'           => $qty,
+                'sale_key'      => $saleKey,
+                'shop_id' => $shopID
+            ]);
+        }else{
+            $item = SaleCart::create([
+                'product_id'    => $product->id,
+                'product_name'  => $product->name,
+                'price'   => $product->price,
+                'offer_price' => $product->price,
+                // 'item_id' => $itemID,
+                'qty' => $qty,
+                'sale_key'      => $saleKey,
+                'shop_id' => $shopID
+            ]);
+        }
+        return response()->json(['status' => true, 'data' => $item , 'message' => 'Done']);
+    }
+
+
+
+    function applyDiscountOnSingleProduct(Request $request){
+        $validator = Validator::make($request->all(), [
+            'product_id'    => 'required',
+            'sale_key'      => 'required',
+            'discount_amount' => 'required'
+        ]);
+
+       //  dd($request->all());
+ 
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()],406);
+        }
+        $productID  = $request->get('product_id');
+        $qty        = (int) $request->get('qty');
+        $action     = $request->get('action');
+        $saleKey    = $request->get('sale_key');
+        $shopID     = auth()->user()->shop_id;
+        $discountAmount = $request->get('discount_amount');
+
+        if(!($shopID)){
+            return response()->json(['status' => false, 'message' => 'User have no shop assign. Please select shop first'],406);
+        }
+
+
+        $itemObj = SaleCart::where('product_id', $productID)->where('sale_key',$saleKey)->first();
+        $itemObj->discount =  $discountAmount;
+        $itemObj->offer_price =  $itemObj->price - $discountAmount;
+        $itemObj->save();
+
+
+        return response()->json(['status' => true, 'data' => $itemObj , 'message' => 'Done']);
+
+
+
+
+    }
+
+
+
+    public function cartPreview($saleKey,Request $request){
+
+
+       //  $saleKey = $request->get('sale_key');
+
+        $items = SaleCart::where('sale_key', $saleKey)->where(function($query) use ($request) {
+            //     $empID      = $request->get('emp_id');
+            //     if( $empID != '' ){
+            //         $query->where('emp_id',$empID);
+            //     }
+        });
+        
+        $items = $items->get();
+
+        $totalBill = 0; 
+        $totalDiscount = 0;
+        $subTotal = 0;
+        $billAmount = 0;
+
+        foreach($items as $res ){
+            $subTotal       += $res->price * $res->qty;
+            $grandTotal     =  ( ($res->offer_price - $res->discount) * $res->qty);
+            $totalDiscount  += $res->discount;
+
+        }
+
+        $billAmount = $subTotal - $totalDiscount; 
+
+
+        return view('sale.cart_preview',[
+            'products' => $items,
+            'sub_total' => $subTotal,
+            'discount_total' => $totalDiscount,
+            'bill_amount' => $billAmount
+        ]);
+
+
+
+        // dd($items);        
+        $for = $request->get('for');
+        if( !($request->ajax()) ){
+            return view('sale.cart_preview');
+        }else{
+            if($for == 'ajax'){
+                $results = SaleCart::all();
+                return response()->json(['status' => true, 'data' => $results]);
+            }elseif($for == 'datatable'){
+                $items = SaleCart::where(function($query) use ($request) {
+                    //     $empID      = $request->get('emp_id');
+                    //     if( $empID != '' ){
+                    //         $query->where('emp_id',$empID);
+                    //     }
+                });
+                
+                $items = $items->get();
+
+                $totalBill = 0; 
+
+                foreach($items as $res ){
+                   //  $res->id;
+                    $price =  ( ($res->offer_price - $res->discount) * $res->qty);
+                    $totalBill += $price; 
+                }
+
+                // echo $totalBill; exit;
+
+
+                return Datatables::of($items)
+                ->addColumn('discount', function ($row){
+                    return ($row->discount)?$row->discount:0;
+                })->addColumn('price', function ($row) {
+                    return ( ($row->offer_price - $row->discount) * $row->qty);    
+                })->addColumn('action', function ($row) {
+                })->rawColumns(['item_count'])
+                ->with('totalPrice', function() use ($totalBill) {
+                    return $totalBill;
+                })
+                ->make(true);
+            }
+        }
+    }
+
+
+    function getItemStock($productID, $qty){
+        
+        $sql = '
+        
+        SELECT 
+        q1.pro,
+        q1.avail_qty,
+        (@runtot := @runtot + q1.avail_qty) AS rt
+     FROM 
+        (SELECT product_id AS pro,
+         available_qty AS avail_qty
+         FROM  stock_items 
+         WHERE available_qty > 0 AND product_id = '.$productID.'
+         ORDER  BY available_qty
+         ) AS q1
+    WHERE @runtot + q1.avail_qty >= '.$qty;
+        
+        DB::raw();
+    }
+
+
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function finalPlaceOrder(Request $request){
+
+       //  echo 'as'; exit;
+
+        $validator = Validator::make($request->all(), [
+            'sale_key'   => 'required'
+        ]);
+ 
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()],406);
+        }
+
+        $saleKey            = $request->get('sale_key');
+        //$cartItems          = SaleCart::all();
+        $cartItems          = SaleCart::where('sale_key',$saleKey)->get();  
+
+
+        $itemFound          = count($cartItems);
+        if($itemFound == 0){
+            return response(['message' => 'No items available'],422);
+        }
+        /********************************/
+        $customerName   = $request->get('customer_name');
+        $customerMobile = $request->get('customer_mobile');
+        $customerID     = 0;
+        if( ($customerName != '') && ($customerMobile != '') ){
+            $customer = Customer::where('mobile',$customerMobile)->first();
+            if( isset($customer->id) ){
+                $customerID = $customer->id;
+            }else{
+                $customer   = Customer::create(['name' => $customerName, 'mobile' => $customerMobile]);
+                $customerID = $customer->id;
+            }
+        }
+        /********************************/
+        $saleOrder          = SaleOrder::create(['sale_key' => $saleKey, 'item_count' => count($cartItems), 'customer_id' => $customerID]);
+        $notFound           = 0;
+        $itemWillDelete     = [];
+
+        $totalOfferPrice    = 0;
+        $totalPrice         = 0;
+        $totalDiscount      = 0;
+
+        try{
+            DB::beginTransaction();
+            // $key = $this->genrateIssuanceKey();
+            $totalDicount = 0;
+            $totalPrice = 0;
+            $billAmount = 0;
+            foreach($cartItems as $tItem):
+                //   echo $tItem->product_id; exit;
+                //  $stockItem = StockItem::findOrFail($tItem->item_id);
+                $shopID = auth()->user()->shop_id;
+                $proAvail = ProductAvailable::where('product_id',$tItem->product_id)->where('shop_id',$shopID)->first();
+
+              //   print_r($proAvail); exit;
+                if( !($proAvail) ){
+                    $notFound++;
+                    continue;
+                }
+
+                if( ($tItem->qty < 1) || ($proAvail->qty < 1) || ($proAvail->qty <  $tItem->qty) ){
+                    $notFound++;
+                    continue;
+                }
+                // sale cart ==> ['product_id', 'product_name', 'item_id', 'sale_key', 'qty', 'offer_price', 'price', 'status', 'created_by','updated_by','deleted_by' ];
+                // sale orer item ==>  ['product_id', 'item_id', 'sale_key', 'order_id', 'customer_id', 'qty', 'offer_price', 'discount', 'price', 'status']; 
+
+                $itemData['product_id']     =    $tItem->product_id;
+                // $itemData['item_id']        =    $stockItem->id;
+                $itemData['order_id']       =    $saleOrder->id;
+                $itemData['customer_id']    =    $saleOrder->customer_id;
+                $itemData['qty']            =    $tItem->qty;
+                                
+                $itemData['offer_price']    =    $tItem->offer_price;
+                $itemData['discount']       =    $tItem->discount;
+                $itemData['price']          =    $tItem->price;
+
+                $totalOfferPrice            +=   $tItem->offer_price;
+                $totalPrice                 +=   $tItem->price;
+                $totalDiscount              +=   $tItem->discount;
+                
+
+                SaleOrderItem::create($itemData);
+
+                $proAvail->qty = $proAvail->qty - $tItem->qty;
+                $proAvail->save();
+
+
+                /*
+                $stockItem->available_qty = $stockItem->available_qty - $tItem->qty;
+                $stockItem->save();
+                */
+
+                $itemWillDelete[] = $tItem->id;
+            endforeach;
+
+            $saleOrder->total_price         = $totalPrice;
+            $saleOrder->total_discount      = $totalDiscount;
+            $saleOrder->total_offer_price   = $totalOfferPrice;
+            $saleOrder->save();
+
+
+            SaleCart::whereIn('id',$itemWillDelete)->delete();
+
+            if( $notFound > 0 ){
+                DB::rollBack();
+            }else{
+                DB::commit();
+            }
+
+            if( $notFound > 0 ){
+                return response(['status' => false, 'message' => $notFound.' items not available in quantity']);
+            }else{
+                return response(['status' => true, 'message' => 'Item added successfully!', 'data' => $saleOrder]);
+            }            
+        }catch(\Exception $e){
+            return response()->json(['status' => false, 'message' => 'Error.Please Contact PITB Support'. $e->getMessage()], 500);
+        }
+
+
+    }
+
+
+    function saveUserAndAttachWithCart(Request $request){
+        $validator = Validator::make($request->all(), [
+            'customer_name'     => 'required',
+            'customer_mobile'   => 'required',
+            'sale_key'          => 'required'
+        ]);
+ 
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()],406);
+        }
+
+
+        $array = array(
+            'name' => $request->get('customer_name'),
+            'mobile' => $request->get('customer_mobile')
+        );
+
+        try{
+            DB::beginTransaction();
+            $rec = Customer::create($array);
+
+
+
+
+
+            DB::commit();
+            return redirect(route('customer.list'))->with('success',' added successful!');
+        }catch(\Exception $e){
+            DB::rollBack();
+            return redirect()->back()->withInput($request->all())->with('error','Error.Please Contact PITB Support');
+        }
+
+
+
+
+
+    }
+
+
+
+
+}
