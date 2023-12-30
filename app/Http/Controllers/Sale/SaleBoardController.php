@@ -86,7 +86,7 @@ class SaleBoardController extends Controller
 
             return Datatables::of($items)
             ->addColumn('image_url', function ($row) {
-                return $row->product->image_url;
+                return optional($row->product)->image_url;
             })->addColumn('product_detail', function ($row) {
                 return $row->product->name;
                 // return count($row->returnItem); // (isset($row->issuanceItem))?$row->item_count:'';
