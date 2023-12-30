@@ -88,7 +88,7 @@ class SaleBoardController extends Controller
             ->addColumn('image_url', function ($row) {
                 return optional($row->product)->image_url;
             })->addColumn('product_detail', function ($row) {
-                return $row->product->name;
+                return optional($row->product)->name;
                 // return count($row->returnItem); // (isset($row->issuanceItem))?$row->item_count:'';
             })->addColumn('shop_name', function ($row) {
                 return ''; //$row->shop->name;
