@@ -1,0 +1,450 @@
+@extends('Layout.master')
+
+@section('title')
+Issuance Items
+@endsection
+
+@section('content')
+
+<style>
+#cart_table_info{
+    display: none;
+}    
+.total-label{
+    font-weight: bold;
+    margin-left: 10px;
+    width: 75%;
+}
+</style>
+<input type="hidden" id="exchange_key" value="{{ $exchangeKey }}" >
+<div class="page-content">
+<div class="page-header" style="min-height:40px;">
+    
+
+    <h1> Request Stock Exchange </h1> 
+
+    
+<div class="row" style="margin-top: 10px;" >
+
+    
+
+    <div class="col-sm-12">
+        <div class="widget-box">
+
+
+            <div class="widget-header">
+            <h5 class="widget-title smaller"> Request Stock Exchange | {{ $exchangeKey }}</h5>
+
+            <div class="widget-toolbar">
+                <a href="{{ route('sale.board.create') }}" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-plus-o"></i> Create New Order </a> 
+
+                <a href="{{ route('stock_exchange.req_form') }}" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-plus-o"></i> Request Stock Exchange </a> 
+                
+            </div>
+            </div>
+        
+
+
+
+           
+    
+            <div class="widget-body">
+                <div class="widget-main">
+
+                    {{-- form-inline --}}
+
+
+<div class="row">
+    <form id="customer_form" action="javascript:void(0);" >
+        <input type="hidden" name="exchange_key" value="{{ $exchangeKey }}" >
+
+    <div class="col-lg-3" >
+        <label for="customer_name"> Shops </label>
+        <div class="input-group"> 
+            <select name="shop_id" id="shop_id">
+                @foreach($shops as $id => $name)
+                <option value="{{ $id }}"> {{ $name }} </option>
+                @endforeach
+            </select>
+        </div>
+    </div>
+    </form>
+</div>
+
+                 
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    </div>
+    
+    
+    
+    
+</div>
+
+
+
+
+
+<div class="row ">
+    <div class="col-6 col-lg-6" >
+        <div class="card radius-10 border-top border-0 border-4 border-danger">
+          
+
+            <div class="card-body">
+
+                @include('Layout.alerts')
+
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered yajratable" id="item_table" style="width:100%"></table>
+                </div>
+            </div>
+
+
+
+        </div>
+    </div>
+
+<!----------------------------------------------------------------->
+
+<div class="col-6 col-lg-6" >
+    <div class="widget-box widget-color-blue ui-sortable-handle" >
+    <div class="widget-header"><h4 class="widget-title">Cart</h4></div>
+    <div class="card radius-10 border-top border-0 border-4 border-danger">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered yajratable" id="cart_table" style="width:100%"></table>
+            </div>
+        </div>
+        <div class="card-footer">
+            <table class="table">
+                
+
+                <tr><td class="total-label" >Total Item</td><td id="total_item" class="total-label" > -- </td></tr>
+                <tr><td class="total-label" >Sub Total</td><td id="sub_total" class="total-label" > -- </td></tr>
+                <tr><td class="total-label" >Total Discount</td><td id="total_discount" class="total-label" > -- </td></tr>
+                <tr><td class="total-label" >Grand Total / BillAmount </td><td   id="billAmount" class="total-label" > -- </td></tr>
+            </table>
+
+            <a href="javascript:void(0);" onclick="placeOrderConfirm();"  class="btn btn-primary btn-block" >Place Order</a>
+            <a href="{{ route('sale.cart.preview',$exchangeKey) }}" class="btn btn-primary btn-block" >Preview</a>
+
+        </div>
+    </div>
+    </div>
+</div>
+
+
+</div>
+<!--end row-->
+</div>
+
+
+
+<!--- delete confirmation modal --->
+<div class="modal" tabindex="-1" role="dialog" id="deletePopup">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+
+
+            <form action="#" method="post" id="delete_form">
+                <input type="hidden" name="_method" value="delete" />
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title">confirmation</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Do you really want to delete ?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Confirm</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+<!--- delete confirmation modal end --->
+@endsection
+
+
+
+
+@section('script')
+<script>
+    var table;
+    var selectID;
+    var cart = [];
+    var cartDataTable;
+
+    var ajaxFailBlock = function(jqXHR, textStatus, errorThrown) {
+        // console.log(textStatus,jqXHR, errorThrown);
+        $('#submit-delivery').removeAttr('disabled');
+        if (jqXHR.status != 422) {
+        $.confirm({
+            title: 'Warning',
+            content: jqXHR.responseJSON.message
+        });
+        } else if (jqXHR.status != 200) {
+        if (typeof jqXHR.responseJSON !== 'undefined') {
+            $.confirm({
+            title: 'warning',
+            content: jqXHR.responseJSON.message
+            });
+        }
+        }
+    }
+
+    function addOneToCart(productID){
+        console.log('pki');
+         addToCart(productID,'1','add');
+    }
+
+    function updateToCart(productID, ele){
+        var val = $(ele).val();
+
+        console.log(productID);
+       
+        addToCart(productID,val,'update');
+    }
+
+    function addToCart(productID,qty,action){
+        var exchangeKey = $('#exchange_key').val();   
+        $.ajax({
+            //  dataType: 'json',
+            type: 'post',
+            data:{'product_id':productID, 'qty':qty, 'action' : action, 'exchange_key' :  exchangeKey},
+            url: "{{ route('sale.cart.add') }}",
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            error:ajaxFailBlock,
+            success: function(res) {
+                console.log(res);
+                cartDataTable.ajax.reload();
+            }
+        });
+    }
+
+
+    function applyDiscount(productID, discountAmount){
+        var exchangeKey = $('#exchange_key').val();   
+        $.ajax({
+            //  dataType: 'json',
+            type: 'post',
+            data:{'product_id':productID, 'discount_amount':discountAmount,'exchange_key' :  exchangeKey},
+            url: "{{ route('sale.cart.apply_dicount_single') }}",
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            error:ajaxFailBlock,
+            success: function(res) {
+                console.log(res);
+                cartDataTable.ajax.reload();
+            }
+        });
+    }
+
+    function applyDiscountOnSingleProduct(productID, $inputField){
+        var discountAmount = $($inputField).val();
+        applyDiscount(productID, discountAmount);
+    }
+
+    
+
+
+    function placeOrderConfirm(){
+        $.confirm({
+                    title: 'Confirm',
+                    content: 'Do you really want to place order',
+                    buttons: {
+                        yes: {
+                            text: 'OK',
+                            action: function() {
+                                placeOrder();
+                            }
+                        }
+                    }
+                });
+    }
+
+
+    function placeOrder(){
+
+        var formData = new FormData($('#customer_form')[0]);
+
+        console.log(formData);
+
+        // var exchangeKey = $('#exchange_key').val();   
+        $.ajax({
+            dataType: 'json',
+            type: 'POST',
+            data: formData,
+            url:  "{{ route('sale.cart.place_order') }}",
+            contentType: false,
+            processData: false,
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            error:ajaxFailBlock,
+            success: function(res) {
+                $.confirm({
+                    title: 'Response',
+                    content: res.message,
+                    buttons: {
+                        yes: {
+                            text: 'OK',
+                            action: function() {
+                                cartDataTable.ajax.reload();
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    $(document).ready(function() {
+        var exchangeKey = $('#exchange_key').val();  
+        setTimeout(function(){
+        table = $('#item_table').DataTable({
+            processing: true,
+            serverSide: true,
+            // ajax: "{{ route('sale.board.product_items') }}?="+exchangeKey,
+            ajax: {
+                url: "{{ route('sale.board.product_items') }}",
+                type: 'GET',
+                data: function (d) {
+                    d.exchangeKey   =    exchangeKey;
+                    d.shop_id       = '{{ auth()->user()->shop_id }}';
+                }
+            },
+            columns: [
+                // {
+                //     "data": "id",
+                //     title: 'Sr.',
+                //     width:'5%',
+                //     render: function(data, type, row, meta) {
+                //         return meta.row + meta.settings._iDisplayStart + 1;
+                //     }
+                // },
+                {"data": "image_url",title: 'Image',
+                    render: function(data, type, row, meta) {
+                        return '<image src="'+data+'" style="width:75px; height:75px;" >';
+                    }, width: '10%'
+                },
+                {
+                    data: 'product_detail',
+                    name: 'product_detail',
+                    title: 'Product',
+                    width:'50%'
+                },
+                {
+                    data: 'product.price',
+                    name: 'product.price',
+                    title: 'Price',
+                },
+                {
+                    data: 'total_qty',
+                    name: 'total_qty',
+                    title: 'Qty',
+                },{
+                    data: 'action',
+                    name: 'action',
+                    title: 'Action',
+                } 
+            ],
+            order: [[0, 'desc']]
+        });
+
+    },500);
+
+
+
+    /* Cart Table */
+    
+    cartDataTable = $('#cart_table').DataTable({
+        dom: 'Bfrtip',
+        buttons: [
+        {
+            extend: 'print',
+            footer: false
+        }        
+        ],
+            processing: true,
+            serverSide: true,
+            searching : false,
+            paging : false,
+            ajax: {
+                url: "{{ route('sale.cart.index') }}?for=datatable&exchange_key="+exchangeKey,
+                // success:function(res){
+                  //  console.log('hello :::: ', res);
+                    // return res;
+               //  },
+                complete:function(res){
+                    var data = res['responseJSON'];
+                    $('#total_item').html(data.recordsTotal);
+                    $('#sub_total').html(data.subTotal);
+                    $('#total_discount').html(data.totalDiscount);
+                    $('#billAmount').html(data.billAmount);
+                }
+            },
+            columns: [
+                {
+                    "data": "id",
+                    title: 'Sr.',
+                    width:'5%',
+                    render: function(data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    }
+                },{
+                    data: 'product_name',
+                    name: 'product_name',
+                    title: 'Product',
+                    width:'40%',
+                },{
+                    data: 'qty',
+                    name: 'qty',
+                    title: 'Qty',
+                    render: function(data, type, row, meta) {
+                        console.log(row);
+                        return '<input type="text" id="'+row.item_id+'_qty"  onblur="updateToCart('+row.product_id+',this)" class="input-sm col-xs-12"  value="'+data+'" >';
+                    }
+                },{
+                    data: 'offer_price',
+                    name: 'offer_price',
+                    title: 'Price'
+                },{
+                    data: 'discount',
+                    name: 'discount',
+                    title: 'Discount',
+                    render: function(data, type, row, meta) {
+                        return '<input type="text" id="'+row.item_id+'_discount" onblur="applyDiscountOnSingleProduct('+row.product_id+',this)" value="'+data+'" class="input-sm col-xs-12" >';
+                    }
+                },{
+                    data: 'product_total_price',
+                    name: 'product_total_price',
+                    title: 'Final'
+                },
+
+
+
+            ],
+            order: [[0, 'desc']]
+        });
+        
+
+
+    
+       
+
+    });
+</script>
+@endsection
