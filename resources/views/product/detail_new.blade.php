@@ -66,7 +66,7 @@
                     <li class="active">
                         <a data-toggle="tab" href="#deliveries-tab" aria-expanded="false">
                             <i class="blue ace-icon fa fa-question-circle bigger-120"></i>
-                            Deliveries
+                            Purchases
                         </a>
                     </li>
 

@@ -227,6 +227,53 @@ class SimpleProductController extends Controller
         }
     }
 
+
+    function uploadProductImage(Request $request){
+        $productName = Str::slug($request->get('name'));
+        if($request->hasFile('product_image')){
+            try{
+                //Getting file name with extension
+                $fileNameWithExt = $request->file('product_image')->getClientOriginalName();
+                //Get just file name
+                // $filename        = pathinfo($fileNameWithExt, PATHINFO_FILENAME);
+                //Get just ext
+                $extension       = $request->file('product_image')->getClientOriginalExtension();
+                //Filename to store
+                $fileNameToStore = "product-".$productName.'-'.time().'.'.$extension;
+                
+                //Upload Image
+                $path = $request->file('product_image')->storeAs('public/product_images', $fileNameToStore);
+
+                dd($path);
+
+                /*******   CREATE TUMBNAIL   *******/
+                
+               //  echo Storage::get($path); exit;
+
+                $path = Storage::path('public/product_images/'.$fileNameToStore);
+
+                // $publicPath = "public\product_images\"".$fileNameToStore;
+
+                $imgFile = Image::fromFile($path);
+                $imgFile->resize(150, 150, Image::EXACT );
+                $imgFile->cropAuto()->save($path);
+                // $imgFile->resize(150, 150, function ($constraint) {
+                //     // $constraint->aspectRatio();
+                //     $constraint->cropAuto();
+                // })->save($path);
+                // $destinationPath = public_path('/uploads');
+                //$image->move($destinationPath, $input['file']);
+                /**************/
+
+                return [true,$fileNameToStore];
+            }catch(Exception $e){
+                return [false,$e->getMessage()];
+            }
+        }
+        return [false,'Image not found!'];
+    }
+
+
     /**
      * Remove the specified resource from storage.
      *

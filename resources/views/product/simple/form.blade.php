@@ -205,8 +205,8 @@ if (isset($product)) {
         let myform = document.getElementById("product_form");
         let fdata = new FormData(myform);
 
-        var errorCount = validator.checkAll();
-        if (errorCount == 0) {
+       // var errorCount = validator.checkAll();
+       // if (errorCount == 0) {
             $.ajax({
                 data: fdata,
                 cache: false,
@@ -249,7 +249,7 @@ if (isset($product)) {
                     }
                 }
             });
-        }
+      //   }
 
         // console.log(validator.checkAll());
     }

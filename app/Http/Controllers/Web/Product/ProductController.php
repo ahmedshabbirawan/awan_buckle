@@ -25,6 +25,7 @@ use App\Models\StockItem;
 
 use App\Events\ProductCreate;
 use App\Events\ProductEvent;
+use App\Models\Shop;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Nette\Utils\Image;
@@ -58,60 +59,20 @@ class ProductController extends Controller
      */
     public function index(Request $request){
 
-
-
+        $shops = Shop::where('status',1)->get();
         if($request->ajax()){
 
-            $order     = $request->get('order_by','name-asc');
-            $column = explode('-',$order)[0];
-            $sort = explode('-',$order)[1];
-
-
-
+            $order      = $request->get('order_by','name-asc');
+            $column     = explode('-',$order)[0];
+            $sort       = explode('-',$order)[1];
 
             $results = Product::with(['product_Category' => function($query) use ($request){}]
             )->select()->where(function ($query) use ($request) {
-                // productAvailable_sum_qty
-                // $productCat = $request->get('product_category_id');
-                // if($productCat != ''){
-                //     $query->where('product_cat_id', '=', $request->product_category_id);
-                // }
-            })
-            //->whereHas('product_Attribute_Value', function ($query) use ($request){
-                // $query->select(DB::raw("GROUP_CONCAT(value_id SEPARATOR ',') as attributes, product_id"))
-                // ->groupBy('product_id')->havingRaw(" 1= 1 AND attributes like '%16%' AND attributes like '%13%'");
 
-                /*
-                $attr = $request->get('attribute_idz');
-                $filterArr = [];
-                $str = ' 1 = 1 ';
-                if( is_array($attr) ){
-                //  $idFound = 0;
-                
-                    foreach($attr as $attrID){
-                        if($attrID == ''){ continue; }
-                        //  $filterArr['value_id'] = $attrID;
-                        //  $str .= ' AND value_id = '.$attrID;
-
-                        //  echo 'as'; exit;
-                        $filterArr[] = $attrID; 
-                    }
-
-                    if( count($filterArr) > 0 ){
-                        $query->whereIn('product_attributes.value_id',$filterArr);
-                        $query->groupBy('value_id3');
-                        $idz = implode(",",$filterArr);
-                    }
-                    
-                }
-                */
-
-            // })
+            })->orderByRaw($column.' '.$sort)->get();
             
-            ->orderByRaw($column.' '.$sort)->get();
-
-// stock_available
-            return Datatables::of($results)
+            
+            $datatable =  Datatables::of($results)
             ->addColumn('product_name', function ($row) {
                     $attributes = array();
                     foreach($row->product_attribute_value as $attr):
@@ -127,15 +88,11 @@ class ProductController extends Controller
                 $qty = ProductAvailable::select(DB::raw('SUM(qty) as total_qty'))->where('product_id', $row->id)->first()->total_qty;
                 return ($qty)?$qty:0;
             })->addColumn('product_category_name', function ($row) {
-                    // return optional($row->product_category)->name;
                      $tree = $row->categories_tree();
                     return  $tree['category']['name'].' / '.$tree['sub_category']['name'].' / '.$tree['product_category']['name']; 
-
             })->addColumn('attributes_tags', function ($row) {
                 return '';
-            })
-            ->addColumn('action', function ($row) {
-
+            })->addColumn('action', function ($row) {
                //  return $row;
                     $statusIcon = 'fa fa-ban';
                     if($row->status == 1){
@@ -146,14 +103,27 @@ class ProductController extends Controller
                      $action .= '<a href="'.route('simple_product.edit', $row->id).'" class="btn btn-xs btn-info"  data-toggle="tooltip" title="Edit" ><i class="ace-icon fa fa-pencil bigger-120"></i></a>';
                      $action .= '<a href="javascript:void(0);" onclick="changeStatus('.$row->id.');" class="btn btn-xs btn-warning" data-toggle="tooltip" title="Change Status" ><i class="ace-icon '.$statusIcon.' bigger-120"></i></a>';
                     //  $action .= '<a href="javascript:void(0);" onclick="deleteConfirmation('.$row->id.');" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Delete" ><i class="ace-icon fa fa-trash-o bigger-120"></i></a>';
-                    $action .= '</div>';
+                     $action .= '</div>';
                     return $action;
-            })->rawColumns(['status_label','action','product_category_name','product_name'])
+            })->rawColumns(['status_label','action','product_category_name','product_name']);
+
+            foreach($shops as $shop):
+                $datatable->addColumn('shop_'.$shop->id, function($row) use ($shop) {
+                    $qty = ProductAvailable::select(DB::raw('SUM(qty) as total_qty'))
+                            ->where('product_id', $row->id)
+                            ->where('shop_id', $shop->id)
+                            ->first()->total_qty;
+                    return ($qty)?$qty:0;
+                });
+                // $dt->addColumn($request->field, 'content here');
+            endforeach;
+
             //  ->orderColumn('id', 'DESC')
-            ->make(true);
+            return $datatable->make(true);
     }
 
 
+        $this->viewData['shops']        = $shops;
         $this->viewData['uoms']         = Uom::orderBy('code','ASC')->where('status',1)->get()->pluck('code','id');
         $this->viewData['parentCat']    = ParentCategory::all()->pluck('name','id');
         return view($this->view.'lists',$this->viewData);
@@ -356,7 +326,7 @@ class ProductController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function destroy($id,Product $product){
-        dd('stop');
+        dd('destory stop');
         $res = StockItem::where('product_id', $id)->get();
         if( count($res) > 0){
             return redirect(route('product.list'))->with('error','This product have stock item. First delete them');
@@ -511,5 +481,48 @@ WHERE @runtot + q1.avail_qty <= 200;
 WHERE @runtot + q1.avail_qty < 130 ORDER BY rt DESC;
     */
 
+
+    /*
+    
+     //->whereHas('product_Attribute_Value', function ($query) use ($request){
+                // $query->select(DB::raw("GROUP_CONCAT(value_id SEPARATOR ',') as attributes, product_id"))
+                // ->groupBy('product_id')->havingRaw(" 1= 1 AND attributes like '%16%' AND attributes like '%13%'");
+
+                /*
+                $attr = $request->get('attribute_idz');
+                $filterArr = [];
+                $str = ' 1 = 1 ';
+                if( is_array($attr) ){
+                //  $idFound = 0;
+                
+                    foreach($attr as $attrID){
+                        if($attrID == ''){ continue; }
+                        //  $filterArr['value_id'] = $attrID;
+                        //  $str .= ' AND value_id = '.$attrID;
+
+                        //  echo 'as'; exit;
+                        $filterArr[] = $attrID; 
+                    }
+
+                    if( count($filterArr) > 0 ){
+                        $query->whereIn('product_attributes.value_id',$filterArr);
+                        $query->groupBy('value_id3');
+                        $idz = implode(",",$filterArr);
+                    }
+                    
+                }
+                
+
+            // })
+    
+    */
+
+    /*
+     // productAvailable_sum_qty
+                // $productCat = $request->get('product_category_id');
+                // if($productCat != ''){
+                //     $query->where('product_cat_id', '=', $request->product_category_id);
+                // }
+    */
 
 }

@@ -32,7 +32,7 @@ class ProjectController extends Controller
         $this->name         = $this->viewData['name']         =   'Project';
         $this->adminURL     = $this->viewData['adminURL']     =   url('/project');
         $this->table        = 'Project';
-        $this->view         = 'Project.';
+        $this->view         = 'project.';
     }
 
     /**

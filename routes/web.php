@@ -482,14 +482,8 @@ Route::middleware(['web','auth'])->group(function () {
         Route::get('item/issuance_history',[StockItemController::class,'itemIssuanceHistory'])->name('item.issuance_history');
         Route::get('item/all_item_by_product_datatable',[StockItemController::class,'all_item_by_product_datatable'])->name('all_item.by_product');
 
-        Route::get('item/history/{id}',[StockItemController::class,'itemHistory'])->name('item.history');
-        // itemHistory
-
-        // stocks.all_item.by_product
-
-        // ShopWiseProductStockController
-
-        Route::get('shop_wise_product_stock/list',[ShopWiseProductStockController::class,'list'])->name('shop_wise_product_stick.list');
+        Route::get('item/history/{id}',[StockItemController::class,'itemHistory'])->name('item.history'); 
+        Route::get('shop_wise_product_stock/list',[ShopWiseProductStockController::class,'shopWiseStock'])->name('shop_wise_product_stock.list');
 
 
         

@@ -27,7 +27,7 @@ class OrganizationController extends Controller
         $this->name         = $this->viewData['name']         =   'Organization';
         $this->adminURL     = $this->viewData['adminURL']     =   url('/organization');
         $this->table        = 'Organizations';
-        $this->view         = 'Organization.';
+        $this->view         = 'organization.';
     }
 
 

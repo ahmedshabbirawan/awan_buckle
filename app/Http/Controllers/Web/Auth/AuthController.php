@@ -14,10 +14,10 @@ class AuthController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function loginPageView()
-    {
-
-       //  echo Hash::make('lahore'); exit;
+    public function loginPageView(){
+        if(auth()->user()){
+            return redirect('/');
+        }
         return view('auth.login');
     }
 

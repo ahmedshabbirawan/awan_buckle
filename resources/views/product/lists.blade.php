@@ -261,9 +261,39 @@ let fdata = new FormData(myform);
     }
 
     $(document).ready(function() {
+
+        var dataColumns = [
+            // {"data": "id",title: 'Sr.',
+            //     render: function(data, type, row, meta) {
+            //         return meta.row + meta.settings._iDisplayStart + 1;
+            //     }, width: '10%'
+            // },
+            { data: 'id', name: 'id', title: 'ID.', width: '10%'  },
+            {"data": "image_url",title: 'Image',
+                render: function(data, type, row, meta) {
+                    return '<image src="'+data+'" style="width:75px; height:75px;" >';
+                }, width: '10%'
+            },
+            { data: 'product_name', name: 'product_name', title: 'Name',},
+            { data: 'price', name: 'price', title: 'Sale Price',},
+            { data: 'code', name: 'code', title: 'UOM', width: '10%'  },
+            { data: 'stock_available', name: 'stock_available', title: 'Total Stock', width: '10%'  }
+        ];
+        <?php 
+        foreach($shops as $shop):
+        ?>
+                dataColumns.push({ data: 'shop_<?=$shop->id?>', name: 'shop_<?=$shop->id?>', title: '<?=$shop->name?>'});
+        <?php
+        endforeach;
+        ?>
+        dataColumns.push({ data: 'status_label', name: 'status', title: 'Status', width: '10%'  });
+        dataColumns.push({ data: 'action', name: 'action', title: 'Action', width: '15%' });
+
+
+
         setTimeout(() => {
             listTable = $('#yajra-table').DataTable({
-                sort:false,
+                sort:true,
             // lengthMenu: [
             //         [1, 2, 3, -1],
             //         [1, 2, 3, 'All'],
@@ -295,25 +325,7 @@ let fdata = new FormData(myform);
                     // d.time          = $('#on_time').val();
                 }
             },
-            columns: [
-                // {"data": "id",title: 'Sr.',
-                //     render: function(data, type, row, meta) {
-                //         return meta.row + meta.settings._iDisplayStart + 1;
-                //     }, width: '10%'
-                // },
-                { data: 'id', name: 'id', title: 'ID.', width: '10%'  },
-                {"data": "image_url",title: 'Image',
-                    render: function(data, type, row, meta) {
-                        return '<image src="'+data+'" style="width:75px; height:75px;" >';
-                    }, width: '10%'
-                },
-                { data: 'product_name', name: 'product_name', title: 'Name',},
-                { data: 'price', name: 'price', title: 'Sale Price',},
-                { data: 'code', name: 'code', title: 'UOM', width: '10%'  },
-                { data: 'stock_available', name: 'stock_available', title: 'Stock Available', width: '10%'  },
-                { data: 'status_label', name: 'status', title: 'Status', width: '10%'  },
-                { data: 'action', name: 'action', title: 'Action', width: '15%' }
-            ],
+            columns: dataColumns,
             order: [[ 2 , 'asc']]
         });
         }, 500);

@@ -45,9 +45,10 @@ setTimeout(() => {
     shop_wise_stock_table = $('#shop_wise_stock_table').DataTable({
             processing: true,
             serverSide: true,
-            ajax: "{{ route('stocks.shop_wise_product_stick.list') }}?product_id={{ $product_id }}",
+            ajax: "{{ route('stocks.shop_wise_product_stock.list') }}?product_id={{ $product_id }}",
             columns: [
                 //   {data: 'id', name: 'id', title : 'ID'},
+                // shop_name
                 {
                     "data": "id",
                     title: 'Sr.',
@@ -56,36 +57,23 @@ setTimeout(() => {
                     }
                 },
                 {
-                    data: 'name',
-                 
-                    title: 'Name',
-                    render: function(data, type, row, meta) {
-                        return row.name+' | '+ row.city_name;
-                    }
+                    data: 'product_name',
+                    name:'product_name',
+                    title: 'Product Name',
+                    width:'10%'
+                },
+                {
+                    data: 'shop_name',
+                    name:'shop_name',
+                    title: 'Shop Name',
+                    width:'10%'
+                },
+                {
+                    data: 'qty',
+                    name:'qty',
+                    title: 'Qty',
+                    width:'10%'
                 }
-                // {
-                //     data: 'ntn',
-                //     name: 'ntn',
-                //     title: 'NTN',
-                //     width: '10%'
-                // },
-                // {
-                //     data: 'phone',
-                //     name: 'phone',
-                //     title: 'phone',
-                //     width: '10%'
-                // },
-                // {
-                //     data: 'email',
-                //     name: 'email',
-                //     title: 'Email',
-                //     width: '10%'
-                // },
-                // {
-                //     data: 'status_label',
-                //     name: 'status',
-                //     title: 'Status'
-                // }
             ],
             // order: [[1, 'asc']]
         });
