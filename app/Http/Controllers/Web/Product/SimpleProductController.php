@@ -244,8 +244,6 @@ class SimpleProductController extends Controller
                 //Upload Image
                 $path = $request->file('product_image')->storeAs('public/product_images', $fileNameToStore);
 
-                dd($path);
-
                 /*******   CREATE TUMBNAIL   *******/
                 
                //  echo Storage::get($path); exit;

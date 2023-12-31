@@ -304,25 +304,16 @@ let fdata = new FormData(myform);
             // buttons: ['excel'],
             processing: true,
             serverSide: true,
-            // ajax: "{{ route('product.list') }}",
             ajax: {
                 url: "{{ route('product.list') }}",
                 type: 'GET',
                 data: function (d) {
-
                     var idz = [];
-
                     $($('.attributes_id')).each(function(index,ele){
                         idz.push($(ele).val());
                     });
-
-                    
-
-
                     d.product_category_id       = $('#product_category_id').val();
                     d.attribute_idz = idz;
-                    // d.location_id   = $('#location_id_select').val();
-                    // d.time          = $('#on_time').val();
                 }
             },
             columns: dataColumns,
