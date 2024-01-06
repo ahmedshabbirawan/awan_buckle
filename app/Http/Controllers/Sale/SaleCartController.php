@@ -199,6 +199,36 @@ class SaleCartController extends Controller{
 
     }
 
+    function searchProducts(Request $request){
+        
+        $loginShopID = auth()->user()->shop_id;
+        $groupBy = $request->get('group_by');
+        $shopID = $request->get('shop_id',$loginShopID);
+        $term = $request->get('term');
+
+        $data = ProductAvailable::
+        select('*',DB::raw('sum(qty) as total_qty'))
+        ->with(['product','shop:id,name'])
+        ->whereHas('product', function($q) use ($term){
+            $q->where('name','like','%'.$term.'%');
+        })
+        ->where('shop_id',$shopID)
+        ->groupBy(DB::raw('product_id'))->get();
+
+        $results = []; 
+        foreach($data as $row):
+            $results[] = [
+                'id' => $row->product_id, 
+                'shop_id' => $row->shop_id,
+                'total_qty' => $row->total_qty, 
+                'product_id' => $row->product_id,
+                'product_img_url' => 'http://devlocal.pos.com/assets/images/placeholder/noimage.png',
+                'text' => $row->product->name
+            ];
+        endforeach;
+        return ['results' => $results]; 
+    }
+
 
 
     public function cartPreview($saleKey,Request $request){
@@ -319,7 +349,11 @@ class SaleCartController extends Controller{
         $validator = Validator::make($request->all(), [
             'sale_key'   => 'required'
         ]);
+
+        $customerID = $request->get('customer_id');
  
+        dd($customerID);
+
         if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => $validator->errors()->first()],406);
         }
@@ -334,18 +368,18 @@ class SaleCartController extends Controller{
             return response(['message' => 'No items available'],422);
         }
         /********************************/
-        $customerName   = $request->get('customer_name');
-        $customerMobile = $request->get('customer_mobile');
-        $customerID     = 0;
-        if( ($customerName != '') && ($customerMobile != '') ){
-            $customer = Customer::where('mobile',$customerMobile)->first();
-            if( isset($customer->id) ){
-                $customerID = $customer->id;
-            }else{
-                $customer   = Customer::create(['name' => $customerName, 'mobile' => $customerMobile]);
-                $customerID = $customer->id;
-            }
-        }
+        // $customerName   = $request->get('customer_name');
+        // $customerMobile = $request->get('customer_mobile');
+        // $customerID     = 0;
+        // if( ($customerName != '') && ($customerMobile != '') ){
+        //     $customer = Customer::where('mobile',$customerMobile)->first();
+        //     if( isset($customer->id) ){
+        //         $customerID = $customer->id;
+        //     }else{
+        //         $customer   = Customer::create(['name' => $customerName, 'mobile' => $customerMobile]);
+        //         $customerID = $customer->id;
+        //     }
+        // }
         /********************************/
         $saleOrder          = SaleOrder::create(['sale_key' => $saleKey, 'item_count' => count($cartItems), 'customer_id' => $customerID]);
         $notFound           = 0;
@@ -429,7 +463,7 @@ class SaleCartController extends Controller{
                 return response(['status' => true, 'message' => 'Item added successfully!', 'data' => $saleOrder]);
             }            
         }catch(\Exception $e){
-            return response()->json(['status' => false, 'message' => 'Error.Please Contact PITB Support'. $e->getMessage()], 500);
+            return response()->json(['status' => false, 'message' => 'Error.Please Contact   Support'. $e->getMessage()], 500);
         }
 
 
@@ -465,7 +499,7 @@ class SaleCartController extends Controller{
             return redirect(route('customer.list'))->with('success',' added successful!');
         }catch(\Exception $e){
             DB::rollBack();
-            return redirect()->back()->withInput($request->all())->with('error','Error.Please Contact PITB Support');
+            return redirect()->back()->withInput($request->all())->with('error','Error.Please Contact   Support');
         }
 
 

@@ -162,12 +162,12 @@ class StockDeliveryProductController extends Controller{
 
      function downloadSample(){
         $file= public_path(). "/download/serial_number_sample.csv";
-        return response()->download($file, "pitb_serial_number_sample.csv");
+        return response()->download($file, " _serial_number_sample.csv");
      }
 
      function readSerialNumber(Request $request){
         // $file= public_path(). "/download/serial_number_sample.csv";
-       //  return response()->download($file, "pitb_serial_number_sample.csv");
+       //  return response()->download($file, " _serial_number_sample.csv");
 
 
          $file = $request->file('serial_number_file');

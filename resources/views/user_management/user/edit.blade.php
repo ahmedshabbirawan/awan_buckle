@@ -38,14 +38,6 @@
                                 <input type="text" name="username" placeholder="Please Provide Username" value="{{$obj->userName}}" class="form-control"  required/>
                             </div>
                             <div class="col-md-3" style="margin-top: 10px;">
-                                <label><b>Enter Password</b></label>
-                                <input type="password" name="password" placeholder="******" class="form-control" required/>
-                            </div>
-                            <div class="col-md-3" style="margin-top: 10px;">
-                                <label><b>Confirm Password</b></label>
-                                <input type="password" name="password_confirmation" placeholder="******" class="form-control" required/>
-                            </div>
-                            <div class="col-md-3" style="margin-top: 10px;">
                                 <label><b>Upload Picture</b></label>
                                 <input type="file" name="image" class="form-control" />
                             </div>

@@ -5,6 +5,9 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Contracts\Validation\Validator;
+
 class CustomerFromRequest extends FormRequest
 {
     /**
@@ -15,6 +18,12 @@ class CustomerFromRequest extends FormRequest
     public function authorize()
     {
         return true;
+    }
+
+    protected function failedValidation(Validator $validator) {
+        throw new HttpResponseException(response()->json(['status'=>'failed',
+                                                    'message'=>$validator->errors()->first(),
+                                                    'errors'=>$validator->errors()->all()], 422));
     }
 
     /**

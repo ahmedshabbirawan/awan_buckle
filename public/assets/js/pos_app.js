@@ -40,8 +40,6 @@ pos_app = {
 
     },
     saveProductWithForm : function(){
-         console.log('i am add product');
-
   let myform = document.getElementById("product_form_model");
   let fdata = new FormData(myform);
   let actionURL = $('#product_form_model').attr('action');
@@ -91,10 +89,119 @@ pos_app = {
               }
           }
       });
+    }, // function end
+    showChangePasswordModal : function(userID){
+       $.ajax({
+           dataType: 'json',
+           type:'get',
+           url : baseURL + 'usermanagement/user/change_password_modal_view/'+userID,
+           success:function(res){
+               $('#update_password_modal_con').html(res.view);
+               $('#update_password_modal').modal('show'); 
+           }
+       });
+   },
+   savePasswordForm : function(){
+    let myform = document.getElementById("change_password_form");
+    let fdata = new FormData(myform);
+    let actionURL = $('#change_password_form').attr('action');
   
+        $.ajax({
+            data: fdata,
+            cache: false,
+            processData: false,
+            contentType: false,
+            type: 'POST',
+            dataType: "JSON",
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            url: actionURL,
+            success: function(res, textStatus, jqXHR) {
+                if (jqXHR.status == 200) {
+                    $.confirm({
+                        title: 'Success',
+                        content: res.message,
+                        buttons: {
+                            yes: {
+                                text: 'OK',
+                                action: function() {
+                                    $('#update_password_modal').modal('hide');
+                                }
+                            }
+                        }
+                    });
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                // console.log(textStatus,jqXHR, errorThrown);
+                if (jqXHR.status != 200) {
+                    if (typeof jqXHR.responseJSON !== 'undefined') {
+                        $.confirm({
+                            title: 'Error',
+                            content: jqXHR.responseJSON.message
+                        });
+                    }
+                }
+            }
+        });
+   },
 
+   showCreateCustomerModal : function(){
+    $.ajax({
+        dataType: 'json',
+        type:'get',
+        url : baseURL + 'customer/create_view_modal',
+        success:function(res){
+            $('#create_customer_modal_con').html(res.view);
+            $('#create_customer_modal').modal('show'); 
+        }
+    });
+},
+saveCustomerForm : function(){
+ let myform = document.getElementById("create_customer_form");
+ let fdata = new FormData(myform);
+ let actionURL = $('#create_customer_form').attr('action');
 
-
-
-    } // function end
+     $.ajax({
+         data: fdata,
+         cache: false,
+         processData: false,
+         contentType: false,
+         type: 'POST',
+         dataType: "JSON",
+         headers: {
+             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+         },
+         url: actionURL,
+         success: function(res, textStatus, jqXHR) {
+             if (jqXHR.status == 200) {
+                 $.confirm({
+                     title: 'Success',
+                     content: res.message,
+                     buttons: {
+                         yes: {
+                             text: 'OK',
+                             action: function() {
+                                 $('#create_customer_modal').modal('hide');
+                             }
+                         }
+                     }
+                 });
+             }
+         },
+         error: function(jqXHR, textStatus, errorThrown) {
+             // console.log(textStatus,jqXHR, errorThrown);
+             if (jqXHR.status != 200) {
+                 if (typeof jqXHR.responseJSON !== 'undefined') {
+                     $.confirm({
+                         title: 'Error',
+                         content: jqXHR.responseJSON.message
+                     });
+                 }
+             }
+         }
+     });
 }
+
+} // pos_app end

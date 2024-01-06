@@ -89,7 +89,7 @@ class Employee extends Model implements Auditable{
 
             // print_r($model); exit;
 
-            if($model->source != 'pitb'){
+            if($model->source != ' '){
                 $statement          =   DB::select("SHOW TABLE STATUS LIKE 'employees'");
                 $nextId             =   isset($statement[0]) ? $statement[0]->Auto_increment : $this->max('id') + 1;
                 $model->emp_code    =   'ims-'.$nextId;  //(string)Uuid::generate();    

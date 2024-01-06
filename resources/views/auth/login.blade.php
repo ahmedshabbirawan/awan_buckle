@@ -105,7 +105,7 @@
                                                 @csrf
 												<fieldset>
 													<div class="form-group">
-														<label class="block clearfix form-label">Email Address</label>
+														<label class="block clearfix form-label">Username</label>
 														<span class="block input-icon input-icon-right">
 															<input type="text" class="form-control login-fields" placeholder="Username" name="userName" value="{{old('userName')}}" />
 															<i class="ace-icon fa fa-user"></i>

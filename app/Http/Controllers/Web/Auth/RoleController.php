@@ -97,7 +97,7 @@ class RoleController extends Controller
             return redirect()->route('usermanagement.role.list')->with('success','Role has been added successfully');
         }catch(\Exception $e){
             DB::rollBack();
-            return redirect()->route('usermanagement.role.list')->with('error','Error.Please Contact PITB Support.');
+            return redirect()->route('usermanagement.role.list')->with('error','Error.Please Contact   Support.');
 
         }
 
@@ -130,7 +130,7 @@ class RoleController extends Controller
             return redirect()->back()->with('success','Status has been '.$status_string.' Successfully');
         }catch(\Exception $e){
             DB::rollBack();
-            return redirect()->back()->with('error','Error.Please Contact PITB Support');
+            return redirect()->back()->with('error','Error.Please Contact   Support');
 
         }
 
@@ -194,7 +194,7 @@ class RoleController extends Controller
             return redirect()->route('usermanagement.role.list')->with('success','Permissions added Successfully');
         }catch(\Exception $e){
             DB::rollBack();
-            return redirect()->route('usermanagement.role.list')->with('error','Error.Please Contact PITB Support');
+            return redirect()->route('usermanagement.role.list')->with('error','Error.Please Contact   Support');
         }
 
 

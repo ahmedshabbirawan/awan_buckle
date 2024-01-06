@@ -131,5 +131,26 @@ class SaleBoardController extends Controller
         SaleCart::where('sale_key',$saleKey)->delete();
         return response()->json(['status' => true, 'message' => 'Delete success.']);
     }
+
+    /*
+    
+    $term = $request->get('term');
+        $data['results'] = Customer::
+        select('id','name', 'cnic', DB::raw("concat(name,' - ', IF(mobile IS NOT NULL, mobile,'')) as text"))
+        //select(DB::raw("concat(first_name,' ',last_name,' (',cnic,')') as text, id"))
+           // ->where('first_name', 'like', "%".$term."%")
+           // ->orWhere('last_name', 'like', "%".$term."%")
+            ->where('name','like','%'.$term.'%')
+            ->orWhere('mobile','like','%'.$term.'%')
+            ->limit(15)
+            ->get();
+           // ->pluck('first_name');
+        return $data;
+    
+    */
+
+    
+
+
     
 }

@@ -143,7 +143,7 @@ class ProductCategoryController extends Controller
         }catch(\Exception $e){
             DB::rollBack();
             
-            return redirect()->route('category.product.create')->with('error','Error. '.$e->getMessage().' And Please Contact PITB Support');
+            return redirect()->route('category.product.create')->with('error','Error. '.$e->getMessage().' And Please Contact   Support');
         }
 
     }
@@ -199,7 +199,7 @@ class ProductCategoryController extends Controller
             return redirect()->route('category.product.list')->with('success','Product Category has been Updated');
         }catch(\Exception $e){
             DB::rollBack();
-            return redirect()->route('category.product.list')->with('error','Error.Please Contact PITB Support '.$e->getMessage());
+            return redirect()->route('category.product.list')->with('error','Error.Please Contact   Support '.$e->getMessage());
         }
 
 
@@ -227,7 +227,7 @@ class ProductCategoryController extends Controller
 
         }catch(\Exception $e){
             DB::rollBack();
-            return redirect()->route('category.product.list')->with('error','Error.Please Contact PITB Support');
+            return redirect()->route('category.product.list')->with('error','Error.Please Contact   Support');
         }
 
 

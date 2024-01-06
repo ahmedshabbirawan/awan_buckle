@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
 {
@@ -25,42 +26,22 @@ class UserController extends Controller
         if ($request->ajax()) {
             $data = User::with(['roles']);
             return DataTables::of($data)
-                ->addColumn('action', function ($data) {
-                $button = "";
-                $button .= '<td class="center">';
-                $button .= '<div class="hidden-sm hidden-xs btn-group">';
-                    if($data->status == 1){
-                        $button .= '<a href="'. route('usermanagement.user.status', ['id' => $data->id]) .'" data-toggle="tooltip" data-placement="top" title="Change Status">
-                        <button class="btn btn-xs btn-warning">
-                            <i class="ace-icon fa fa-ban bigger-120"></i>
-                        </button>
-                        </a>';
-                    }else{
+                ->addColumn('action', function ($row) {
 
-                        $button .= '<a href="'. route('usermanagement.user.status', ['id' => $data->id]) .'" data-toggle="tooltip" data-placement="top" title="Change Status">
-                        <button class="btn btn-xs btn-success">
-                            <i class="ace-icon fa fa-check bigger-120"></i>
-                        </button>
-                        </a>';
+
+
+                    $statusIcon = 'fa fa-ban';
+                    if($row->status == 1){
+                    $statusIcon = 'fa fa-check-circle-o';
                     }
-
-                    $button .=
-
-                                    ' <a href="'. route('usermanagement.user.edit', ['id' => $data->id]) .'" data-toggle="tooltip" data-placement="top" title="Edit">
-                                    <button class="btn btn-xs btn-primary">
-                                        <i class="ace-icon fa fa-edit bigger-120"></i>
-                                    </button>
-                                    </a>
-
-                                    <a href="'. route('usermanagement.user.delete', ['id' => $data->id]) .'" data-toggle="tooltip" data-placement="top" title="Delete">
-                                    <button class="btn btn-xs btn-danger">
-                                        <i class="ace-icon fa fa-trash-o bigger-120"></i>
-                                    </button>
-                                    </a>
-
-                                </div>
-                            </td>';
-                            return $button;
+                     $action = '<div class="hidden-sm hidden-xs btn-group">';
+                  //    $action .= '<a href="'.route('product.view', $row->id).'" class="btn btn-xs btn-success" data-toggle="tooltip" title="Detail" ><i class="ace-icon fa fa-eye bigger-120"></i></a>';
+                     $action .= '<a href="'. route('usermanagement.user.edit', ['id' => $row->id]) .'" class="btn btn-xs btn-info"  data-toggle="tooltip" title="Edit" ><i class="ace-icon fa fa-pencil bigger-120"></i></a>';
+                     $action .= '<a href="'.route('usermanagement.user.status', ['id' => $row->id]).'"  class="btn btn-xs btn-warning" data-toggle="tooltip" title="Change Status" ><i class="ace-icon '.$statusIcon.' bigger-120"></i></a>';
+                    // $action .= '<a href="'. route('usermanagement.user.delete', ['id' => $row->id]) .'" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Delete" ><i class="ace-icon fa fa-trash-o bigger-120"></i></a>';
+                    $action .= '<a href="javascript:void(0);" onclick="pos_app.showChangePasswordModal('.$row->id.')"  class="btn btn-xs btn-success" data-toggle="tooltip" title="Change Password" ><i class="ace-icon fa fa-lock bigger-120"></i></a>';
+                     $action .= '</div>';
+                    return $action;
                 })
                 ->addIndexColumn()
                 ->addColumn('status', function ($data) {
@@ -126,18 +107,14 @@ class UserController extends Controller
                 },
             ],
         ]);
-
-        
- 
         if ($validator->fails()) {
-           //  return response()->json(['status' => false, 'message' => $validator->errors()->first()],406);
-            return redirect()->back()->withErrors($validator->errors());  //->with('success',$array['name'].' added successful!');
+            if($request->ajax()){
+                return response()->json(['status' => false, 'message' => $validator->errors()->first()],406); 
+            }else{
+                return redirect()->back()->withErrors($validator->errors());
+            }
         }
 
-        
-
-
-        // dd($request->all());
         try {
             DB::beginTransaction();
             $user = new User();
@@ -160,16 +137,23 @@ class UserController extends Controller
             $user->syncRoles($request->roleId);
             if ($user->id) {
                 DB::commit();
-                return redirect()->route('usermanagement.user.list')->with('success', 'User has been created Successfully');
+                if($request->ajax()){
+                    return response()->json(['status' => true, 'message' => 'User has been created Successfully'],200); 
+                }else{
+                    return redirect()->route('usermanagement.user.list')->with('success', 'User has been created Successfully');
+                }
             } else {
-
-                return redirect()->back()->with('error', 'Something Went Wrong.Try Again');
+                if($request->ajax()){
+                    return response()->json(['status' => false, 'message' => 'Something Went Wrong.Try Again'],406);
+                }else{
+                    return redirect()->back()->with('error', 'Something Went Wrong.Try Again');
+                }
             }
 
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error' . 'Error.Please Contact PITB Support');
+            return redirect()->back()->with('error' . 'Error.Please Contact Support');
 
         }
     }
@@ -201,7 +185,7 @@ class UserController extends Controller
 
         }catch(\Exception $e){
             DB::rollBack();
-            return redirect()->back()->with('error','Error.Please Contact PITB SUpport');
+            return redirect()->back()->with('error','Error.Please Contact SUpport');
         }
     }
 
@@ -258,7 +242,7 @@ class UserController extends Controller
             }
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error' . 'Error.Please Contact PITB Support');
+            return redirect()->back()->with('error' . 'Error.Please Contact Support Department');
 
         }
     }
@@ -273,4 +257,55 @@ class UserController extends Controller
     {
         //
     }
+
+
+    function changePasswordModalView($userID){
+        return response()->json([
+            'view' => View('user_management.user.change_password_modal',['userID' => $userID])->render(),
+            'data' =>   [],
+            'status' => true,
+            'message' => 'OK'
+        ]);
+    }
+
+    function savePassword(Request $request){
+        $validator = Validator::make($request->all(), [
+            'user_id'   => 'required',
+            'password'  => ['required', 'confirmed', Password::min(6)],
+           // 'password_confirmation' => 'required|password_confirmation'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()],406);
+        }
+
+
+        $userID = $request->get('user_id');
+
+
+        try {
+            DB::beginTransaction();
+            $user = User::where('id',$userID)->first();
+            $user->password = $request->name;
+            $user->save();
+            if ($user->id) {
+                DB::commit();
+                return response(['status' => true, 'data' => [], 'message' => 'User has been Updated Successfully.' ]);
+            } else {
+                return response()->json(['status' => false, 'message' => 'Error.Something Went Wrong.Try Again'],406);
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['status' => false, 'message' => 'Error.Please Contact Support Department'],406);
+        }
+
+
+
+
+
+
+
+        
+    }
+
 }

@@ -112,7 +112,7 @@ class ParentCategoryController extends Controller
             return redirect()->route('category.parent.list')->With('success','Parent Category Added Successfully');
         }catch(\Exception $e){
             DB::rollBack();
-            return redirect()->route('category.parent.list')->With('error','Please Contact PITB Support');
+            return redirect()->route('category.parent.list')->With('error','Please Contact   Support');
 
         }
 
@@ -158,7 +158,7 @@ class ParentCategoryController extends Controller
 
         }catch(\Exception $e){
             DB::rollBack();
-            return redirect()->route('category.parent.list')->with('error','Error.Please Contact PITB Support');
+            return redirect()->route('category.parent.list')->with('error','Error.Please Contact   Support');
         }
 
     }
@@ -185,7 +185,7 @@ class ParentCategoryController extends Controller
 
         }catch(\Exception $e){
             DB::rollBack();
-            return redirect()->route('category.parent.list')->with('error','Error.Please Contact PITB Support');
+            return redirect()->route('category.parent.list')->with('error','Error.Please Contact   Support');
         }
 
     }
@@ -206,7 +206,7 @@ class ParentCategoryController extends Controller
             return redirect()->route('category.parent.list')->with('success','Parent Category Deleted Successfully');
         }catch(\Exception $e){
             DB::rollBack();
-            return redirect()->route('category.parent.list')->with('error','Error.Please Contact PITB Support');
+            return redirect()->route('category.parent.list')->with('error','Error.Please Contact   Support');
         }
 
     }

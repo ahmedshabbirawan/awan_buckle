@@ -153,6 +153,8 @@ Route::middleware(['web','auth'])->group(function () {
             Route::post('update/{id}',[UserController::class,'update'])->name('update')->middleware('permission:user.update');
             Route::get('status/{id}',[UserController::class,'status'])->name('status')->middleware('permission:user.status');
             Route::get('delete/{id}',[UserController::class,'destroy'])->name('delete')->middleware('permission:user.delete');
+            Route::get('change_password_modal_view/{id}',[UserController::class,'changePasswordModalView'])->name('change_password_modal')->middleware('permission:user.update');
+            Route::post('save_password',[UserController::class,'savePassword'])->name('save_password')->middleware('permission:user.update');
         });
 
 
@@ -340,6 +342,10 @@ Route::middleware(['web','auth'])->group(function () {
         Route::get('/delete/{id}',[CustomerController::class,'destroy'])->name('delete')->middleware('permission:supplier.delete');
         Route::get('/view/{id}',[CustomerController::class,'show'])->name('view')->middleware('permission:supplier.read');
         Route::get('/search',[CustomerController::class,'search'])->name('search');
+
+        Route::get('/search_select2',[CustomerController::class,'searchSelectTwo'])->name('search_select2');
+
+        Route::get('/create_view_modal', [CustomerController::class, 'createViewModal'] )->name('create')->middleware('permission:supplier.create');
     });
 
 
@@ -525,6 +531,8 @@ Route::middleware(['web','auth'])->group(function () {
             Route::post('add-to-cart',[SaleCartController::class,'addToCart'])->name('add');
             Route::get('preview/{sale_key}',[SaleCartController::class,'cartPreview'])->name('preview');
             Route::post('place_order',[SaleCartController::class,'finalPlaceOrder'])->name('place_order');
+            
+            Route::get('search_product',[SaleCartController::class,'searchProducts'])->name('search_product');
             Route::post('apply_dicount_on_single_product',[SaleCartController::class,'applyDiscountOnSingleProduct'])->name('apply_dicount_single');
         });
 

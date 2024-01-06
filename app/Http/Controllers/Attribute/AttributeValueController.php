@@ -208,7 +208,7 @@ public function index()
 
         }catch(\Exception $e){
             DB::rollBack();
-            return redirect('attribute/'.$slug.'/list')->with('Error','Error.Please Contact PITB Support');
+            return redirect('attribute/'.$slug.'/list')->with('Error','Error.Please Contact   Support');
 
         }
 
@@ -241,7 +241,7 @@ public function index()
             return array('status' => true);
         }catch(\Exception $e){
             DB::rollBack();
-            return redirect()->back()->with('error','Error.Please Contact PITB Support');
+            return redirect()->back()->with('error','Error.Please Contact   Support');
         }
 
     }

@@ -198,7 +198,7 @@ class EmployeeController extends Controller{
             if(auth()->user()->can('employee.read')){
                 $action .= '<a href="'.route('Settings.employee.view',$row->id).'" class="btn btn-xs btn-success" data-toggle="tooltip" title="Detail" ><i class="ace-icon fa fa-eye bigger-120"></i></a>';
             }
-            if($row->source != 'pitb'){
+            if($row->source != ' '){
                 if(auth()->user()->can('employee.update')){
                     $action .= '<a href="'.$this->adminURL.'/edit/'.$row->id.'" class="btn btn-xs btn-info"  data-toggle="tooltip" title="Edit" ><i class="ace-icon fa fa-pencil bigger-120"></i></a>';
                 }

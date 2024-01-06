@@ -15,7 +15,7 @@ class EmployeeHttpReq extends Model
     use HasFactory;
 
     
-    public $allEmployeeURL = "https://test.hr.pitb.gov.pk/api/rest_api/pitbEmployeesInventory";
+    public $allEmployeeURL = "https://test.hr. .gov.pk/api/rest_api/ EmployeesInventory";
 
 
 
@@ -29,7 +29,7 @@ class EmployeeHttpReq extends Model
                 
         $post_string= http_build_query($POSTFIELDS);
                     
-        $url='https://hr.pitb.gov.pk/beta/api/rest_api/pitbEmployeesInventory';
+        $url='https://hr. .gov.pk/beta/api/rest_api/ EmployeesInventory';
         $ch= curl_init();// or die("Cannot init");
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -52,10 +52,10 @@ class EmployeeHttpReq extends Model
         if($resArr['code'] == 200){
             // print_r($resArr->empList);
             $data = $resArr['empList']; // ->toArray();
-            $orgnization =  Organization::where('name', 'LIKE',  'PITB')->first()->id;
+            $orgnization =  Organization::where('name', 'LIKE',  ' ')->first()->id;
 
             foreach($data as $rec){
-                    $rec['source']     = 'pitb';
+                    $rec['source']     = ' ';
                     $rec['org_id']     = $orgnization;
                     Employee::updateOrCreate(['emp_code' => $rec['emp_code']], $rec);
             }
@@ -87,7 +87,7 @@ class EmployeeHttpReq extends Model
                 
         $post_string= http_build_query($POSTFIELDS);
                     
-        $url='https://hr.pitb.gov.pk/beta/api/rest_api/getActiveProjects';
+        $url='https://hr. .gov.pk/beta/api/rest_api/getActiveProjects';
         $ch= curl_init();// or die("Cannot init");
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -112,7 +112,7 @@ class EmployeeHttpReq extends Model
         if($resArr['code'] == 200){
             // print_r($resArr->empList);
             $data = $resArr['activeProjects']; // ->toArray();
-            $orgnization =  Organization::where('name', 'LIKE',  'PITB')->first()->id;
+            $orgnization =  Organization::where('name', 'LIKE',  ' ')->first()->id;
 
             foreach($data as $rec){
                 $projectData = array(

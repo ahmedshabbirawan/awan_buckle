@@ -129,7 +129,7 @@ class SupplierController extends Controller
                 return redirect(route('supplier.list'))->with('success',$this->name.' added successful!');
             }catch(\Exception $e){
                 DB::rollBack();
-                return redirect()->back()->withInput($request->all())->with('error','Error.Please Contact PITB Support');
+                return redirect()->back()->withInput($request->all())->with('error','Error.Please Contact   Support');
             }
     }
 
@@ -189,7 +189,7 @@ class SupplierController extends Controller
             return redirect(route('supplier.list'))->with('success','Supplier updated successful!');
         }catch(\Exception $e){
             DB::rollBack();
-            return redirect()->back()->withInput($request->all())->with('error','Error.Please Contact PITB Support');
+            return redirect()->back()->withInput($request->all())->with('error','Error.Please Contact   Support');
         }
     }
 

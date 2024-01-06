@@ -26,6 +26,7 @@
                             <tr>
                                 <th class="center">SR</th>
                                 <th class="center">User Name</th>
+                                <th class="center">Login Username</th>
                                 <th class="center">Role Name</th>
                                 <th class="center" class="hidden-480">Status</th>
                                 <th class="center" class="hidden-480">Action</th>
@@ -45,6 +46,7 @@
     </div>
     <!-- /.row -->
 </div><!-- /.page-content -->
+<div id="update_password_modal_con"></div>
 @stop
 
 @section('script')
@@ -57,6 +59,7 @@
                 columns: [
                     {data: 'DT_RowIndex', searchable: false, orderable: false,"width": "2%"},
                     {data: 'name', name: 'name', "className": "dt-center" },
+                    {data: 'userName', name: 'userName', "className": "dt-center" },
                     {data: 'roleName', name: 'roleName', "className": "dt-center" },
                     {data: 'status', name: 'status',"className": "dt-center"},
                     {data: 'action', name: 'action',"className": "dt-center"},

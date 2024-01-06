@@ -264,7 +264,7 @@ class IssuanceController extends Controller
                 return response(['message' => 'Item added successfully!']);
             }            
         }catch(\Exception $e){
-            return response()->json(['message' => 'Error.Please Contact PITB Support'. $e->getMessage()], 500);
+            return response()->json(['message' => 'Error.Please Contact   Support'. $e->getMessage()], 500);
         }
     }
 
@@ -334,7 +334,7 @@ class IssuanceController extends Controller
             DB::commit();
             return response()->json(['message' => 'Items return successfully'], 200);
         }catch(\Exception $e){
-            return response()->json(['message' => 'Error.Please Contact PITB Support'. $e->getMessage()], 500);
+            return response()->json(['message' => 'Error.Please Contact   Support'. $e->getMessage()], 500);
         }
     }
 
@@ -503,7 +503,7 @@ class IssuanceController extends Controller
             return response()->json(['status' => true]);
 
         }catch(\Exception $e){
-            return response()->json(['message' => 'Error.Please Contact PITB Support'. $e->getMessage()], 500);
+            return response()->json(['message' => 'Error.Please Contact   Support'. $e->getMessage()], 500);
         }
     }
 
@@ -550,7 +550,7 @@ class IssuanceController extends Controller
         IssuanceItemTemp::create($data);
         return response(['message' => 'Add item successfully!'],200);
     }catch(\Exception $e){
-        return response()->json(['message' => 'Error.Please Contact PITB Support'. $e->getMessage()], 500);
+        return response()->json(['message' => 'Error.Please Contact   Support'. $e->getMessage()], 500);
     }
     }
 

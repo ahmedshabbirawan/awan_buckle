@@ -222,8 +222,8 @@ class SimpleProductController extends Controller
             }
         }catch(\Exception $e){
             DB::rollBack();
-            return response()->json(['message' => 'Error.Please Contact PITB Support'], 500);
-            // return redirect()->route('category.sub.list')->with('error','Error.Please Contact PITB Support');
+            return response()->json(['message' => 'Error.Please Contact Support'], 500);
+            // return redirect()->route('category.sub.list')->with('error','Error.Please Contact   Support');
         }
     }
 

@@ -15,6 +15,10 @@ Issuance Items
     margin-left: 10px;
     width: 75%;
 }
+.pro_img_sug{
+    width: 50px;
+    height: 50px;
+}
 </style>
 <input type="hidden" id="sale_key" value="{{ $salekey }}" >
 <div class="page-content">
@@ -26,9 +30,55 @@ Issuance Items
     
 <div class="row" style="margin-top: 10px;" >
 
-    
+<div class="col-sm-6">
 
-    <div class="col-sm-12">
+<div class="widget-box">
+<div class="widget-header">
+<h5 class="widget-title smaller"> Sale Order | {{ $salekey }}</h5>
+
+
+
+        </div>
+    
+        <div class="widget-body">
+                <div class="widget-main">
+                <form id="customer_form" action="javascript:void(0);" >
+        <input type="hidden" name="sale_key" value="{{ $salekey }}" >
+
+<div class="row">
+                <div class="col-xs-12 col-sm-12">
+        <label for="customer_name"> Select Customer </label>
+            <div class="input-group">
+                <select class="form-control" name="customer_id" id="customer_select2" >
+                    
+                </select>
+                <span class="input-group-addon" onclick="pos_app.showCreateCustomerModal();"  >
+                    <i class="fa fa-plus bigger-110"></i>
+                </span>
+            </div>
+        </div>
+
+        </div>
+
+                </form>
+
+
+
+                </div>
+            
+            
+            
+            
+            
+            </div>
+    
+    
+    
+    </div>
+
+</div>
+
+    <div class="col-sm-6">
         <div class="widget-box">
 
 
@@ -51,11 +101,32 @@ Issuance Items
             <div class="widget-body">
                 <div class="widget-main">
 
-                    {{-- form-inline --}}
+
+
+
+
+
+                <div class="row">
+                <div class="col-xs-12 col-sm-12">
+        <label for="customer_name"> Search Product </label>
+            <div class="input-group">
+            <span class="input-group-addon">
+                    <i class="fa fa-search bigger-110"></i>
+                </span>
+                <select class="form-control" name="product_select2" id="product_select2" >
+                    
+                </select>
+                
+            </div>
+        </div>
+
+        </div>
+
+
 
 
 <div class="row">
-    <form id="customer_form" action="javascript:void(0);" >
+    <!-- <form id="customer_form_____" action="javascript:void(0);" >
         <input type="hidden" name="sale_key" value="{{ $salekey }}" >
 
     <div class="col-lg-3" >
@@ -67,11 +138,7 @@ Issuance Items
         <div class="input-group"> <input name="customer_mobile" class="form-control input-mask-phone col-lg-12" type="text"  id="customer_mobile"> </div>
     </div>
 
-    {{-- <div class="col-lg-3" >
-        <label for="customer_mobile"> &nbsp; </label>
-        <div class="input-group"> <button class="btn btn-primary" type="button" onclick="saveCustomerInfo()" > Save & Update </button> </div>
-    </div> --}}
-    </form>
+    </form> -->
 </div>
 
                  
@@ -175,6 +242,9 @@ Issuance Items
     </div>
 </div>
 <!--- delete confirmation modal end --->
+
+<div id="create_customer_modal_con"></div>
+
 @endsection
 
 
@@ -359,14 +429,12 @@ Issuance Items
                     width:'50%'
                    
                 },
-                
                 {
                     data: 'product.price',
                     name: 'product.price',
                     title: 'Price',
                  
                 },
-                
                 {
                     data: 'total_qty',
                     name: 'total_qty',
@@ -462,8 +530,72 @@ Issuance Items
 
 
     
-       
-    $('#customer_name').typeahead({
+        function formatRepo (repo) {
+//   if (repo.loading) {
+//     return repo.text;
+//   }
+
+// console('helllll', repo);
+
+  var $container = $(
+    "<div class='select2-result-repository clearfix'>" +
+      "<div class='select2-result-repository__avatar'><img class='pro_img_sug' src='" + repo.product_img_url + "' /></div>" +
+      "<div class='select2-result-repository__meta'>" +
+        "<div class='select2-result-repository__title'>"+repo.text+"</div>" +
+      "</div>" +
+    "</div>"
+  );
+
+//   $container.find(".select2-result-repository__title").text(repo.full_name);
+//   $container.find(".select2-result-repository__description").text(repo.description);
+//   $container.find(".select2-result-repository__forks").append(repo.forks_count + " Forks");
+//   $container.find(".select2-result-repository__stargazers").append(repo.stargazers_count + " Stars");
+//   $container.find(".select2-result-repository__watchers").append(repo.watchers_count + " Watchers");
+
+  return $container;
+}
+
+function formatRepoSelection (repo) {
+  return repo.text;
+}
+   
+
+        
+   
+        $('#product_select2').select2({
+        placeholder: "Search Product",
+        ajax: {
+            url: "{{ route('sale.cart.search_product') }}",
+            dataType: 'json',
+            // Additional AJAX parameters go here; see the end of this chapter for the full code of this example
+            
+        }
+//         minimumInputLength: 1,
+//   templateResult: formatRepo,
+//   templateSelection: formatRepoSelection
+
+        }).on('select2:select', function (e) {
+            // Do something
+            // console.log(e.params.data);
+            var obj = e.params.data;
+            addToCart(obj.product_id,'1','add');
+        });
+
+
+    $('#customer_select2').select2({
+        placeholder: "Select Customer",
+        ajax: {
+            url: "{{ route('customer.search_select2') }}",
+            dataType: 'json'
+            // Additional AJAX parameters go here; see the end of this chapter for the full code of this example
+        }
+    });
+
+
+    });
+
+    /*
+     $('#customer_name').typeahead({
         minLength: 1,
        
         displayField: 'name'
@@ -524,18 +656,7 @@ Issuance Items
     }).on('typeahead:change',function(){
         // $('#customer_mobile').val('');
     });
-
-
-   
-
-    
-
-    
-
-
-
-    
-    });
+    */
 
 
     // function saveCustomerInfo(productID,qty,action){

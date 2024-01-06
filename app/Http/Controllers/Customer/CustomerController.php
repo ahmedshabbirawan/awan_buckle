@@ -120,10 +120,20 @@ class CustomerController extends Controller{
             DB::beginTransaction();
             $rec = Customer::create($array);
             DB::commit();
-            return redirect(route('customer.list'))->with('success',$this->name.' added successful!');
+            if($request->ajax()){
+                return response(['status' => true, 'message' => $this->name.' added successful!' ]);
+            }else{
+                return redirect(route('customer.list'))->with('success',$this->name.' added successful!');
+            }
+            
         }catch(\Exception $e){
             DB::rollBack();
-            return redirect()->back()->withInput($request->all())->with('error','Error.Please Contact PITB Support');
+            if($request->ajax()){
+                return response()->json(['message' => 'Error.Please Contact Support'], 500);
+            }else{
+                return redirect()->back()->withInput($request->all())->with('error','Error.Please Contact Support');
+            }
+            
         }
     }
 
@@ -180,7 +190,7 @@ class CustomerController extends Controller{
             return redirect(route('customer.list'))->with('success','Customer updated successful!');
         }catch(\Exception $e){
             DB::rollBack();
-            return redirect()->back()->withInput($request->all())->with('error','Error.Please Contact PITB Support');
+            return redirect()->back()->withInput($request->all())->with('error','Error.Please Contact   Support');
         }
     }
 
@@ -252,6 +262,31 @@ class CustomerController extends Controller{
             ->get();
            // ->pluck('first_name');
         return $data;
+    }
+
+
+    function searchSelectTwo(Request $request){
+        $term = $request->get('term');
+        $data['results'] = Customer::
+        select('id','name', 'cnic', DB::raw("concat(name,' - ', IF(mobile IS NOT NULL, mobile,'')) as text"))
+        //select(DB::raw("concat(first_name,' ',last_name,' (',cnic,')') as text, id"))
+           // ->where('first_name', 'like', "%".$term."%")
+           // ->orWhere('last_name', 'like', "%".$term."%")
+            ->where('name','like','%'.$term.'%')
+            ->orWhere('mobile','like','%'.$term.'%')
+            ->limit(15)
+            ->get();
+           // ->pluck('first_name');
+        return $data;
+    }
+
+    function createViewModal(){
+        return response()->json([
+            'view' => View('Customer.create_customer_modal')->render(),
+            'data' =>   [],
+            'status' => true,
+            'message' => 'OK'
+        ]);
     }
 
 

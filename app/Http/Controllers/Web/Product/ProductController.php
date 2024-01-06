@@ -208,8 +208,8 @@ class ProductController extends Controller
             
         }catch(\Exception $e){
             DB::rollBack();
-            return response()->json(['message' => 'Error.Please Contact PITB Support'. $e->getMessage()], 500);
-            // return redirect()->route('category.sub.list')->with('error','Error.Please Contact PITB Support');
+            return response()->json(['message' => 'Error.Please Contact   Support'. $e->getMessage()], 500);
+            // return redirect()->route('category.sub.list')->with('error','Error.Please Contact   Support');
         }
 
         
@@ -314,8 +314,8 @@ class ProductController extends Controller
             }
         }catch(\Exception $e){
             DB::rollBack();
-            return response()->json(['message' => 'Error.Please Contact PITB Support'], 500);
-            // return redirect()->route('category.sub.list')->with('error','Error.Please Contact PITB Support');
+            return response()->json(['message' => 'Error.Please Contact   Support'], 500);
+            // return redirect()->route('category.sub.list')->with('error','Error.Please Contact   Support');
         }
     }
 

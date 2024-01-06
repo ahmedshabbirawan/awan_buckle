@@ -143,7 +143,7 @@ class StockDeliveryController extends Controller{
 
                 $snArr                              = ($deliverProduct->serial_numbers != '')? explode(',',$deliverProduct->serial_numbers):[];
 
-                // $itemKey = 'pitb/'.Str::slug($project->code,'-').'/'.Str::slug($productCategory->name).'/';
+                // $itemKey = ' /'.Str::slug($project->code,'-').'/'.Str::slug($productCategory->name).'/';
                 $itemKey = 'tb/'.Str::slug($productCategory->name).'/'.$productID;
 
 
@@ -205,8 +205,8 @@ class StockDeliveryController extends Controller{
             
         }catch(\Exception $e){
             DB::rollBack();
-            return response()->json(['message' => 'Error.Please Contact PITB Support'. $e->getMessage()], 500);
-            // return redirect()->route('category.sub.list')->with('error','Error.Please Contact PITB Support');
+            return response()->json(['message' => 'Error.Please Contact   Support'. $e->getMessage()], 500);
+            // return redirect()->route('category.sub.list')->with('error','Error.Please Contact   Support');
         }
 
 

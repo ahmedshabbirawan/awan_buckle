@@ -117,7 +117,7 @@ class SubCategoryController extends Controller
             return redirect()->route('category.sub.list')->With('success','Sub Category Added Successfully');
         }catch(\Exception $e){
             DB::rollBack();
-            return redirect()->route('category.sub.list')->With('error','Error.Please Contact PITB Support');
+            return redirect()->route('category.sub.list')->With('error','Error.Please Contact   Support');
 
 
         }
@@ -166,7 +166,7 @@ class SubCategoryController extends Controller
 
         }catch(\Exception $e){
             DB::rollBack();
-            return redirect()->route('category.sub.list')->with('error','Error.Please Contact PITB Support');
+            return redirect()->route('category.sub.list')->with('error','Error.Please Contact   Support');
         }
 
     }
@@ -194,7 +194,7 @@ class SubCategoryController extends Controller
 
         }catch(\Exception $e){
             DB::rollBack();
-            return redirect()->route('category.sub.list')->with('error','Error.Please Contact PITB Support');
+            return redirect()->route('category.sub.list')->with('error','Error.Please Contact   Support');
 
 
         }

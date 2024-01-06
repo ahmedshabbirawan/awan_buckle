@@ -82,7 +82,7 @@ class DesignationController extends Controller
 
         }catch(\Exception $e){
             DB::rollBack();
-            return redirect(route('Settings.designations.create'))->with('error','Error.Please Contact PITB Support');
+            return redirect(route('Settings.designations.create'))->with('error','Error.Please Contact   Support');
         }
 
     }
@@ -134,7 +134,7 @@ class DesignationController extends Controller
 
         }catch(\Exception $e){
             DB::rollBack();
-            return redirect(route('Settings.designations.edit',$id))->with('error','Error.Please Contact PITB Support');
+            return redirect(route('Settings.designations.edit',$id))->with('error','Error.Please Contact   Support');
         }
     }
 
