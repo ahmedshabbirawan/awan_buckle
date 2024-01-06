@@ -345,7 +345,7 @@ Route::middleware(['web','auth'])->group(function () {
 
         Route::get('/search_select2',[CustomerController::class,'searchSelectTwo'])->name('search_select2');
 
-        Route::get('/create_view_modal', [CustomerController::class, 'createViewModal'] )->name('create')->middleware('permission:supplier.create');
+        Route::get('/create_view_modal', [CustomerController::class, 'createViewModal'] )->name('create_view_modal')->middleware('permission:supplier.create');
     });
 
 
