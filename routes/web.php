@@ -535,11 +535,16 @@ Route::middleware(['web','auth'])->group(function () {
             Route::get('search_product',[SaleCartController::class,'searchProducts'])->name('search_product');
             Route::post('apply_dicount_on_single_product',[SaleCartController::class,'applyDiscountOnSingleProduct'])->name('apply_dicount_single');
         });
-
+        
         Route::group(['prefix'=>'board/','as' => 'board.'],function(){            
             Route::get('product_items',[SaleBoardController::class,'getProductItems'])->name('product_items');
+
            //  Route::get('product_items',[SaleBoardController::class,'getProductItems'])->name('product_items');
             Route::get('list',[SaleBoardController::class,'index'])->name('list');
+            
+            // 
+            Route::get('on_hold_modal_view',[SaleBoardController::class,'onHoldModalView'])->name('on_hold_modal_view');
+            
             Route::get('create/{sale_key?}',[SaleBoardController::class,'create'])->name('create');
             Route::get('delete/board_item/{sale_key?}',[SaleBoardController::class,'deleteKeyItems'])->name('delete.board_item');
         });

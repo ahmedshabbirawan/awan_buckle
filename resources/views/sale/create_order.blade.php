@@ -52,7 +52,7 @@ Issuance Items
                 <select class="form-control" name="customer_id" id="customer_select2" >
                     
                 </select>
-                <span class="input-group-addon" onclick="pos_app.showCreateCustomerModal();"  >
+                <span class="input-group-addon" onclick="pos_app.showCreateCustomerModal();"  title="Create Customer"  >
                     <i class="fa fa-plus bigger-110"></i>
                 </span>
             </div>
@@ -86,6 +86,11 @@ Issuance Items
             <h5 class="widget-title smaller"> Sale Order | {{ $salekey }}</h5>
 
             <div class="widget-toolbar">
+
+            
+
+            <a href="javascript:void(0);" onclick="pos_app.showOnHoldListModal();" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-plus-o"></i> OnHolds </a> 
+
                 <a href="{{ route('sale.board.create') }}" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-plus-o"></i> Create New Order </a> 
 
                 <a href="{{ route('stock_exchange.req_form') }}" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-plus-o"></i> Request Stock Exchange </a> 
@@ -244,6 +249,7 @@ Issuance Items
 <!--- delete confirmation modal end --->
 
 <div id="create_customer_modal_con"></div>
+<div id="on_hold_list_modal_con"></div>
 
 @endsection
 

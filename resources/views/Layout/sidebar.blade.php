@@ -18,7 +18,7 @@
 
             <!--------------- Sale Board -------------------->
             <li class="{{request()->is('sale/board*') ? 'active' : '' }}">
-                <a href="{{route('sale.board.list')}}">
+                <a href="{{route('sale.board.create')}}">
                     <i class="menu-icon fa fa-desktop"></i>
                     <span class="menu-text"> Sale Board </span>
                 </a>

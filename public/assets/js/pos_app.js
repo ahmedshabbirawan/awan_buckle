@@ -1,3 +1,4 @@
+var onHoldTable;
 pos_app = {
     
     showAddProductModal : function(){
@@ -202,6 +203,101 @@ saveCustomerForm : function(){
              }
          }
      });
+},
+showOnHoldListModal : function(){
+    $.ajax({
+        dataType: 'json',
+        type:'get',
+        url : baseURL + 'sale/board/on_hold_modal_view',
+        success:function(res){
+            $('#on_hold_list_modal_con').html(res.view);
+            $('#on_hold_list_modal').modal('show'); 
+
+
+            onHoldTable = $('#yajra-table').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: baseURL + "sale/board/list?group_by=issue_key",
+                columns: [
+                    {
+                        "data": "id",
+                        title: 'Sr.',
+                        width:'5%',
+                        render: function(data, type, row, meta) {
+                            return meta.row + meta.settings._iDisplayStart + 1;
+                        }
+                    },{
+                        data: 'title',
+                        name: 'title',
+                        title: 'Sale Key',
+                       
+                    },{
+                        data: 'item_count',
+                        name: 'item_count',
+                        title: 'Items',
+                     
+                    },{
+                        data: 'last_update',
+                        name: 'last_update',
+                        title: 'Items',
+                     
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        title: 'Action'
+                    }
+                ],
+                order: [[0, 'desc']]
+            });
+
+
+        }
+    });
+},
+deleteOnHoldItem : function(saleKey){
+    selectID = saleKey;
+    $.confirm({
+        title: 'Confirmation',
+        content: 'Do you really want to delete ?',
+        buttons: {
+            yes: {
+                text: 'Yes',
+                action: function() {
+                    $.ajax({
+                        type: 'GET',
+                        dataType: "JSON",
+                        
+                        url: baseURL+"sale/board/delete/board_item/"+selectID,
+                        success: function(res, textStatus, jqXHR) {
+                           
+                            if (jqXHR.status == 200) {
+                                onHoldTable.ajax.reload();
+                            }
+                        },
+                        error: function(jqXHR, textStatus, errorThrown) {
+                            // console.log(textStatus,jqXHR, errorThrown);
+                            if (jqXHR.status != 200) {
+                                if (typeof jqXHR.responseJSON !== 'undefined') {
+                                    $.confirm({
+                                        title: 'Error',
+                                        content: jqXHR.responseJSON.message
+                                    });
+                                }
+                            }
+                        }
+                    });
+                }
+            },
+            no: {
+                text: 'No', // With spaces and symbols
+                action: function() {
+
+                }
+            }
+        }
+    });
 }
+
 
 } // pos_app end

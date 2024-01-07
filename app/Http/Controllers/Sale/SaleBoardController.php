@@ -53,7 +53,7 @@ class SaleBoardController extends Controller
         ->addColumn('action', function ($row) {
             $action = '<div class="hidden-sm hidden-xs btn-group">';
             $action .= '<a href="'.route('sale.board.create',$row->sale_key).'" class="btn btn-xs btn-success" data-toggle="tooltip" title="Detail" ><i class="ace-icon fa fa-eye bigger-120"></i></a>';
-            $action .= '<a href="javascript:void(0);" onclick="deleteConfirmation('.$row->sale_key.');" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Delete" ><i class="ace-icon fa fa-trash-o bigger-120"></i></a>';
+            $action .= '<a href="javascript:void(0);" onclick="pos_app.deleteOnHoldItem('.$row->sale_key.');" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Delete" ><i class="ace-icon fa fa-trash-o bigger-120"></i></a>';
             $action .= '</div>';
             return $action;
         })->rawColumns(['title','product_attribute','status_label','action'])
@@ -131,6 +131,17 @@ class SaleBoardController extends Controller
         SaleCart::where('sale_key',$saleKey)->delete();
         return response()->json(['status' => true, 'message' => 'Delete success.']);
     }
+
+
+    function onHoldModalView(){
+        return response()->json([
+            'view' => View('sale.on_hold_modal')->render(),
+            'data' =>   [],
+            'status' => true,
+            'message' => 'OK'
+        ]);
+    }
+
 
     /*
     
