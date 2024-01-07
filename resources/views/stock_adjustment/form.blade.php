@@ -299,7 +299,6 @@ Add New<i class="ace-icon fa fa-plus icon-on-right"></i></button>
 
 
       function saveAdjustment(){
-        console.log('Hello ----->>>>');
         var formData = new FormData($('#product_form')[0]); 
         $.ajax({
           //   data: fdata,
@@ -326,7 +325,18 @@ Add New<i class="ace-icon fa fa-plus icon-on-right"></i></button>
                                     }
                                 }
                             });
-            }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                                // console.log(textStatus,jqXHR, errorThrown);
+                                if (jqXHR.status != 200) {
+                                    if (typeof jqXHR.responseJSON !== 'undefined') {
+                                        $.confirm({
+                                            title: 'Error',
+                                            content: jqXHR.responseJSON.message
+                                        });
+                                    }
+                                }
+                            }
         });
     }
 

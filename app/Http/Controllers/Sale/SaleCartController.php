@@ -351,9 +351,6 @@ class SaleCartController extends Controller{
         ]);
 
         $customerID = $request->get('customer_id');
- 
-        dd($customerID);
-
         if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => $validator->errors()->first()],406);
         }

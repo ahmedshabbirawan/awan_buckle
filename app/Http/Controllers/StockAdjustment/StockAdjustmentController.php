@@ -20,14 +20,14 @@ class StockAdjustmentController extends Controller{
         if($request->ajax()){
         $userID             = auth()->user()->id;
         $deliveryID         = $request->get('stock_delivery_id');
-        $loginShopID        = 1;
+        $loginShopID        = auth()->user()->shop_id;
         $requestToShopID    = 2; //$request->get('shop_id');
         // if($deliveryID != ''){
         //     $results    = StockExchange::with(['product'])->where('stock_delivery_id',$deliveryID)->get();
         // }else{
         //     $results    = StockExchange::with(['product'])->where('created_by',$userID)->where('status',0)->get();
         // }
-        $results    = StockAdjustment::with(['product'])->where('shop_id',$loginShopID)->where('status','darft')->get();
+        $results    = StockAdjustment::with(['product'])->where('shop_id',$loginShopID)->get();
 
 
 
@@ -78,6 +78,16 @@ class StockAdjustmentController extends Controller{
         $qtyArr         = $request->get('adjust_qty');
         $descArr        = $request->get('description');
         $currentQtyArr  = $request->get('current_qty');
+        
+        if( count($productIDzArr) > 0 && !($productIDzArr[0]) ){
+            return response()->json(['status' => false, 'message' => 'No Product Found'],406);
+        }
+
+        if( count($qtyArr) > 0 && !($qtyArr[0]) ){
+            return response()->json(['status' => false, 'message' => 'No Quantity Found'],406);
+        }
+
+
         $loginShopID    = auth()->user()->shop_id; 
 
         $index = 0;
@@ -93,7 +103,8 @@ class StockAdjustmentController extends Controller{
             if( $qty < 1 ){
                 continue;
             }
-            StockAdjustment::create([
+            
+            $sa = StockAdjustment::create([
                 'product_id' => $productID,
                 'stock_type' => $stockArr[$index],
                 'qty_when_adjust'   => $currentQtyArr[$index],
@@ -101,6 +112,7 @@ class StockAdjustmentController extends Controller{
                 'description'       => $descArr[$index],
                 'shop_id'       => $loginShopID
             ]);
+            // dd($sa);
             $product = ProductAvailable::where([
                 'shop_id'       => $loginShopID,
                 'product_id'    => $productID
@@ -121,6 +133,9 @@ class StockAdjustmentController extends Controller{
                 ]);
             }
         }
+
+        DB::commit();
+
         return response()->json(['status' => true, 'message' => 'Successful']);
     }catch(\Exception $e){
         DB::rollBack();

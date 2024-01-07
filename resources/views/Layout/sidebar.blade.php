@@ -20,7 +20,7 @@
             <li class="{{request()->is('sale/board*') ? 'active' : '' }}">
                 <a href="{{route('sale.board.create')}}">
                     <i class="menu-icon fa fa-desktop"></i>
-                    <span class="menu-text"> Sale Board </span>
+                    <span class="menu-text"> Sale Board / POS </span>
                 </a>
 
                 <b class="arrow"></b>

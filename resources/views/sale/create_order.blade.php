@@ -25,138 +25,62 @@ Issuance Items
 <div class="page-header" style="min-height:40px;">
     
 
-    <h1> Sale Order </h1> 
+    <h1> Sale Board / POS </h1> 
 
     
 <div class="row" style="margin-top: 10px;" >
 
 <div class="col-sm-6">
-
 <div class="widget-box">
-<div class="widget-header">
-<h5 class="widget-title smaller"> Sale Order | {{ $salekey }}</h5>
-
-
-
-        </div>
-    
-        <div class="widget-body">
-                <div class="widget-main">
-                <form id="customer_form" action="javascript:void(0);" >
+<div class="widget-header"><h5 class="widget-title smaller"> Sale Board / POS | {{ $salekey }}</h5></div>
+<div class="widget-body">
+    <div class="widget-main">
+        <form id="customer_form" action="javascript:void(0);" >
         <input type="hidden" name="sale_key" value="{{ $salekey }}" >
-
-<div class="row">
-                <div class="col-xs-12 col-sm-12">
-        <label for="customer_name"> Select Customer </label>
-            <div class="input-group">
-                <select class="form-control" name="customer_id" id="customer_select2" >
-                    
-                </select>
-                <span class="input-group-addon" onclick="pos_app.showCreateCustomerModal();"  title="Create Customer"  >
-                    <i class="fa fa-plus bigger-110"></i>
-                </span>
-            </div>
-        </div>
-
-        </div>
-
-                </form>
-
-
-
+        <div class="row">
+            <div class="col-xs-12 col-sm-12">
+                <label for="customer_name"> Select Customer </label>
+                <div class="input-group">
+                    <select class="form-control" name="customer_id" id="customer_select2" ></select>
+                    <span class="input-group-addon" onclick="pos_app.showCreateCustomerModal();"  title="Create Customer"  >
+                        <i class="fa fa-plus bigger-110"></i>
+                    </span>
                 </div>
-            
-            
-            
-            
-            
             </div>
-    
-    
-    
-    </div>
-
+        </div>
+        </form>
+        </div>
+</div>
+</div>
 </div>
 
     <div class="col-sm-6">
         <div class="widget-box">
-
-
             <div class="widget-header">
-            <h5 class="widget-title smaller"> Sale Order | {{ $salekey }}</h5>
-
-            <div class="widget-toolbar">
-
-            
-
-            <a href="javascript:void(0);" onclick="pos_app.showOnHoldListModal();" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-plus-o"></i> OnHolds </a> 
-
-                <a href="{{ route('sale.board.create') }}" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-plus-o"></i> Create New Order </a> 
-
-                <a href="{{ route('stock_exchange.req_form') }}" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-plus-o"></i> Request Stock Exchange </a> 
-                
-            </div>
-            </div>
-        
-
-
-
-           
-    
-            <div class="widget-body">
-                <div class="widget-main">
-
-
-
-
-
-
-                <div class="row">
-                <div class="col-xs-12 col-sm-12">
-        <label for="customer_name"> Search Product </label>
-            <div class="input-group">
-            <span class="input-group-addon">
-                    <i class="fa fa-search bigger-110"></i>
-                </span>
-                <select class="form-control" name="product_select2" id="product_select2" >
-                    
-                </select>
-                
-            </div>
-        </div>
-
-        </div>
-
-
-
-
-<div class="row">
-    <!-- <form id="customer_form_____" action="javascript:void(0);" >
-        <input type="hidden" name="sale_key" value="{{ $salekey }}" >
-
-    <div class="col-lg-3" >
-        <label for="customer_name"> Customer Name </label>
-        <div class="input-group"> <input name="customer_name" class="form-control input-mask-phone col-lg-12" type="text" id="customer_name"> </div>
-    </div>
-    <div class="col-lg-3" >
-        <label for="customer_mobile"> Customer Mobile </label>
-        <div class="input-group"> <input name="customer_mobile" class="form-control input-mask-phone col-lg-12" type="text"  id="customer_mobile"> </div>
-    </div>
-
-    </form> -->
-</div>
-
-                 
+                <h5 class="widget-title smaller"> Sale Order | {{ $salekey }}</h5>
+                <div class="widget-toolbar">
+                    <a href="javascript:void(0);" onclick="pos_app.showOnHoldListModal();" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-plus-o"></i> OnHolds </a> 
+                    <a href="{{ route('sale.board.create') }}" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-plus-o"></i> Create New Order </a> 
+                    <a href="{{ route('stock_exchange.req_form') }}" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-plus-o"></i> Request Stock Exchange </a> 
                 </div>
             </div>
+            <div class="widget-body">
+                <div class="widget-main">
+                <div class="row">
+                    <div class="col-xs-12 col-sm-12">
+                    <label for="customer_name"> Search Product </label>
+                    <div class="input-group">
+                        <span class="input-group-addon"><i class="fa fa-search bigger-110"></i></span>
+                        <select class="form-control" name="product_select2" id="product_select2" ></select>
+                    </div>
+                    </div>
+                </div>   
         </div>
-    </div>
+        </div>
+        </div>
+        </div>
     
     </div>
-    
-    
-    
-    
 </div>
 
 
@@ -166,19 +90,12 @@ Issuance Items
 <div class="row ">
     <div class="col-6 col-lg-6" >
         <div class="card radius-10 border-top border-0 border-4 border-danger">
-          
-
             <div class="card-body">
-
                 @include('Layout.alerts')
-
                 <div class="table-responsive">
                     <table class="table table-striped table-bordered yajratable" id="item_table" style="width:100%"></table>
                 </div>
             </div>
-
-
-
         </div>
     </div>
 
@@ -336,22 +253,9 @@ Issuance Items
         applyDiscount(productID, discountAmount);
     }
 
-    function listCart(){
 
-        $.ajax({
-            //  dataType: 'json',
-            type: 'get',
-         //    data:{'item_id':itemID, 'qty':qty, 'action' : action },
-            url: "{{ route('sale.cart.index') }}",
-            // headers: {
-            //     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            // },
-            error:ajaxFailBlock,
-            success: function(res) {
-                console.log(res);
-            }
-        });
-    }
+
+    
 
 
     function placeOrderConfirm(){
@@ -600,89 +504,7 @@ function formatRepoSelection (repo) {
 
     });
 
-    /*
-     $('#customer_name').typeahead({
-        minLength: 1,
-       
-        displayField: 'name'
-    },{
-        limit: 12,
-        source: function(query, processSync, processAsync) {
-        //  processSync(['This suggestion appears immediately', 'This one too']);
-        return $.ajax({
-          url: "{{ route('customer.search') }}",
-          type: 'GET',
-          displayField: 'name',
-          valueField: "id",
-          data: {
-            query: query
-          },
-        dataType: 'json',
-        preDispatch: function(query) {
-            showLoadingMask(true);
-            return {
-              search: query
-            }
-        },
-        preProcess: function(data) {
-            if (data.success === false) {
-              return false;
-            } else {
-              return data;
-            }
-          },
-          success: function(result) {
-            var resultList = result.results.map(function(item) {
-              return item.text; //{first_name : item.text};
-            });
-            return processAsync(resultList);
-          }
-        });
-      }
-    }).on('typeahead:select', function(evt, item) {
-        console.log('selected event', evt);
-        // var arr = item.split("-");
-        // console.log(arr);
-        // do what you want with the item here
-
-         var arr =  item.split("-");
-        // setTimeout(function(){
-            $('#customer_name').val(arr[0]);
-            $('#customer_mobile').val(arr[1]);
-      //  },3000);
-
-    }).on('typeahead:close', function(evt, item) {
-        var item = $('#customer_name').val();
-        console.log('selected close', evt);
-        var arr =  item.split("-");
-         setTimeout(function(){
-            $('#customer_name').val(arr[0]);
-          //  $('#customer_mobile').val(arr[1]);
-         },2000);
-    }).on('typeahead:change',function(){
-        // $('#customer_mobile').val('');
-    });
-    */
-
-
-    // function saveCustomerInfo(productID,qty,action){
-    //     var formData = new FormData($('#customer_form')[0]);
-    //     console.log(formData);
-    //    //  return false;   
-    //     $.ajax({
-    //         //  dataType: 'json',
-    //         type: 'post',
-    //         data:{'product_id':productID, 'qty':qty, 'action' : action, 'sale_key' :  saleKey},
-    //         url: "{{ route('sale.cart.add') }}",
-    //         headers: {
-    //             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-    //         },
-    //         success: function(res) {
-    //             console.log(res);
-    //             cartDataTable.ajax.reload();
-    //         }
-    //     });
-    // }
+    
 
     
 </script>
