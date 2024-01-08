@@ -67,7 +67,7 @@
             </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-primary" onclick="pos_app.saveCustomerForm();">Save Password</button>
+        <button type="button" class="btn btn-primary" onclick="pos_app.saveCustomerForm();">Save Customer</button>
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
       </div>
     </div>

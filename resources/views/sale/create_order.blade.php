@@ -121,7 +121,7 @@ Issuance Items
             </table>
 
             <a href="javascript:void(0);" onclick="placeOrderConfirm();"  class="btn btn-primary btn-block" >Place Order</a>
-            <a href="{{ route('sale.cart.preview',$salekey) }}" class="btn btn-primary btn-block" >Preview</a>
+            <a href="javascript:void(0);" onclick="openPreviewPopUp();" class="btn btn-primary btn-block" >Preview</a>
 
         </div>
     </div>
@@ -203,6 +203,11 @@ Issuance Items
          addToCart(productID,'1','add');
     }
 
+
+    function openPreviewPopUp(){
+        window.open("{{ route('sale.cart.preview',$salekey) }}");
+    }
+
     function updateToCart(productID, ele){
         var val = $(ele).val();
 
@@ -248,6 +253,23 @@ Issuance Items
         });
     }
 
+    function deleteCartItem(itemID){
+        $.ajax({
+            //  dataType: 'json',
+            type: 'post',
+            data:{'item_id':itemID},
+            url: "{{ route('sale.cart.delete_cart_item') }}",
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            error:ajaxFailBlock,
+            success: function(res) {
+                cartDataTable.ajax.reload();
+            }
+        });
+    }
+
+
     function applyDiscountOnSingleProduct(productID, $inputField){
         var discountAmount = $($inputField).val();
         applyDiscount(productID, discountAmount);
@@ -268,19 +290,15 @@ Issuance Items
                             action: function() {
                                 placeOrder();
                             }
-                        }
+                        },
+                        no: { text: 'Cancel', action: function() {} }
                     }
                 });
     }
 
 
     function placeOrder(){
-
         var formData = new FormData($('#customer_form')[0]);
-
-        console.log(formData);
-
-        // var saleKey = $('#sale_key').val();   
         $.ajax({
             dataType: 'json',
             type: 'POST',
@@ -405,34 +423,40 @@ Issuance Items
                     data: 'product_name',
                     name: 'product_name',
                     title: 'Product',
-                    width:'40%',
+                    width:'35%',
                 },{
                     data: 'qty',
                     name: 'qty',
                     title: 'Qty',
+                    width:'10%',
                     render: function(data, type, row, meta) {
                         console.log(row);
                         return '<input type="text" id="'+row.item_id+'_qty"  onblur="updateToCart('+row.product_id+',this)" class="input-sm col-xs-12"  value="'+data+'" >';
                     }
                 },{
-                    data: 'offer_price',
-                    name: 'offer_price',
+                    data: 'price',
+                    name: 'price',
                     title: 'Price'
-                },{
+                },
+                {
                     data: 'discount',
                     name: 'discount',
                     title: 'Discount',
+                    width:'15%',
                     render: function(data, type, row, meta) {
                         return '<input type="text" id="'+row.item_id+'_discount" onblur="applyDiscountOnSingleProduct('+row.product_id+',this)" value="'+data+'" class="input-sm col-xs-12" >';
                     }
+                },
+                {
+                    data: 'offer_price',
+                    name: 'offer_price',
+                    title: 'Price'
                 },{
                     data: 'product_total_price',
                     name: 'product_total_price',
                     title: 'Final'
                 },
-
-
-
+                { data: 'action',name: 'action',title: 'Action' },
             ],
             order: [[0, 'desc']]
         });

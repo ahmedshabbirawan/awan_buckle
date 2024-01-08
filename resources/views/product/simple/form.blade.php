@@ -171,42 +171,12 @@ if (isset($product)) {
 @section('script')
 <script>
     let validator;
-
-    function getCategories() {
-        var parentCat = $('#parent_category_id').val();
-        if (parentCat == '') {
-            $('#sub_country_id').html('<option value=""> -- Select -- </option>');
-            return false;
-        }
-        $.ajax({
-            // dataType: 'json',
-            type: 'get',
-            url: "{{ route('product.ajax_sub_cat') }}?parent_id=" + parentCat + "&selected_id=<?= $subCategoryID ?>",
-            success: function(res) {
-                $('#sub_category_id').html(res);
-                $(".select21").trigger("chosen:updated");
-                // var province_id = $('#province_id').val();
-                // getProductCategories();
-            }
-        });
-    }
-
-   
-
-    // getProductAttribute
-
-   
-
-
     function checkValidation() {
 
-
+        $(".btn-info").LoadingOverlay("show");
         // const formElement = document.querySelector("#product_form");
         let myform = document.getElementById("product_form");
         let fdata = new FormData(myform);
-
-       // var errorCount = validator.checkAll();
-       // if (errorCount == 0) {
             $.ajax({
                 data: fdata,
                 cache: false,
@@ -219,6 +189,7 @@ if (isset($product)) {
                 },
                 url: "{{ $actionURL }}",
                 success: function(res, textStatus, jqXHR) {
+                    $(".btn-info").LoadingOverlay("hide");
                     // console.log('=======>>>>> ',res);
                     if (jqXHR.status == 200) {
                         if (typeof res.data.product !== 'undefined') {
@@ -238,6 +209,7 @@ if (isset($product)) {
                     }
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
+                    $(".btn-info").LoadingOverlay("hide");
                     // console.log(textStatus,jqXHR, errorThrown);
                     if (jqXHR.status != 200) {
                         if (typeof jqXHR.responseJSON !== 'undefined') {
@@ -249,33 +221,16 @@ if (isset($product)) {
                     }
                 }
             });
-      //   }
-
-        // console.log(validator.checkAll());
     }
 
 
 
 
     $(document).ready(function() {
-
-        // $('#description').ace_wysiwyg();
-
-//         $('#description').ace_wysiwyg({
-//   hotKeys: {
-//     'ctrl+b meta+b': 'bold',
-//     'ctrl+i meta+i': 'italic',
-//     'ctrl+u meta+u': 'underline',
-//     'ctrl+z meta+z': 'undo',
-//     'ctrl+y meta+y meta+shift+z': 'redo'
-//   },
-//   add_images:false,
-//   insert_images:false,
-//   wysiwygConfigData:{add_images:false, insert_images : false}
-// });
+        
 
 
-$('#file_2').ace_file_input({
+    $('#file_2').ace_file_input({
       no_file: 'No File ...',
       btn_choose: 'Choose',
       btn_change: 'Change',
@@ -287,31 +242,6 @@ $('#file_2').ace_file_input({
       //onchange:''
       //
     });
-
-
-        validator = $('form.product_form').jbvalidator({
-            allow_single_deselect: true,
-            errorMessage: true,
-            successClass: true,
-            html5BrowserDefault: false,
-            validFeedBackClass: 'valid-feedback',
-            invalidFeedBackClass: 'invalid-feedback',
-            validClass: 'is-valid',
-            invalidClass: 'is-invalid'
-        });
-
-
-
-        $(document).on('change', '#sub_category_id', function() {
-            getProductCategories();
-        });
-
-        // $(document).on('change', '#product_category_id', function() {
-        //     getProductAttribute();
-        // });
-
-
-        
 
 
 
@@ -345,29 +275,6 @@ $('#file_2').ace_file_input({
             })
         });
 
-
-        //custom validate methode
-        // validator.validator.custom = function(el, event){
-        //     if($(el).is('[name=password]') && $(el).val().length < 5){
-        //         return 'Your password is too weak.';
-        //     }
-        // }
-
-        // validator.validator.example = function(el, event){
-        //     if($(el).is('[name=username]') && $(el).val().length < 3){
-        //         return 'Your username is too short.';
-        //     }
-        // }
-
-        //check form without submit
-        // validator.checkAll(); //return error count
-
-
-
-
-        //    getCategories();
-        getProductCategories();
-        getProductAttribute();
 
         $('.select21').chosen({
             allow_single_deselect: true

@@ -144,7 +144,7 @@
 					</td>
 				</tr>
 
-				<tr class="heading">
+				<!-- <tr class="heading">
 					<td colspan="4" >Payment Method</td>
 
 					<td>Check #</td>
@@ -154,7 +154,7 @@
 					<td colspan="4" >Check</td>
 
 					<td>1000</td>
-				</tr>
+				</tr> -->
 
                 <tr>
 
@@ -169,6 +169,7 @@
                         <td width="50%">Item</td>
                         <td>Orignal</td>
                         <td>Discount</td>
+						<td>Offer</td>
                         <td>Qty</td>
                         <td width="20%" >Total</td>
                     </tr>
@@ -179,6 +180,7 @@
                         <td>{{ $product->product_name }}</td>
                         <td>{{ $product->price }}</td>
                         <td>{{ $product->discount }}</td>
+						<td>{{ $product->offer_price }}</td>
                         <td>{{ $product->qty }}</td>
                         <td>{{ $product->offer_price * $product->qty }}</td>
                     </tr>
@@ -193,6 +195,7 @@
                         <td></td>
                         <td></td>
                         <td></td>
+						<td></td>
     
                         <td> {{ $bill_amount }}</td>
                     </tr>

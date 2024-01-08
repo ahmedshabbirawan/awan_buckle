@@ -29,6 +29,7 @@ class SaleCartController extends Controller{
 
 
     function index(Request $request){
+   
         $for = $request->get('for');
         if($request->ajax()){
             if($for == 'ajax'){
@@ -55,7 +56,7 @@ class SaleCartController extends Controller{
                 foreach($items as $res ){
                     $subTotal       += $res->price * $res->qty;
                     $grandTotal     =  ( ($res->offer_price - $res->discount) * $res->qty);
-                    $totalDiscount  += $res->discount;
+                    $totalDiscount  += $res->discount * $res->qty;
 
                 }
 
@@ -69,9 +70,11 @@ class SaleCartController extends Controller{
                     return $row->offer_price; // ( ($row->offer_price - $row->discount) * $row->qty);    
                 })->addColumn('product_total_price', function ($row) {
                     return ( ($row->price - $row->discount) * $row->qty);    
+                })->addColumn('action', function ($row) {
+                    $dd =  '<a href="javascript:void(0);" onclick="deleteCartItem('.$row->id.');" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Delete" ><i class="ace-icon fa fa-trash-o bigger-120"></i></a>';
+                    return $dd;
                 })
-                ->addColumn('action', function ($row) {
-                })->rawColumns(['item_count'])
+                ->rawColumns(['item_count','action'])
                 ->with('totalPrice', function() use ($totalBill) {
                     return $totalBill;
                 })->with('billAmount', function() use ($billAmount) {
@@ -106,6 +109,10 @@ class SaleCartController extends Controller{
         $action     = $request->get('action');
         $saleKey    = $request->get('sale_key');
         $shopID     = auth()->user()->shop_id;
+
+        if($qty < 1){
+            return response()->json(['status' => false, 'message' => 'Invalid Qty.'],406);
+        }
 
         if(!($shopID)){
             return response()->json(['status' => false, 'message' => 'User have no shop assign. Please select shop first'],406);
@@ -158,6 +165,13 @@ class SaleCartController extends Controller{
             ]);
         }
         return response()->json(['status' => true, 'data' => $item , 'message' => 'Done']);
+    }
+
+
+    function deleteCartItem(Request $request){
+        $itemID = $request->get('item_id');
+        SaleCart::find($itemID)->delete();
+        return response()->json(['status' => true, 'message' => 'Deleted Successfully']);
     }
 
 

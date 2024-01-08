@@ -2,48 +2,29 @@ var onHoldTable;
 pos_app = {
     
     showAddProductModal : function(){
-         console.log('i am add product');
-        // $('#add_product_modal').modal('show');
         $.ajax({
             dataType: 'json',
             type:'get',
             url : baseURL + 'simple_product/create_by_modal',
             success:function(res){
-
-               // alert(res.view);
-
                 $('#add_product_modal_con').html(res.view);
-
                 $('#add_product_modal').modal('show');
-
                 $('#file_2').ace_file_input({
                     no_file: 'No File ...',
                     btn_choose: 'Choose',
                     btn_change: 'Change',
                     droppable: false,
                     onchange: null,
-                    thumbnail: false //| true | large
-                    //whitelist:'gif|png|jpg|jpeg'
-                    //blacklist:'exe|php'
-                    //onchange:''
-                    //
+                    thumbnail: false
                   });
-                
-                console.log('yes',res);
-                // if(res.status){
-                //     table.ajax.reload();
-                //     $('#statusPopup').modal('hide');
-                // } 
             }
         });
-
-
-
     },
     saveProductWithForm : function(){
-  let myform = document.getElementById("product_form_model");
-  let fdata = new FormData(myform);
-  let actionURL = $('#product_form_model').attr('action');
+        $(".add-product-btn").LoadingOverlay("show");
+        let myform = document.getElementById("product_form_model");
+        let fdata = new FormData(myform);
+        let actionURL = $('#product_form_model').attr('action');
 
       $.ajax({
           data: fdata,
@@ -57,7 +38,7 @@ pos_app = {
           },
           url: actionURL,
           success: function(res, textStatus, jqXHR) {
-              // console.log('=======>>>>> ',res);
+            $(".add-product-btn").LoadingOverlay("hide");
               if (jqXHR.status == 200) {
                   if (typeof res.data.product !== 'undefined') {
                       $.confirm({
@@ -69,8 +50,6 @@ pos_app = {
                                   action: function() {
                                     getProductAttribute();
                                     $('#add_product_modal').modal('hide');
-                                    
-                                      // window.location = "{{ route('simple_product.create') }}";
                                   }
                               }
                           }
@@ -79,7 +58,7 @@ pos_app = {
               }
           },
           error: function(jqXHR, textStatus, errorThrown) {
-              // console.log(textStatus,jqXHR, errorThrown);
+            $(".add-product-btn").LoadingOverlay("hide");
               if (jqXHR.status != 200) {
                   if (typeof jqXHR.responseJSON !== 'undefined') {
                       $.confirm({
@@ -101,7 +80,7 @@ pos_app = {
                $('#update_password_modal').modal('show'); 
            }
        });
-   },
+    },
    savePasswordForm : function(){
     let myform = document.getElementById("change_password_form");
     let fdata = new FormData(myform);
@@ -295,6 +274,17 @@ deleteOnHoldItem : function(saleKey){
 
                 }
             }
+        }
+    });
+},
+showStockRequestModal : function(){
+    $.ajax({
+        dataType: 'json',
+        type:'get',
+        url : baseURL + 'stock-exchange/create_req_view_modal',
+        success:function(res){
+            $('#create_customer_modal_con').html(res.view);
+            $('#create_customer_modal').modal('show'); 
         }
     });
 }

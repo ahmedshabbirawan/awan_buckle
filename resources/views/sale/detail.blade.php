@@ -29,10 +29,10 @@ Return Items Detail
 													<tr class="" >
 														<td width="120"><img src="{{asset('assets/images/logo/logo.jpg')}}" width="120" /></td>
 														<td class="text-center">
-													<h4 class="text-uppercase"><b>Punjab Information Technology Board</b></h4>
-													<h4><b>Government of the Punjab</b></h4>
-													<h5>11th Floor, Arfa Software Technology Park.<br/>
-													346-B, Main Ferozepur Road, Lahore, Pakistan</h5>
+													<h4 class="text-uppercase"><b>POS</b></h4>
+													<h4><b>---</b></h4>
+													<h5>------<br/>
+													-------</h5>
 														</td>
 														<td width="120"><img src="{{asset('assets/images/logo/logo-icon.png')}}" width="120"/></td>
 													</tr>

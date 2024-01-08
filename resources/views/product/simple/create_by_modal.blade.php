@@ -89,7 +89,7 @@
             </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-primary" onclick="pos_app.saveProductWithForm();">Save Product</button>
+        <button type="button" class="btn btn-primary add-product-btn" onclick="pos_app.saveProductWithForm();">Save Product</button>
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
       </div>
     </div>

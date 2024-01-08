@@ -139,59 +139,52 @@ var listTable;
 
 
     function checkValidation() {
+        $(".btn-info").LoadingOverlay("show");
+        let myform = document.getElementById("product_form");
+        let fdata = new FormData(myform);
 
-
-// const formElement = document.querySelector("#product_form");
-let myform = document.getElementById("product_form");
-let fdata = new FormData(myform);
-
-// var errorCount = validator.checkAll();
-// if (errorCount == 0) {
-    $.ajax({
-        data: fdata,
-        cache: false,
-        processData: false,
-        contentType: false,
-        type: 'POST',
-        dataType: "JSON",
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        },
-        url: "{{ $actionURL }}",
-        success: function(res, textStatus, jqXHR) {
-            // console.log('=======>>>>> ',res);
-            if (jqXHR.status == 200) {
-                if (typeof res.data.product !== 'undefined') {
-                    $.confirm({
-                        title: 'Success',
-                        content: res.message,
-                        buttons: {
-                            yes: {
-                                text: 'OK',
-                                action: function() {
-                                    listTable.ajax.reload();
+        $.ajax({
+            data: fdata,
+            cache: false,
+            processData: false,
+            contentType: false,
+            type: 'POST',
+            dataType: "JSON",
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            url: "{{ $actionURL }}",
+            success: function(res, textStatus, jqXHR) {
+                $(".btn-info").LoadingOverlay("hide");
+                if (jqXHR.status == 200) {
+                    if (typeof res.data.product !== 'undefined') {
+                        $.confirm({
+                            title: 'Success',
+                            content: res.message,
+                            buttons: {
+                                yes: {
+                                    text: 'OK',
+                                    action: function() {
+                                        listTable.ajax.reload();
+                                    }
                                 }
                             }
-                        }
-                    });
+                        });
+                    }
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                $(".btn-info").LoadingOverlay("hide");
+                if (jqXHR.status != 200) {
+                    if (typeof jqXHR.responseJSON !== 'undefined') {
+                        $.confirm({
+                            title: 'Error',
+                            content: jqXHR.responseJSON.message
+                        });
+                    }
                 }
             }
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-            // console.log(textStatus,jqXHR, errorThrown);
-            if (jqXHR.status != 200) {
-                if (typeof jqXHR.responseJSON !== 'undefined') {
-                    $.confirm({
-                        title: 'Error',
-                        content: jqXHR.responseJSON.message
-                    });
-                }
-            }
-        }
-    });
-   // }
-
-// console.log(validator.checkAll());
+        });
 }
 
 
@@ -261,7 +254,6 @@ let fdata = new FormData(myform);
     }
 
     $(document).ready(function() {
-
         var dataColumns = [
             // {"data": "id",title: 'Sr.',
             //     render: function(data, type, row, meta) {
@@ -289,16 +281,12 @@ let fdata = new FormData(myform);
         dataColumns.push({ data: 'status_label', name: 'status', title: 'Status', width: '10%'  });
         dataColumns.push({ data: 'action', name: 'action', title: 'Action', width: '15%' });
 
-
-
         setTimeout(() => {
             listTable = $('#yajra-table').DataTable({
-               
-                sort:true,
-           
-                dom: 'Bfrtip',
+            sort:true,
+            dom: 'Bfrtip',
             buttons: [
-                'excel', 'pdf'
+            'excel', 'pdf'
             ],
             // paging: false,
             processing: true,
@@ -318,19 +306,7 @@ let fdata = new FormData(myform);
             columns: dataColumns,
             order: [[ 2 , 'asc']]
         });
-
-
-
-
         }, 500);
-
-
-        
-
-
-     
-
-
     });
 
     function apply_Filter(){

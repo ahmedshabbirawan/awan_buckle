@@ -284,7 +284,7 @@ $qty = '';
 
                  <!------>
       <div class="modal-footer" style="margin: 15px 0px;">
-        <button type="button" class="btn btn-primary btn-minier btn-block" onclick="saveProduct();">Add item to purchase</button>
+        <button type="button" class="btn btn-primary btn-minier btn-block" id="add-item-purchase" onclick="saveProduct();">Add item to purchase</button>
       </div>
       <!----->
      
@@ -397,11 +397,15 @@ $qty = '';
 
 
 
+
+
 @endsection
 @section('script')
 <script type="text/javascript">
   var ajaxFailBlock = function(jqXHR, textStatus, errorThrown) {
     // console.log(textStatus,jqXHR, errorThrown);
+    $("#add-item-purchase").LoadingOverlay("hide");
+    $("#submit-delivery").LoadingOverlay("hide");
     $('#submit-delivery').removeAttr('disabled');
     if (jqXHR.status != 422) {
       $.confirm({
@@ -455,7 +459,7 @@ $qty = '';
   /******************************************         Delivery Work    **********************************************************/
 
   function submitDeliveryForm() {
-
+    $("#submit-delivery").LoadingOverlay("show");
 
     // const formElement = document.querySelector("#product_form");
     let myform = document.getElementById("product_form");
@@ -478,6 +482,7 @@ $qty = '';
         },
         url: "{{ route('stocks.simple.delivery.save') }}",
         success: function(res, textStatus, jqXHR) {
+          $("#submit-delivery").LoadingOverlay("hide");
           $('#submit-delivery').removeAttr('disabled');
           // console.log('=======>>>>> ',res);
           if (jqXHR.status == 200) {
@@ -571,7 +576,7 @@ $qty = '';
 
     // let myform = document.getElementById("stock_item_form");
     // let fdata = new FormData(myform);
-
+    $("#add-item-purchase").LoadingOverlay("show");
     let fdata = new FormData();
     fdata.append('product_id',productID);
     fdata.append('shop_id',shop_id);
@@ -592,7 +597,7 @@ $qty = '';
       },
       url: "{{ route('stocks.dp.save') }}",
       success: function(res, textStatus, jqXHR) {
-
+        $("#add-item-purchase").LoadingOverlay("hide");
         $('.stock_item_input').val('');
         $('#input_zone').tagging( "removeAll" );
 

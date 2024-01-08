@@ -12,6 +12,7 @@ Issuance Items
         <h1>Stock Exchange</h1>
     </div>
     <div class="" style="float: right;">
+    <a href="javascript:void(0);" onclick="pos_app.openStockRequestForm();" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-add-o"></i> Create Request </a> 
         <a href="{{ route('stock_exchange.req_form') }}" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-add-o"></i> Create Request </a> 
     </div>
 </div>

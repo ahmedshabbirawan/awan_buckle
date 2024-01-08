@@ -344,6 +344,7 @@ if (isset($product)) {
 
     $(document).ready(function() {
 
+
         // $('#description').ace_wysiwyg();
 
 //         $('#description').ace_wysiwyg({

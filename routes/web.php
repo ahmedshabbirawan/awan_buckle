@@ -529,6 +529,7 @@ Route::middleware(['web','auth'])->group(function () {
         Route::group(['prefix'=>'cart/','as' => 'cart.'],function(){
             Route::get('get-cart-item',[SaleCartController::class,'index'])->name('index');
             Route::post('add-to-cart',[SaleCartController::class,'addToCart'])->name('add');
+            Route::post('delete-cart-item',[SaleCartController::class,'deleteCartItem'])->name('delete_cart_item');
             Route::get('preview/{sale_key}',[SaleCartController::class,'cartPreview'])->name('preview');
             Route::post('place_order',[SaleCartController::class,'finalPlaceOrder'])->name('place_order');
             
@@ -561,6 +562,8 @@ Route::middleware(['web','auth'])->group(function () {
 
  // StockExchangeController  
     Route::group(['prefix'=>'stock-exchange/','as' => 'stock_exchange.'],function(){
+        // 
+        Route::get('create_req_view_modal',[StockExchangeController::class,'createReqViewModal'])->name('create_req_view_modal');
         Route::get('request-form',[StockExchangeController::class,'requestForm'])->name('req_form');
         Route::post('request-post-form',[StockExchangeController::class,'requestPost'])->name('req_post');
         Route::get('request-send-list',[StockExchangeController::class,'requestSendList'])->name('req_send_list');

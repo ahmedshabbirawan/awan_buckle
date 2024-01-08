@@ -184,6 +184,9 @@
 <script src="{{asset('assets/js/bootstrap-wysiwyg.min.js')}}"></script>
 
 
+<script src="{{asset('assets/js/loadingoverlay.min.js')}}"></script>
+
+
 
 		<!-- ace scripts -->
 		<script src="{{asset('assets/js/ace-elements.min.js')}}"></script>
