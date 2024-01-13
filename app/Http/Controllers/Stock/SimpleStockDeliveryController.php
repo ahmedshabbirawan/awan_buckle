@@ -25,13 +25,13 @@ use App\Models\StockAdjustment;
 use Illuminate\Support\Str;
 
 use App\Traits\Definitions;
-
-
+use Carbon\Carbon;
 
 class SimpleStockDeliveryController extends Controller{
 
 
     function index(Request $request){
+       
         $productID = $request->get('product_id');
         if($request->ajax()){
             $results =  StockDelivery::with(['Supplier'])->select();
@@ -59,8 +59,8 @@ class SimpleStockDeliveryController extends Controller{
                 return StockItem::where('stock_delivery_id', $row->id)->count();
             })->addColumn('status_label', function ($row) {
                 return '';
-            })->addColumn('create', function ($row) {
-                return ''; //$row->created_at->format('d-m-Y');
+            })->addColumn('purchased_date_new', function ($row) {
+                return $row->created_at->format('d-m-Y');
             })
             ->addColumn('action', function ($row) {
                 $statusIcon = 'fa fa-ban';
@@ -71,7 +71,7 @@ class SimpleStockDeliveryController extends Controller{
                 $action .= '<a href="'.route('stocks.delivery.detail',$row->id).'" class="btn btn-xs btn-success" data-toggle="tooltip" title="Detail" ><i class="ace-icon fa fa-eye bigger-120"></i></a>';
                 $action .= '</div>';
                 return $action;
-            })->rawColumns(['status_label','rec_info','hand_info','action'])
+            })->rawColumns(['status_label','rec_info','hand_info','action','purchased_date_new'])
         //  ->orderColumn('id', 'DESC')
             ->make(true);
         }
@@ -95,13 +95,17 @@ class SimpleStockDeliveryController extends Controller{
 
 
     function save(StockDeliveryFormRequest $request){
-
+    
         $data = $request->only(['rec_by_name', 'rec_by_designation', 'rec_by_cnic', 'rec_by_phone', 
         'hand_name', 'hand_designation','hand_cnic', 'hand_phone',
         'purchased_date', 'project_id', 'project_dg', 
         'po_loa_loi','amount_category','delivery_amount','supplier_id','delivery_challan_no','warehouse_id',
         'stock_ledger_reference'
         ]);
+
+       //  dd($data);
+
+       $data['purchased_date'] = Carbon::parse($data['purchased_date'])->format('Y-m-d');
 
         $userID             = auth()->user()->id;
         $projectID          = 1; // $data['project_id'];
@@ -115,6 +119,8 @@ class SimpleStockDeliveryController extends Controller{
 
         //$filesData          = $this->uploadDeliveryDocuments($request);
         //$data               = array_merge($data,$filesData);
+
+// dd($data);
 
         try{
             DB::beginTransaction();

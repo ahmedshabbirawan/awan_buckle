@@ -93,7 +93,7 @@ $hand_designation = 'N/A';
 $hand_cnic = 'N/A';
 $hand_phone = 'N/A';
 
-$purchase_date = date('Y-m-d');
+$purchase_date = date('d-m-Y');
 $poi = '';
 $amount_category = '';
 $amount_delivery = '';
@@ -199,7 +199,7 @@ $qty = '';
 
                 <div class="input-group">
 
-                  <input type="text" required class="input-sm col-sm-12 input_date" value="{{ $purchase_date }}" data-date-format="yyyy-mm-dd" name="purchased_date" id="purchased_date" placeholder="Purchase Date">
+                  <input type="text" required class="input-sm col-sm-12 input_date" value="{{ $purchase_date }}" data-date-format="dd-mm-yyyy" name="purchased_date" id="purchased_date" placeholder="Purchase Date">
                   <span class="input-group-addon">
                     <i class="fa fa-calendar bigger-110"></i>
                   </span>

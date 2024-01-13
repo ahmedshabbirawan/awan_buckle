@@ -30,6 +30,7 @@ class StockDeliveryController extends Controller{
 
 
     function index(Request $request){
+      
         $productID = $request->get('product_id');
         if($request->ajax()){
             $results =  StockDelivery::with(['Supplier'])->select();
@@ -53,10 +54,13 @@ class StockDeliveryController extends Controller{
                 return '<b> Name : ';//m.$row->hand_name.' <br> Designation : '.$row->hand_designation.' <br>   Cell : '.$row->hand_phone.'</b>';
             })->addColumn('project_name', function ($row) {
                     return optional(Project::find($row->project_id))->name;
-            })->addColumn('items', function ($row) {
+            })->addColumn('items_count', function ($row) {
                 return StockItem::where('stock_delivery_id', $row->id)->count();
             })->addColumn('status_label', function ($row) {
                 return '';
+            })
+            ->addColumn('purchased_date_new', function ($row) {
+                return $row->created_at->format('d-m-Y');
             })->addColumn('create', function ($row) {
                 return ''; //$row->created_at->format('d-m-Y');
             })
@@ -200,7 +204,7 @@ class StockDeliveryController extends Controller{
             if($request->ajax()){
                 return response(['status' => true, 'data' => $row, 'message' => 'Product Add successfully.' ]);
             }else{
-                return redirect(route('product.list'))->with('success',$this->name.' added successful!');
+                return redirect(route('product.list'))->with('success',' added successful!');
             }
             
         }catch(\Exception $e){

@@ -104,17 +104,21 @@
 					<td colspan="5">
 						<table>
 							<tr>
-								<td class="title">
-									{{ env('APP_NAME', 'POS') }}
+								<td >
+									<span style="font-weight:bolder;" >Awan Buckle</span>
+									<br />
+									<span>Shop # 1-G Mustafa Center, Doctor Line <br/> Shoes Market Shah Alam Lahore.</span>
+									<br/>
+									<b> 0321-9999668 / 042-37659668</b> 
+
 								</td>
+								
 
 								<td>
-									Invoice / Order ID # <b>{{ $order->id }} </b><br /> 
-									Sale Key #: <b>{{ $order->sale_key }} </b><br />
-									Created: <b>{{ $order->created_at->format('H:i d-m-Y') }} </b><br />
-									@if($shop)
-									Shop : <b>{{ $shop->name }} </b><br />
-									@endif
+									Bill No : <b>{{ $order->id }} </b><br /> 
+								
+									Date: <b>{{ $order->created_at->format('d-m-Y / h:i a') }} </b><br />
+								
 									@if($manager)
 									Manager : <b>{{ $manager->name }} </b><br />
 									@endif
@@ -149,17 +153,7 @@
 					</td>
 				</tr>
 
-				<tr class="heading">
-					<td colspan="4" >Payment Method</td>
-
-					<td>&nbsp;</td>
-				</tr>
-
-				<tr class="details">
-					<td colspan="4" >Cash</td>
-
-					<td>&nbsp;</td>
-				</tr>
+			
 
                 <tr>
 
@@ -210,7 +204,7 @@
                         <td></td>
                         <td></td>
                         <td></td>
-                        <td> {{ $order->total_price }} </td>
+                        <td> <b> {{ $order->total_price }} </b> </td>
                     </tr>
 
 					

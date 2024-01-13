@@ -186,8 +186,8 @@ Stock Deliveries
                     title:'Supplier'
                 },
                 {
-                    data:'purchased_date',
-                    name:'purchased_date',
+                    data:'purchased_date_new',
+                    name:'purchased_date_new',
                     title:'Purchase Date'
                 },
                 {
@@ -196,9 +196,9 @@ Stock Deliveries
                     title:'Created at'
                 },
                 {
-                    data: 'items',
-                    name: 'items',
-                    title: 'Item Count',
+                    data: 'items_count',
+                    name: 'items_count',
+                    title: 'Item Count *',
                     width: '10%'
                 },
                 {

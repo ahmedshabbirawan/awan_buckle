@@ -20,7 +20,7 @@
             <li class="{{request()->is('sale/board*') ? 'active' : '' }}">
                 <a href="{{route('sale.board.create')}}">
                     <i class="menu-icon fa fa-cart-plus"></i>
-                    <span class="menu-text"> Sale Board / POS </span>
+                    <span class="menu-text"> POS </span>
                 </a>
 
                 <b class="arrow"></b>
@@ -54,7 +54,7 @@
             <li class="{{request()->is('sale/order/*') ? 'active' : '' }}">
                 <a href="{{route('sale.order.list')}}">
                     <i class="menu-icon fa fa-list"></i>
-                    <span class="menu-text"> Sale Order </span>
+                    <span class="menu-text"> Sale </span>
                 </a>
                 <b class="arrow"></b>
             </li>

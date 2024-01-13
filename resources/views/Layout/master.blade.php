@@ -255,7 +255,7 @@ tag-basic-style.css -->
 		$( document ).on( "ready", function() {
 			$('.input_date').attr('autocomplete','off');
 				$('.input_date').attr('onkeydown','return false');
-				$('.input_date').datepicker({ autoclose: true, format: 'yyyy-m-dd', 
+				$('.input_date').datepicker({ autoclose: true, format: 'dd-m-yyyy', 
 					maxDate: new Date() 
 				
 				});
