@@ -428,15 +428,15 @@ class SaleCartController extends Controller{
                 $proAvail = ProductAvailable::where('product_id',$tItem->product_id)->where('shop_id',$shopID)->first();
 
               //   print_r($proAvail); exit;
-                // if( !($proAvail) ){
-                //     $notFound++;
-                //     continue;
-                // }
+                if( !($proAvail) ){
+                    $notFound++;
+                    continue;
+                }
 
-                // if( ($tItem->qty < 1) || ($proAvail->qty < 1) || ($proAvail->qty <  $tItem->qty) ){
-                //     $notFound++;
-                //     continue;
-                // }
+                if( ($tItem->qty < 1) || ($proAvail->qty < 1) || ($proAvail->qty <  $tItem->qty) ){
+                    $notFound++;
+                    continue;
+                }
                 // sale cart ==> ['product_id', 'product_name', 'item_id', 'sale_key', 'qty', 'offer_price', 'price', 'status', 'created_by','updated_by','deleted_by' ];
                 // sale orer item ==>  ['product_id', 'item_id', 'sale_key', 'order_id', 'customer_id', 'qty', 'offer_price', 'discount', 'price', 'status']; 
 
