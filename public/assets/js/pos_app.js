@@ -290,4 +290,63 @@ showStockRequestModal : function(){
 }
 
 
+///////////////////////     Order Return      ////////////////////////////////////
+, orderBackSearchModal : function(){
+    $.ajax({
+        dataType: 'json',
+        type:'get',
+        url : baseURL + 'sale/order/order_back_search_modal',
+        success:function(res){
+            $('#order_back_search_modal_con').html(res.view);
+            $('#order_back_search_modal').modal('show'); 
+        }
+    });
+},
+submitSearchOrderForm : function(){
+ let myform = document.getElementById("create_customer_form");
+ let fdata = new FormData(myform);
+ let actionURL = $('#create_customer_form').attr('action');
+
+     $.ajax({
+         data: fdata,
+         cache: false,
+         processData: false,
+         contentType: false,
+         type: 'POST',
+         dataType: "JSON",
+         headers: {
+             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+         },
+         url: actionURL,
+         success: function(res, textStatus, jqXHR) {
+             if (jqXHR.status == 200) {
+                 $.confirm({
+                     title: 'Success',
+                     content: res.message,
+                     buttons: {
+                         yes: {
+                             text: 'OK',
+                             action: function() {
+                                 $('#create_customer_modal').modal('hide');
+                             }
+                         }
+                     }
+                 });
+             }
+         },
+         error: function(jqXHR, textStatus, errorThrown) {
+             // console.log(textStatus,jqXHR, errorThrown);
+             if (jqXHR.status != 200) {
+                 if (typeof jqXHR.responseJSON !== 'undefined') {
+                     $.confirm({
+                         title: 'Error',
+                         content: jqXHR.responseJSON.message
+                     });
+                 }
+             }
+         }
+     });
+},
+
+
 } // pos_app end

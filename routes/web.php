@@ -533,8 +533,11 @@ Route::middleware(['web','auth'])->group(function () {
             Route::get('preview/{sale_key}',[SaleCartController::class,'cartPreview'])->name('preview');
             Route::post('place_order',[SaleCartController::class,'finalPlaceOrder'])->name('place_order');
             
+            Route::post('attach_customer_with_cart',[SaleCartController::class,'attachCustomerWithCart'])->name('attach_customer_with_cart');
             Route::get('search_product',[SaleCartController::class,'searchProducts'])->name('search_product');
             Route::post('apply_dicount_on_single_product',[SaleCartController::class,'applyDiscountOnSingleProduct'])->name('apply_dicount_single');
+            // update_product_price
+            Route::post('update_price_on_single_product',[SaleCartController::class,'updatePriceOnSingleProduct'])->name('update_product_price');
         });
         
         Route::group(['prefix'=>'board/','as' => 'board.'],function(){            
@@ -553,6 +556,8 @@ Route::middleware(['web','auth'])->group(function () {
         Route::group(['prefix'=>'order/','as' => 'order.'],function(){            
             Route::get('list',[SaleOrderController::class,'index'])->name('list');
             Route::get('detail/{id}',[SaleOrderController::class,'detail'])->name('detail');
+            Route::get('order/search_order',[SaleOrderController::class,'detail'])->name('order.search_order');
+            Route::get('order_back_search_modal',[SaleOrderController::class,'OrderBackSearchModal'])->name('order_back_search_modal');
         });
         
 

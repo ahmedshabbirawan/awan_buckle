@@ -1,7 +1,7 @@
 @extends('Layout.master')
 
 @section('title')
-Issuance Items
+Order Lists
 @endsection
 
 @section('content')
@@ -12,6 +12,7 @@ Issuance Items
         <h1>Sales Orders</h1>
     </div>
     <div class="" style="float: right;">
+        <a href="javascript:void(0);" onclick="pos_app.orderBackSearchModal();" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-floppy-o"></i> Order Return </a> 
         <a href="{{ route('sale.board.create') }}" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-floppy-o"></i> Add Order </a> 
     </div>
 </div>
@@ -63,6 +64,7 @@ Issuance Items
     </div>
 </div>
 <!--- delete confirmation modal end --->
+<div id="order_back_search_modal_con"></div>
 @endsection
 
 
@@ -149,18 +151,18 @@ Issuance Items
                     title: 'Items',
                  
                 },{
+                    data: 'total_offer_price',
+                    name: 'total_offer_price',
+                    title: 'Offer Amount',
+                 
+                },{
                     data: 'total_price',
                     name: 'total_price',
-                    title: 'Price',
+                    title: 'Bill Price',
                 },{
                     data: 'total_discount',
                     name: 'total_discount',
                     title: 'Total Discount',
-                 
-                },{
-                    data: 'total_offer_price',
-                    name: 'total_offer_price',
-                    title: 'Bill Amount',
                  
                 },{
                     data: 'order_time',

@@ -19,7 +19,7 @@
             <!--------------- Sale Board -------------------->
             <li class="{{request()->is('sale/board*') ? 'active' : '' }}">
                 <a href="{{route('sale.board.create')}}">
-                    <i class="menu-icon fa fa-desktop"></i>
+                    <i class="menu-icon fa fa-cart-plus"></i>
                     <span class="menu-text"> Sale Board / POS </span>
                 </a>
 
@@ -30,7 +30,7 @@
             <!--------------- Stock Exchange -------------------->
             <li class="{{request()->is('stock_exchange/*') ? 'active' : '' }}">
                 <a href="{{route('stock_exchange.list')}}">
-                    <i class="menu-icon fa fa-desktop"></i>
+                    <i class="menu-icon fa fa-arrows-h"></i>
                     <span class="menu-text"> Stock Exchange </span>
                 </a>
 
@@ -42,7 +42,7 @@
             <!--------------- Stock Adjustment -------------------->
             <li class="{{request()->is('stock_exchange/*') ? 'active' : '' }}">
                 <a href="{{route('stock_adjustment.list')}}">
-                    <i class="menu-icon fa fa-desktop"></i>
+                    <i class="menu-icon fa fa-balance-scale"></i>
                     <span class="menu-text"> Stock Adjust </span>
                 </a>
                 <b class="arrow"></b>
@@ -53,7 +53,7 @@
             <!--------------- Orders -------------------->
             <li class="{{request()->is('sale/order/*') ? 'active' : '' }}">
                 <a href="{{route('sale.order.list')}}">
-                    <i class="menu-icon fa fa-desktop"></i>
+                    <i class="menu-icon fa fa-list"></i>
                     <span class="menu-text"> Sale Order </span>
                 </a>
                 <b class="arrow"></b>

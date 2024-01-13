@@ -54,7 +54,7 @@ class StockDeliveryProductController extends Controller{
             })->addColumn('uom_code', function ($row) {
                  return $row->uom_code;
              })->addColumn('product_description', function ($row) {
-                return optional($row->product)->name;
+                return optional($row->product)->description;
              })->addColumn('product_category_name', function ($row) {
                      $cat =  optional($row->product)->categories_tree();
                      return  $cat['category']['name'].' / '.$cat['sub_category']['name'].' / '.$cat['product_category']['name']; 

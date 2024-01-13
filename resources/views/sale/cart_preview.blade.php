@@ -5,6 +5,7 @@
 		<title>Invoice</title>
 
 		<style>
+			.total{ font-weight: bold; }
 			.invoice-box {
 				max-width: 800px;
 				margin: auto;
@@ -115,9 +116,18 @@
 								</td>
 
 								<td>
-									Invoice #: 123<br />
-									Created: January 1, 2023<br />
-									Due: February 1, 2023
+									@if($sale_key)
+									Invoice #: {{ $sale_key }}
+									@endif
+
+									@if(isset($order))
+									Invoice #: {{ $sale_key }}
+									@endif
+
+
+									<br />
+									Created: {{ date('d-M-Y',time()) }}<br />
+									Shop / Branch:  {{ optional($shop)->name }}
 								</td>
 							</tr>
 						</table>
@@ -129,15 +139,16 @@
 						<table>
 							<tr>
 								<td>
-									Sparksuite, Inc.<br />
-									12345 Sunny Road<br />
-									Sunnyville, CA 12345
+									@if($customer)
+										Customer : {{ $customer->name }}<br />
+										Mobile : {{ $customer->mobile }}<br />
+									@endif
+
 								</td>
 
 								<td>
-									Acme Corp.<br />
-									John Doe<br />
-									john@example.com
+								{{ optional($shop)->name }}<br />
+								{{ auth()->user()->name }}<br />
 								</td>
 							</tr>
 						</table>
@@ -167,37 +178,60 @@
                     
                     <tr class="heading">
                         <td width="50%">Item</td>
-                        <td>Orignal</td>
+                        <td>Offer</td>
                         <td>Discount</td>
-						<td>Offer</td>
                         <td>Qty</td>
                         <td width="20%" >Total</td>
                     </tr>
     
-                    <?php foreach($products as $product): ?>
+                    <?php
+						$subTotal = 0;
+						$totalDiscount = 0;
+						$finalBill = 0; 
+						foreach($products as $product): 
+							$subTotal = $subTotal + $product->offer_price; 
+							$totalDiscount = $totalDiscount + ( $product->qty * $product->discount);
+							
+					?>
     
                     <tr class="item">
                         <td>{{ $product->product_name }}</td>
-                        <td>{{ $product->price }}</td>
+                        <td>{{ $product->offer_price }}</td>
                         <td>{{ $product->discount }}</td>
-						<td>{{ $product->offer_price }}</td>
                         <td>{{ $product->qty }}</td>
                         <td>{{ $product->offer_price * $product->qty }}</td>
                     </tr>
     
                     <?php endforeach; ?>
+
+					<?php 
+						$finalBill = $subTotal - $totalDiscount;
+					?>
     
                     <!-- class="item last" -->
     
                     <tr class="total">
-                        <td>Total:</td>
+                        <td>Sub Total:</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td> {{ $subTotal }}</td>
+                    </tr>
 
+					<tr class="total">
+                        <td>Discount:</td>
                         <td></td>
                         <td></td>
                         <td></td>
-						<td></td>
-    
-                        <td> {{ $bill_amount }}</td>
+                        <td> {{ $totalDiscount }}</td>
+                    </tr>
+
+					<tr class="total">
+                        <td>Total:</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td> {{ $finalBill   }}</td>
                     </tr>
     
                     </table>

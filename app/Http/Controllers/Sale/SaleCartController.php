@@ -17,6 +17,7 @@ use App\Models\Customer;
 use App\Models\SaleItem;
 use App\Models\SaleOrder;
 use App\Models\SaleOrderItem;
+use App\Models\Shop;
 use App\Models\StockItem;
 use Illuminate\Support\Facades\DB;
 
@@ -54,22 +55,19 @@ class SaleCartController extends Controller{
                 $billAmount = 0;
 
                 foreach($items as $res ){
-                    $subTotal       += $res->price * $res->qty;
+                    $subTotal       += $res->offer_price * $res->qty;
                     $grandTotal     =  ( ($res->offer_price - $res->discount) * $res->qty);
                     $totalDiscount  += $res->discount * $res->qty;
 
                 }
-
                 $billAmount = $subTotal - $totalDiscount; 
-
-
                 return Datatables::of($items)
                 ->addColumn('discount', function ($row){
                     return ($row->discount)?$row->discount:0;
                 })->addColumn('offer_price', function ($row) {
-                    return $row->offer_price; // ( ($row->offer_price - $row->discount) * $row->qty);    
+                    return $row->offer_price;
                 })->addColumn('product_total_price', function ($row) {
-                    return ( ($row->price - $row->discount) * $row->qty);    
+                    return ( ($row->offer_price - $row->discount) * $row->qty);    
                 })->addColumn('action', function ($row) {
                     $dd =  '<a href="javascript:void(0);" onclick="deleteCartItem('.$row->id.');" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Delete" ><i class="ace-icon fa fa-trash-o bigger-120"></i></a>';
                     return $dd;
@@ -142,26 +140,29 @@ class SaleCartController extends Controller{
             if($action  == 'add' ){
                 $qty = $itemObj->qty  + $qty;
             }
+
+            $finalPrice = $itemObj->offer_price - $itemObj->discount;
+
             $item = SaleCart::where(['product_id' => $productID, 'sale_key'=> $saleKey])->update([
                 'product_id'    => $product->id,
-                'product_name'  => $product->name,
-                'price'   => $product->price,
-                'offer_price'   => $product->price,
-                // 'item_id'       => $itemID,
+    //            'product_name'  => $product->name,
+  //              'price'         => $product->price,
+//                'offer_price'   => $product->price,
+                'final_price' => $finalPrice, 
                 'qty'           => $qty,
                 'sale_key'      => $saleKey,
-                'shop_id' => $shopID
+                'shop_id'       => $shopID
             ]);
         }else{
             $item = SaleCart::create([
                 'product_id'    => $product->id,
                 'product_name'  => $product->name,
-                'price'   => $product->price,
-                'offer_price' => $product->price,
-                // 'item_id' => $itemID,
-                'qty' => $qty,
+                'orignal_price' => $product->price,
+                'offer_price'   => $product->price,
+                'final_price'   => $product->price,
+                'qty'           => $qty,
                 'sale_key'      => $saleKey,
-                'shop_id' => $shopID
+                'shop_id'       => $shopID
             ]);
         }
         return response()->json(['status' => true, 'data' => $item , 'message' => 'Done']);
@@ -182,9 +183,6 @@ class SaleCartController extends Controller{
             'sale_key'      => 'required',
             'discount_amount' => 'required'
         ]);
-
-       //  dd($request->all());
- 
         if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => $validator->errors()->first()],406);
         }
@@ -198,19 +196,42 @@ class SaleCartController extends Controller{
         if(!($shopID)){
             return response()->json(['status' => false, 'message' => 'User have no shop assign. Please select shop first'],406);
         }
-
-
         $itemObj = SaleCart::where('product_id', $productID)->where('sale_key',$saleKey)->first();
         $itemObj->discount =  $discountAmount;
-        $itemObj->offer_price =  $itemObj->price - $discountAmount;
+        $itemObj->final_price =  ($itemObj->offer_price - $discountAmount);
         $itemObj->save();
-
-
         return response()->json(['status' => true, 'data' => $itemObj , 'message' => 'Done']);
+    }
 
+    function updatePriceOnSingleProduct(Request $request){
+        $validator = Validator::make($request->all(), [
+            'product_id'    => 'required',
+            'sale_key'      => 'required',
+            'product_price' => 'required'
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()],406);
+        }
+        $productID  = $request->get('product_id');
+        $qty        = (int) $request->get('qty');
+        $action     = $request->get('action');
+        $saleKey    = $request->get('sale_key');
+        $shopID     = auth()->user()->shop_id;
+        $productPrice = $request->get('product_price');
 
+        if(!($shopID)){
+            return response()->json(['status' => false, 'message' => 'User have no shop assign. Please select shop first'],406);
+        }
+        $itemObj = SaleCart::where('product_id', $productID)->where('sale_key',$saleKey)->first();
 
+        $finalPrice = ($productPrice - $itemObj->discount);
 
+       //  dd($itemObj);
+       // $itemObj->discount =  $discountAmount;
+        $itemObj->offer_price =  $productPrice; // - $discountAmount;
+        $itemObj->final_price = $finalPrice;
+        $itemObj->save();
+        return response()->json(['status' => true, 'data' => $itemObj , 'message' => 'Done']);
     }
 
     function searchProducts(Request $request){
@@ -273,8 +294,24 @@ class SaleCartController extends Controller{
 
         $billAmount = $subTotal - $totalDiscount; 
 
+        $shop = Shop::find(auth()->user()->shop_id);
+
+        $saleCartWithCustomer = SaleCart::where('sale_key', $saleKey)->whereNotNull('customer_id')->first();
+
+// dd($customer);
+
+        $customer = null; 
+
+        if($saleCartWithCustomer){
+            $customer = Customer::find($saleCartWithCustomer->customer_id);
+        }
+        
+
 
         return view('sale.cart_preview',[
+            'shop' => $shop,
+            'customer' => $customer,
+            'sale_key' => $saleKey,
             'products' => $items,
             'sub_total' => $subTotal,
             'discount_total' => $totalDiscount,
@@ -358,8 +395,6 @@ class SaleCartController extends Controller{
      */
     public function finalPlaceOrder(Request $request){
 
-       //  echo 'as'; exit;
-
         $validator = Validator::make($request->all(), [
             'sale_key'   => 'required'
         ]);
@@ -370,42 +405,22 @@ class SaleCartController extends Controller{
         }
 
         $saleKey            = $request->get('sale_key');
-        //$cartItems          = SaleCart::all();
         $cartItems          = SaleCart::where('sale_key',$saleKey)->get();  
-
-
         $itemFound          = count($cartItems);
         if($itemFound == 0){
             return response(['message' => 'No items available'],422);
         }
-        /********************************/
-        // $customerName   = $request->get('customer_name');
-        // $customerMobile = $request->get('customer_mobile');
-        // $customerID     = 0;
-        // if( ($customerName != '') && ($customerMobile != '') ){
-        //     $customer = Customer::where('mobile',$customerMobile)->first();
-        //     if( isset($customer->id) ){
-        //         $customerID = $customer->id;
-        //     }else{
-        //         $customer   = Customer::create(['name' => $customerName, 'mobile' => $customerMobile]);
-        //         $customerID = $customer->id;
-        //     }
-        // }
-        /********************************/
-        $saleOrder          = SaleOrder::create(['sale_key' => $saleKey, 'item_count' => count($cartItems), 'customer_id' => $customerID]);
+
+        $saleOrder          = SaleOrder::create(['sale_key' => $saleKey, 'item_count' => count($cartItems), 'customer_id' => $customerID, 'shop_id' => auth()->user()->shop_id , 'created_by' => auth()->user()->id]);
         $notFound           = 0;
         $itemWillDelete     = [];
 
-        $totalOfferPrice    = 0;
-        $totalPrice         = 0;
-        $totalDiscount      = 0;
-
         try{
             DB::beginTransaction();
-            // $key = $this->genrateIssuanceKey();
-            $totalDicount = 0;
+            $totalOfferPrice    = 0;
             $totalPrice = 0;
             $billAmount = 0;
+            $totalDiscount      = 0;
             foreach($cartItems as $tItem):
                 //   echo $tItem->product_id; exit;
                 //  $stockItem = StockItem::findOrFail($tItem->item_id);
@@ -413,15 +428,15 @@ class SaleCartController extends Controller{
                 $proAvail = ProductAvailable::where('product_id',$tItem->product_id)->where('shop_id',$shopID)->first();
 
               //   print_r($proAvail); exit;
-                if( !($proAvail) ){
-                    $notFound++;
-                    continue;
-                }
+                // if( !($proAvail) ){
+                //     $notFound++;
+                //     continue;
+                // }
 
-                if( ($tItem->qty < 1) || ($proAvail->qty < 1) || ($proAvail->qty <  $tItem->qty) ){
-                    $notFound++;
-                    continue;
-                }
+                // if( ($tItem->qty < 1) || ($proAvail->qty < 1) || ($proAvail->qty <  $tItem->qty) ){
+                //     $notFound++;
+                //     continue;
+                // }
                 // sale cart ==> ['product_id', 'product_name', 'item_id', 'sale_key', 'qty', 'offer_price', 'price', 'status', 'created_by','updated_by','deleted_by' ];
                 // sale orer item ==>  ['product_id', 'item_id', 'sale_key', 'order_id', 'customer_id', 'qty', 'offer_price', 'discount', 'price', 'status']; 
 
@@ -433,11 +448,11 @@ class SaleCartController extends Controller{
                                 
                 $itemData['offer_price']    =    $tItem->offer_price;
                 $itemData['discount']       =    $tItem->discount;
-                $itemData['price']          =    $tItem->price;
+                $itemData['price']          =    $tItem->final_price;
 
-                $totalOfferPrice            +=   $tItem->offer_price;
-                $totalPrice                 +=   $tItem->price;
-                $totalDiscount              +=   $tItem->discount;
+                $totalOfferPrice            =    $totalOfferPrice + ( $tItem->offer_price * $tItem->qty );
+                $totalPrice                 =    $totalPrice + ( $tItem->final_price * $tItem->qty ) ;
+                $totalDiscount              =    $totalDiscount + ( $tItem->discount * $tItem->qty );
                 
 
                 SaleOrderItem::create($itemData);
@@ -454,13 +469,15 @@ class SaleCartController extends Controller{
                 $itemWillDelete[] = $tItem->id;
             endforeach;
 
-            $saleOrder->total_price         = $totalPrice;
-            $saleOrder->total_discount      = $totalDiscount;
             $saleOrder->total_offer_price   = $totalOfferPrice;
+            $saleOrder->total_discount      = $totalDiscount;
+            $saleOrder->total_price         = $totalPrice;
             $saleOrder->save();
 
+            DB::commit();
+         //    dd('testing');
 
-            SaleCart::whereIn('id',$itemWillDelete)->delete();
+         //   SaleCart::whereIn('id',$itemWillDelete)->delete();
 
             if( $notFound > 0 ){
                 DB::rollBack();
@@ -471,7 +488,7 @@ class SaleCartController extends Controller{
             if( $notFound > 0 ){
                 return response(['status' => false, 'message' => $notFound.' items not available in quantity']);
             }else{
-                return response(['status' => true, 'message' => 'Item added successfully!', 'data' => $saleOrder]);
+                return response(['status' => true, 'message' => 'Order created successfully!', 'data' => $saleOrder]);
             }            
         }catch(\Exception $e){
             return response()->json(['status' => false, 'message' => 'Error.Please Contact   Support'. $e->getMessage()], 500);
@@ -487,12 +504,9 @@ class SaleCartController extends Controller{
             'customer_mobile'   => 'required',
             'sale_key'          => 'required'
         ]);
- 
         if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => $validator->errors()->first()],406);
         }
-
-
         $array = array(
             'name' => $request->get('customer_name'),
             'mobile' => $request->get('customer_mobile')
@@ -501,23 +515,42 @@ class SaleCartController extends Controller{
         try{
             DB::beginTransaction();
             $rec = Customer::create($array);
-
-
-
-
-
             DB::commit();
             return redirect(route('customer.list'))->with('success',' added successful!');
         }catch(\Exception $e){
             DB::rollBack();
             return redirect()->back()->withInput($request->all())->with('error','Error.Please Contact   Support');
         }
+    }
 
 
-
-
+    function attachCustomerWithCart(Request $request){
+        $customerID = $request->get('customer_id');
+        $saleKey            = $request->get('sale_key');
+        if($customerID && $saleKey){
+            SaleCart::where('sale_key',$saleKey)->update(['customer_id' => $customerID ]);
+            return response(['status' => true, 'message' => 'Customer attched successfully!']);
+        }else{
+            return response()->json(['status' => false, 'message' => 'Information Missed!'],406);
+        }
 
     }
+
+
+            /********************************/
+        // $customerName   = $request->get('customer_name');
+        // $customerMobile = $request->get('customer_mobile');
+        // $customerID     = 0;
+        // if( ($customerName != '') && ($customerMobile != '') ){
+        //     $customer = Customer::where('mobile',$customerMobile)->first();
+        //     if( isset($customer->id) ){
+        //         $customerID = $customer->id;
+        //     }else{
+        //         $customer   = Customer::create(['name' => $customerName, 'mobile' => $customerMobile]);
+        //         $customerID = $customer->id;
+        //     }
+        // }
+        /********************************/
 
 
 

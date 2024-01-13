@@ -9,7 +9,7 @@ class SaleOrder extends Model
 {
     use HasFactory;
     protected $table        = "sale_orders";
-    protected $fillable     = ['customer_id', 'sale_key','item_count', 'total_offer_price', 'total_discount', 'total_price', 'status']; 
+    protected $fillable     = ['customer_id', 'sale_key','item_count', 'total_offer_price', 'total_discount','shop_id', 'total_price', 'status', 'created_by']; 
     
 
 

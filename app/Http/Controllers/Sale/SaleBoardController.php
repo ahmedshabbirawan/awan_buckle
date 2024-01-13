@@ -122,7 +122,8 @@ class SaleBoardController extends Controller
             $saleKey = time();
             return redirect(route('sale.board.create',$saleKey));
         }
-        return view('sale.create_order',['salekey' => $salekey]);
+        $saleCartObj = SaleCart::where('sale_key', $salekey)->get()->first(); 
+        return view('sale.create_order',['salekey' => $salekey, 'saleCartObj' => $saleCartObj]);
     }
 
 

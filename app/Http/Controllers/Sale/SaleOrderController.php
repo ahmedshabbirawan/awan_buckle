@@ -14,9 +14,10 @@ use App\Models\Product;
 use App\Models\ProductAvailable;
 use App\Models\SaleCart;
 use App\Models\Customer;
-use App\Models\SaleItem;
+use App\Models\User;
 use App\Models\SaleOrder;
 use App\Models\SaleOrderItem;
+use App\Models\Shop;
 use App\Models\StockItem;
 use Illuminate\Support\Facades\DB;
 
@@ -64,14 +65,33 @@ class SaleOrderController extends Controller{
         }
 
         function detail($orderID,Request $request){
+
+            $viewType   = $request->get('view');
             $order      = SaleOrder::findOrFail($orderID);
-           //  dd($order);
             $orderItem  = SaleOrderItem::with('product')->where('order_id',$order->id)->get();
-            $customer = Customer::find($order->customer_id);
-            return view('order.detail', [
+            $customer   = Customer::find($order->customer_id);
+            $shop       = Shop::find($order->shop_id);
+            $manager    = User::find($order->created_by);
+            $view       = 'order.detail';
+            if($viewType == 'print'){
+                $view = 'order.order_detail_table';
+            }
+            return view($view, [
                 'order' => $order,
                 'orderItem' => $orderItem,
-                'customer' => $customer
+                'shop' => $shop,
+                'customer' => $customer,
+                'manager' => $manager
             ]);
+        }
+
+
+        function OrderBackSearchModal(){
+        return response()->json([
+            'view' => View('order.order_back_search_modal',[])->render(),
+            'data' =>   [],
+            'status' => true,
+            'message' => 'OK'
+        ]);
         }
     }

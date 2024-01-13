@@ -262,7 +262,7 @@ $qty = '';
           </div>
       </div>
       <div class="col-lg-3 col-sm-3">
-          <label class="" for="form-field-1" > Unit Price </label>
+          <label class="" for="form-field-1" > Purchase Price </label>
           <div>
           <input type="text" required class="form-control stock_item_input" value="" name="unit_price" id="unit_price" placeholder="Unit Price">
           </div>
@@ -301,7 +301,7 @@ $qty = '';
                   
                   <th class="hidden-xs">Description</th>
                   <th class="hidden-480">Qty</th>
-                  <th class="hidden-480">Unit Price</th>
+                  <th class="hidden-480">Purchase Unit Price</th>
                   <th class="hidden-480">Total Price</th>
                   <th>Action</th>
                 </tr>

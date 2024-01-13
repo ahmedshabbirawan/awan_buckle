@@ -112,8 +112,6 @@ Issuance Items
         </div>
         <div class="card-footer">
             <table class="table">
-                
-
                 <tr><td class="total-label" >Total Item</td><td id="total_item" class="total-label" > -- </td></tr>
                 <tr><td class="total-label" >Sub Total</td><td id="sub_total" class="total-label" > -- </td></tr>
                 <tr><td class="total-label" >Total Discount</td><td id="total_discount" class="total-label" > -- </td></tr>
@@ -121,7 +119,7 @@ Issuance Items
             </table>
 
             <a href="javascript:void(0);" onclick="placeOrderConfirm();"  class="btn btn-primary btn-block" >Place Order</a>
-            <a href="javascript:void(0);" onclick="openPreviewPopUp();" class="btn btn-primary btn-block" >Preview</a>
+            <a href="javascript:void(0);" onclick="openPreviewPopUp();" class="btn btn-primary btn-block hidden" >Preview</a>
 
         </div>
     </div>
@@ -210,9 +208,6 @@ Issuance Items
 
     function updateToCart(productID, ele){
         var val = $(ele).val();
-
-        console.log(productID);
-       
         addToCart(productID,val,'update');
     }
 
@@ -253,6 +248,25 @@ Issuance Items
         });
     }
 
+    function updateProductPrice(productID, productPrice){
+        var saleKey = $('#sale_key').val();   
+        $.ajax({
+            //  dataType: 'json',
+            type: 'post',
+            data:{'product_id':productID, 'product_price':productPrice,'sale_key' :  saleKey},
+            url: "{{ route('sale.cart.update_product_price') }}",
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            error:ajaxFailBlock,
+            success: function(res) {
+                console.log(res);
+                cartDataTable.ajax.reload();
+            }
+        });
+    }
+
+
     function deleteCartItem(itemID){
         $.ajax({
             //  dataType: 'json',
@@ -278,6 +292,11 @@ Issuance Items
 
 
     
+    function updateCartProductPrice(productID, $inputField){
+        var productPrice = $($inputField).val();
+     updateProductPrice(productID, productPrice);
+        
+    }
 
 
     function placeOrderConfirm(){
@@ -319,7 +338,8 @@ Issuance Items
                             text: 'OK',
                             action: function() {
                                 cartDataTable.ajax.reload();
-                                window.location = "{{ route('sale.order.detail','') }}/"+res.data.id;
+                                var url = "{{ route('sale.order.detail','') }}/"+res.data.id+'?view=print';
+                                window.open(url, '_blank').focus();
                             }
                         }
                     }
@@ -430,13 +450,15 @@ Issuance Items
                     title: 'Qty',
                     width:'10%',
                     render: function(data, type, row, meta) {
-                        console.log(row);
                         return '<input type="text" id="'+row.item_id+'_qty"  onblur="updateToCart('+row.product_id+',this)" class="input-sm col-xs-12"  value="'+data+'" >';
                     }
                 },{
-                    data: 'price',
-                    name: 'price',
-                    title: 'Price'
+                    data: 'offer_price',
+                    name: 'offer_price',
+                    title: 'Offer Price',
+                    render: function(data, type, row, meta) {
+                        return '<input type="text" id="'+row.item_id+'_price" onblur="updateCartProductPrice('+row.product_id+',this)" value="'+data+'" class="input-sm col-xs-12" >';
+                    }
                 },
                 {
                     data: 'discount',
@@ -447,11 +469,12 @@ Issuance Items
                         return '<input type="text" id="'+row.item_id+'_discount" onblur="applyDiscountOnSingleProduct('+row.product_id+',this)" value="'+data+'" class="input-sm col-xs-12" >';
                     }
                 },
+                // {
+                //     data: 'offer_price',
+                //     name: 'offer_price',
+                //     title: 'Price'
+                // },
                 {
-                    data: 'offer_price',
-                    name: 'offer_price',
-                    title: 'Price'
-                },{
                     data: 'product_total_price',
                     name: 'product_total_price',
                     title: 'Final'
@@ -520,10 +543,35 @@ function formatRepoSelection (repo) {
         placeholder: "Select Customer",
         ajax: {
             url: "{{ route('customer.search_select2') }}",
-            dataType: 'json'
+            dataType: 'json',
+            success: function(res) {
+                    console.log('oooooooooooooooooooooooooooooooooooooooooo',res);
+                   //  cartDataTable.ajax.reload();
+                }
             // Additional AJAX parameters go here; see the end of this chapter for the full code of this example
         }
+    }).on('select2:select', function (e) {
+            var obj = e.params.data;
+            // console.log(obj.id);
+            var saleKey = $('#sale_key').val();   
+            $.ajax({
+                //  dataType: 'json',
+                type: 'post',
+                data:{'sale_key':saleKey, 'customer_id':obj.id},
+                url: "{{ route('sale.cart.attach_customer_with_cart') }}",
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                error:ajaxFailBlock,
+                success: function(res) {
+                    console.log(res);
+                   //  cartDataTable.ajax.reload();
+                }
+            });
     });
+
+
+    //$("#customer_select2").select2('val',2);
 
 
     });
