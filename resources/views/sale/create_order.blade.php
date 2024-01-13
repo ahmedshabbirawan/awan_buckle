@@ -448,7 +448,7 @@ Issuance Items
                     data: 'qty',
                     name: 'qty',
                     title: 'Qty',
-                    width:'10%',
+                    width:'15%',
                     render: function(data, type, row, meta) {
                         return '<input type="text" id="'+row.item_id+'_qty"  onblur="updateToCart('+row.product_id+',this)" class="input-sm col-xs-12"  value="'+data+'" >';
                     }
@@ -456,6 +456,7 @@ Issuance Items
                     data: 'offer_price',
                     name: 'offer_price',
                     title: 'Offer Price',
+                    width:'15%',
                     render: function(data, type, row, meta) {
                         return '<input type="text" id="'+row.item_id+'_price" onblur="updateCartProductPrice('+row.product_id+',this)" value="'+data+'" class="input-sm col-xs-12" >';
                     }
@@ -464,7 +465,7 @@ Issuance Items
                     data: 'discount',
                     name: 'discount',
                     title: 'Discount',
-                    width:'15%',
+                    width:'12%',
                     render: function(data, type, row, meta) {
                         return '<input type="text" id="'+row.item_id+'_discount" onblur="applyDiscountOnSingleProduct('+row.product_id+',this)" value="'+data+'" class="input-sm col-xs-12" >';
                     }
