@@ -465,7 +465,7 @@ Issuance Items
                     data: 'discount',
                     name: 'discount',
                     title: 'Discount',
-                    width:'12%',
+                    width:'10%',
                     render: function(data, type, row, meta) {
                         return '<input type="text" id="'+row.item_id+'_discount" onblur="applyDiscountOnSingleProduct('+row.product_id+',this)" value="'+data+'" class="input-sm col-xs-12" >';
                     }
