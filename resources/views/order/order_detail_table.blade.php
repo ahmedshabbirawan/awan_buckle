@@ -115,10 +115,13 @@ html  { background-color: #FFFFFF; margin: 0px; }
 				<tr class="top">
 					<td colspan="5">
 						<table>
+
 							<tr>
-								<td colspan="6" style="padding-bottom:2px;" >
-									<span style="font-weight:bolder;" >Awan Buckle</span>
-									<br />
+								<td colspan="4" style="padding-bottom:2px; text-align:center; " > <h1 style="padding: 0px; margin : 0px;">Awan Buckle</h1> </td>
+							</tr>
+
+							<tr>
+								<td colspan="6" style="padding-bottom:2px; text-align:center;" >
 									<span>Shop # 1-G Mustafa Center, Doctor Line Shoes Market Shah Alam Lahore.</span>
 									<br/>
 									<b> 0321-9999668 / 042-37659668</b> 
@@ -129,22 +132,23 @@ html  { background-color: #FFFFFF; margin: 0px; }
 							</tr>
 
 							<tr>
-								<td colspan="2" style="padding-bottom:2px;" >Bill No : <b>{{ $order->id }} </b> </td> 
+								<td colspan="2" style="padding-bottom:2px; font-size:12px;" >Bill No : <b>{{ $order->id }} </b> </td> 
 								
-								<td colspan="2" style="text-align: center; padding-bottom:2px;" >Date: <b>{{ $order->created_at->format('d-m-Y / h:i a') }} </b> </td>
+								<td colspan="2" style="text-align: right; padding-bottom:2px; font-size:12px;" >Date: <b>{{ $order->created_at->format('d-m-Y / h:i a') }} </b> </td>
 								
-								<td colspan="2" style="text-align: right; padding-bottom:2px;" >Manager : @if($manager)
-									 <b>{{ $manager->name }} </b>
-									@endif</td>
+								
 							</tr>
 
 							<tr>
-								<td colspan="6" style="padding-bottom: 2px;" >Customer : <b> <?php if($customer){ ?>
-									{{ $customer->name }}<br />
-									{{ $customer->mobile }}
+								<td colspan="2" style="padding-bottom: 2px; font-size:12px; " >Customer : <b> <?php if($customer){ ?>
+									{{ $customer->name }} / {{ $customer->mobile }}
 								<?php }else{ ?>
 									Walking Customer
-								<?php } ?> </b> </td> 
+								<?php } ?> </b> </td>
+								
+								<td colspan="2" style="text-align: right; padding-bottom:2px;  font-size:12px;" >Manager : @if($manager)
+									 <b>{{ $manager->name }} </b>
+									@endif</td>
 								
 							</tr>
 
@@ -200,7 +204,7 @@ html  { background-color: #FFFFFF; margin: 0px; }
                     </tr>
 
 					<tr class="total">
-                        <td>Total:</td>
+                        <td> Payable :</td>
                         <td></td>
                         <td></td>
                         <td></td>
