@@ -3,7 +3,7 @@
 html  { background-color: #FFFFFF; margin: 0px; }
 			.invoice-box {
 				max-width: 800px;
-				margin: 0px;
+				margin: auto;
 				padding: 0px;
 				border: 1px solid #eee;
 				box-shadow: 0 0 0px rgba(0, 0, 0, 0.15);
@@ -116,54 +116,42 @@ html  { background-color: #FFFFFF; margin: 0px; }
 					<td colspan="5">
 						<table>
 							<tr>
-								<td >
+								<td colspan="6" style="padding-bottom:2px;" >
 									<span style="font-weight:bolder;" >Awan Buckle</span>
 									<br />
-									<span>Shop # 1-G Mustafa Center, Doctor Line <br/> Shoes Market Shah Alam Lahore.</span>
+									<span>Shop # 1-G Mustafa Center, Doctor Line Shoes Market Shah Alam Lahore.</span>
 									<br/>
 									<b> 0321-9999668 / 042-37659668</b> 
-
 								</td>
 								
 
-								<td>
-									Bill No : <b>{{ $order->id }} </b><br /> 
 								
-									Date: <b>{{ $order->created_at->format('d-m-Y / h:i a') }} </b><br />
-								
-									@if($manager)
-									Manager : <b>{{ $manager->name }} </b><br />
-									@endif
-									<!-- Due: February 1, 2023 -->
-								</td>
 							</tr>
-						</table>
-					</td>
-				</tr>
 
-				<tr class="information">
-					<td colspan="5">
-						<table>
 							<tr>
-								<td>
+								<td colspan="2" style="padding-bottom:2px;" >Bill No : <b>{{ $order->id }} </b> </td> 
+								
+								<td colspan="2" style="text-align: center; padding-bottom:2px;" >Date: <b>{{ $order->created_at->format('d-m-Y / h:i a') }} </b> </td>
+								
+								<td colspan="2" style="text-align: right; padding-bottom:2px;" >Manager : @if($manager)
+									 <b>{{ $manager->name }} </b>
+									@endif</td>
+							</tr>
 
-								<?php if($customer){ ?>
+							<tr>
+								<td colspan="6" style="padding-bottom: 2px;" >Customer : <b> <?php if($customer){ ?>
 									{{ $customer->name }}<br />
 									{{ $customer->mobile }}
 								<?php }else{ ?>
 									Walking Customer
-								<?php } ?>
-								</td>
-
-								<td>
-									<!-- Acme Corp.<br />
-									John Doe<br />
-									john@example.com -->
-								</td>
+								<?php } ?> </b> </td> 
+								
 							</tr>
+
 						</table>
 					</td>
 				</tr>
+
 
 			
 
