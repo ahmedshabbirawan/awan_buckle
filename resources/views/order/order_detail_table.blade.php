@@ -137,13 +137,14 @@ html  { background-color: #FFFFFF; margin: 0px; }
 							</tr>
 
 							<tr>
-								<td colspan="2" style="padding-bottom: 2px; font-size:12px; " >Customer : <b> <?php if($customer){ ?>
+								<td  style="padding-bottom: 2px; font-size:12px; height:12px;" >Customer : <b> <?php if($customer){ ?>
 									{{ $customer->name }} / {{ $customer->mobile }}
 								<?php }else{ ?>
 									Walking Customer
 								<?php } ?> </b> </td>
-								
-								<td colspan="2" style="text-align: right; padding-bottom:2px;  font-size:12px;" >Manager : @if($manager)
+								</tr>
+								<tr>
+								<td  style="text-align: left; padding-bottom:2px;  font-size:12px; height:12px;" >Manager : @if($manager)
 									 <b>{{ $manager->name }} </b>
 									@endif</td>
 								
