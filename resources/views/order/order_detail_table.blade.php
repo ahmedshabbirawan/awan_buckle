@@ -1,11 +1,13 @@
 <style>
 @page { size:  auto; margin: 0px !important; }
+html  { background-color: #FFFFFF; margin: 0px; }
+body  { margin: 10mm 10mm 10mm 10mm; }
 			.invoice-box {
 				max-width: 800px;
-				margin: auto;
+				margin: 0px;
 				padding: 0px;
 				border: 1px solid #eee;
-				box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+				box-shadow: 0 0 0px rgba(0, 0, 0, 0.15);
 				font-size: 16px;
 				line-height: 24px;
 				font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
