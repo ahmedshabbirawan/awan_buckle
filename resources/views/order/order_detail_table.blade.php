@@ -166,7 +166,7 @@
                     
                     <tr class="heading">
                         <td width="50%">Item</td>
-                        <td>Orignal</td>
+                        <td>Price</td>
                         <td>Discount</td>
                         <td>Qty</td>
                         <td width="20%" >Total</td>
@@ -220,4 +220,9 @@
 	</div>
 
 </div>
+@if($viewType)
+<script>
+window.print();
+</script>
+@endif
 <!----------------------------------------------------------------------------------------------------------------------------->

@@ -77,6 +77,7 @@ class SaleOrderController extends Controller{
                 $view = 'order.order_detail_table';
             }
             return view($view, [
+                'viewType' => $viewType,
                 'order' => $order,
                 'orderItem' => $orderItem,
                 'shop' => $shop,
