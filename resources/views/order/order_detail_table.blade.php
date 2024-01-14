@@ -2,7 +2,7 @@
 			.invoice-box {
 				max-width: 800px;
 				margin: auto;
-				padding: 30px;
+				padding: 0px;
 				border: 1px solid #eee;
 				box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
 				font-size: 16px;
@@ -55,7 +55,7 @@
 			}
 
 			.invoice-box table tr.item td {
-				border-bottom: 1px solid #eee;
+				border-bottom: 1px solid #333;
 			}
 
 			.invoice-box table tr.item.last td {
@@ -79,6 +79,16 @@
 					display: block;
 					text-align: center;
 				}
+			}
+
+			.item td {
+				border: 1px solid black;
+  border-collapse: collapse;
+  border-spacing:0;
+			}
+
+			.item_listing{
+				border-spacing:0;
 			}
 
 			/** RTL **/
@@ -162,9 +172,9 @@
 
 
 
-                <table>
+                <table class="item_listing">
                     
-                    <tr class="heading">
+                    <tr class="heading item">
                         <td width="50%">Item</td>
                         <td>Price</td>
                         <td>Discount</td>
