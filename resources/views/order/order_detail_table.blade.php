@@ -1,4 +1,5 @@
 <style>
+@page { size:  auto; margin: 5px; }
 			.invoice-box {
 				max-width: 800px;
 				margin: auto;
