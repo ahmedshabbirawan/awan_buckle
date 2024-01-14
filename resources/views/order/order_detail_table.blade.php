@@ -183,12 +183,12 @@ html  { background-color: #FFFFFF; margin: 0px; }
                         <td>{{ $item->price }}</td>
                         <td>{{ $item->discount }}</td>
                         <td>{{ $item->qty }}</td>
-                        <td>{{ $item->offer_price * $item->qty }}</td>
+                        <td>{{ ($item->offer_price - $item->discount) * $item->qty }}</td>
                     </tr>
                     <?php endforeach; ?>
 
 					<tr class="total">
-                        <td>Paid:</td>
+                        <td>Total Amount:</td>
                         <td></td>
                         <td></td>
                         <td></td>
