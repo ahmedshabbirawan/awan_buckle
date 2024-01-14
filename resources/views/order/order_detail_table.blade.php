@@ -132,8 +132,8 @@ html  { background-color: #FFFFFF; margin: 0px; }
 							</tr>
 
 							<tr>
-								<td style="padding-bottom:2px; font-size:12px; background-color: grey;" >Bill No : <b>{{ $order->id }} </b> </td> 
-								<td colspan="3" style="text-align: right; padding-bottom:2px; font-size:12px;  background-color: green; " >Date: <b>{{ $order->created_at->format('d-m-Y / h:i a') }} </b> </td>
+								<td style="padding-bottom:2px; font-size:12px; background-color: grey; width:35%" >Bill No : <b>{{ $order->id }} </b> </td> 
+								<td colspan="3" style="text-align: right; padding-bottom:2px; font-size:12px;  background-color: green; width:80%" >Date: <b>{{ $order->created_at->format('d-m-Y / h:i a') }} </b> </td>
 							</tr>
 
 							<tr>
