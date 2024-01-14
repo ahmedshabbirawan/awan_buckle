@@ -1,6 +1,7 @@
 <style>
 @page { size:  auto; margin: 0px !important; }
 html  { background-color: #FFFFFF; margin: 0px; }
+body{ margin : 0px;}
 			.invoice-box {
 				max-width: 800px;
 				margin: auto;
@@ -20,7 +21,7 @@ html  { background-color: #FFFFFF; margin: 0px; }
 			}
 
 			.invoice-box table td {
-				padding: 5px;
+				padding: 2px;
 				vertical-align: top;
 			}
 
