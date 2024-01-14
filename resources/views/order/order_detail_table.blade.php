@@ -1,7 +1,6 @@
 <style>
 @page { size:  auto; margin: 0px !important; }
 html  { background-color: #FFFFFF; margin: 0px; }
-body  { margin: 10mm 10mm 10mm 10mm; }
 			.invoice-box {
 				max-width: 800px;
 				margin: 0px;
