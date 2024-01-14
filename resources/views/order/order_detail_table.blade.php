@@ -132,9 +132,9 @@ html  { background-color: #FFFFFF; margin: 0px; }
 							</tr>
 
 							<tr>
-								<td colspan="2" style="padding-bottom:2px; font-size:12px;" >Bill No : <b>{{ $order->id }} </b> </td> 
+								<td colspan="2" style="padding-bottom:2px; font-size:12px; background-color: grey;" >Bill No : <b>{{ $order->id }} </b> </td> 
 								
-								<td colspan="2" style="text-align: right; padding-bottom:2px; font-size:12px;" >Date: <b>{{ $order->created_at->format('d-m-Y / h:i a') }} </b> </td>
+								<td colspan="2" style="text-align: right; padding-bottom:2px; font-size:12px;  background-color: green; " >Date: <b>{{ $order->created_at->format('d-m-Y / h:i a') }} </b> </td>
 								
 								
 							</tr>
@@ -188,11 +188,11 @@ html  { background-color: #FFFFFF; margin: 0px; }
                     <?php endforeach; ?>
 
 					<tr class="total">
-                        <td>Total Amount:</td>
+                        <td colspan="2" >Total Amount:</td>
                         <td></td>
+						
                         <td></td>
-                        <td></td>
-                        <td> <b>{{ $order->total_offer_price }} </b> </td>
+                        <td style="text-align: right;"> <b>{{ $order->total_offer_price }} </b> </td>
                     </tr>
 
 					<tr class="total">
