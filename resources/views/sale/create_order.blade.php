@@ -330,20 +330,14 @@ Issuance Items
             },
             error:ajaxFailBlock,
             success: function(res) {
-                $.confirm({
-                    title: 'Response',
-                    content: res.message,
-                    buttons: {
-                        yes: {
-                            text: 'OK',
-                            action: function() {
-                                cartDataTable.ajax.reload();
-                                var url = "{{ route('sale.order.detail','') }}/"+res.data.id+'?view=print';
-                                window.open(url, '_blank').focus();
-                            }
-                        }
-                    }
-                });
+
+
+                if(res.status){
+                    // cartDataTable.ajax.reload();
+                    var url = "{{ route('sale.order.detail','') }}/"+res.data.id+'?view=print';
+                    window.open(url, '_blank').focus(); 
+                    window.location = "{{ route('sale.board.create') }}";
+                }
             }
         });
     }

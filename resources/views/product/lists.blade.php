@@ -12,6 +12,7 @@ Products
         <h1>Products</h1>
     </div>
     <div class="" style="float: right;">
+        <a href="javascript:void(0);" onclick="pos_app.import_product_modal();"  class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-file-o"></i> Import Products </a> 
         <a href="{{ route('simple_product.create') }}" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-floppy-o"></i> Add Record </a> 
     </div>
 </div>
@@ -121,6 +122,7 @@ $actionURL =  route('simple_product.store');
 <!--end row-->
 </div>
 
+<div id="import_product_modal_con"></div>
 
 
 @endsection

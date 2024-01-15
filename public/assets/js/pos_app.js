@@ -347,6 +347,70 @@ submitSearchOrderForm : function(){
          }
      });
 },
+import_product_modal:function(){
+    $.ajax({
+        dataType: 'json',
+        type:'get',
+        url : baseURL + 'simple_product/import_products_modal',
+        success:function(res){
+            $('#import_product_modal_con').html(res.view);
+            $('#import_product_modal').modal('show'); 
+            $('#product_list_file').ace_file_input({
+                no_file: 'No File ...',
+                btn_choose: 'Choose',
+                btn_change: 'Change',
+                droppable: false,
+                onchange: null,
+                thumbnail: false
+            });
+        }
+    });
+}, 
+saveImportProductsForm : function(){
+    let myform = document.getElementById("import_products_form_model");
+ let fdata = new FormData(myform);
+ let actionURL = $('#import_products_form_model').attr('action');
+
+     $.ajax({
+         data: fdata,
+         cache: false,
+         processData: false,
+         contentType: false,
+         type: 'POST',
+         dataType: "JSON",
+         headers: {
+             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+         },
+         url: actionURL,
+         success: function(res, textStatus, jqXHR) {
+             if (jqXHR.status == 200) {
+                 $.confirm({
+                     title: 'Success',
+                     content: res.message,
+                     buttons: {
+                         yes: {
+                             text: 'OK',
+                             action: function() {
+                                 $('#create_customer_modal').modal('hide');
+                             }
+                         }
+                     }
+                 });
+             }
+         },
+         error: function(jqXHR, textStatus, errorThrown) {
+             // console.log(textStatus,jqXHR, errorThrown);
+             if (jqXHR.status != 200) {
+                 if (typeof jqXHR.responseJSON !== 'undefined') {
+                     $.confirm({
+                         title: 'Error',
+                         content: jqXHR.responseJSON.message
+                     });
+                 }
+             }
+         }
+     });
+}
 
 
 } // pos_app end

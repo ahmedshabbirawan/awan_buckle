@@ -22,13 +22,20 @@ use Illuminate\Support\Str;
 use App\Models\Attribute;
 use App\Models\AttributeType;
 use App\Models\StockItem;
+use App\Models\Shop;
 
 use App\Events\ProductCreate;
 use App\Events\ProductEvent;
+use App\Models\ProductAvailable;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Nette\Utils\Image;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+
+
+
+use League\Csv\Reader;
 
 class SimpleProductController extends Controller
 {
@@ -38,6 +45,7 @@ class SimpleProductController extends Controller
     public $viewData;
     public $table;
     public $view;
+
 
 
 
@@ -286,6 +294,157 @@ class SimpleProductController extends Controller
             Product::find($id)->delete();
             return redirect(route('product.list'))->with('success','Product updated successful!');
         }
+    }
+
+
+    function importProductsModal(Request $request){
+        $data['shops']          = Shop::all()->pluck('name','id');
+        return response()->json([
+            'view' => View('product.simple.import_products_modal',$data)->render(),
+            'data' =>   [],
+            'status' => true,
+            'message' => 'OK'
+        ]);
+    }
+
+
+    function importProductsSave(Request $request){
+
+
+     //   dd($request->file('product_list_file'));
+
+        $validator = Validator::make($request->all(), [
+            'shop_id' => 'required',
+            'product_list_file'   => 'required'
+        ]);
+
+
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()],406);
+        }
+
+        $fileNameWithExt = $request->file('product_list_file')->getClientOriginalName();
+        $extension       = $request->file('product_list_file')->getClientOriginalExtension();
+        $fileNameToStore = "product-csv".'-'.time().'.'.$extension;
+        $path            = $request->file('product_list_file')->storeAs('public/product_images', $fileNameToStore);
+        $path            = Storage::path('public/product_images/'.$fileNameToStore);
+        
+
+
+
+
+        //load the CSV document from a file path
+        $csv = Reader::createFromPath($path, 'r');
+        $csv->setHeaderOffset(0);
+
+        $header = $csv->getHeader(); //returns the CSV header record
+
+        //returns all the records as
+        $records = $csv->getRecords(); // an Iterator object containing arrays
+
+
+        $unitArr = array();
+        $shopID = $request->get('shop_id');
+
+        $insertCount = 0;
+        $updateCount = 0;
+        $index = 1; 
+        foreach($records as $product){
+            $index++;
+            // print_r($product);
+
+            /*
+                [product_name] => AW08NIC HOOK
+                [product_description] => 08 NIC HOOK
+                [product_price] => 6
+                [product_qty] => 1,000
+                [product_unit] => Pair
+            */
+
+            
+            $name = $product['product_name'];
+            $desc = $product['product_description'];
+            $price = $product['product_price'];
+            $qty = (int) $product['product_qty'];
+            $unit = ucfirst($product['product_unit']);
+
+
+            $product = Product::where('name',$name)->first();
+
+            $unitObj = null;
+            if( isset($unitArr[$unit]) ){
+                $unitObj = $unitArr[$unit];
+            }else{
+                
+                if( trim($unit) == '' ){
+                    continue;
+                    return response(['status' => false, 'message' => 'Empty Product Unit is given at index'.$index ]);
+                }
+
+                $unitObj = Uom::where('name',$unit)->first();
+
+                if( !($unitObj) ){
+                    continue;
+                    return response(['status' => false, 'message' => 'No Pair found at index'.$index ]);
+                }
+
+                if($unitObj){
+                    $unitArr[$unitObj->name] = $unitObj; // ['id' => $unitObj->id, 'code' => $unitObj->code];
+                }else{
+                    $unitObj =    Uom::create([
+                        'name' => $unit,
+                        'code' => $unit
+                    ]);
+                    $unitArr[$unitObj->name] = $unitArr;
+                }
+            }
+
+           // dd($unitObj);
+
+            if($product){
+                $product->update([
+                    'price' => $price,
+                    'uom_id' => $unitObj->id,
+                    'code' => $unitObj->code,
+                    'description' => $desc
+                ]);
+                $updateCount++;
+            }else{
+                $product = Product::create([
+                    'name' => $name,
+                    'price' => $price,
+                    'uom_id' => $unitObj->id,
+                    'code' => $unitObj->code,
+                    'description' => $desc
+                ]);
+                $insertCount++;
+            }
+
+            $productAvail = ProductAvailable::where([
+                'shop_id' => $shopID,
+                'product_id' => $product->id
+            ])->first();
+
+
+
+            if($productAvail){
+                $productAvail->qty = $qty;
+                $productAvail->save();
+            }else{
+                ProductAvailable::create([
+                    'shop_id' => $shopID,
+                    'product_id' => $product->id,
+                    'qty' => $qty
+                ]);   
+            }      
+        }
+
+
+
+        return response(['status' => true, 'message' => $insertCount. ' new Product added and '.$updateCount.' products updated' ]);
+
+
+
     }
 
 

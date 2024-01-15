@@ -220,6 +220,8 @@ if (isset($product)) {
                         }
                     }
                 }
+            }).done(function(){
+                $(".btn-info").LoadingOverlay("hide");
             });
     }
 

@@ -13,7 +13,7 @@ Order Lists
     </div>
     <div class="" style="float: right;">
         <a href="javascript:void(0);" onclick="pos_app.orderBackSearchModal();" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-floppy-o"></i> Order Return </a> 
-        <a href="{{ route('sale.board.create') }}" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-floppy-o"></i> Add Order </a> 
+        <a href="{{ route('sale.board.create') }}" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-floppy-o"></i> Create New </a> 
     </div>
 </div>
 

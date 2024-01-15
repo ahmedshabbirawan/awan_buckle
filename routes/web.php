@@ -203,6 +203,9 @@ Route::middleware(['web','auth'])->group(function () {
         Route::get('/edit/{id}',[SimpleProductController::class,'edit'])->name('edit')->middleware('permission:product.update');
         Route::post('/update/{id}',[SimpleProductController::class,'update'])->name('update')->middleware('permission:product.update');
         Route::get('/ajax/products',[SimpleProductController::class,'getProducts'])->name('ajax_products');
+        // 
+        Route::get('/import_products_modal',[SimpleProductController::class,'importProductsModal'])->name('import_products_modal');
+        Route::post('/save_import_products',[SimpleProductController::class,'importProductsSave'])->name('save_import_products');
 
     });
 

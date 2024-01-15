@@ -216,7 +216,7 @@ body{ margin : 0px;}
                     </table>
                 </td>
                 </tr>
-                <tr> <td colspan="5" style="text-align:center" > Develop By TechBite @ 03134222632 </td> </tr>	
+                <tr> <td colspan="5" style="text-align:center; font-size: 10px;" > Develop By TechBite @ 03134222632 </td> </tr>	
 			</table>
 		</div>
 
