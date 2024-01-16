@@ -37,7 +37,7 @@ Supplier Detail
     <div class="page-content">
     <div class="page-header" style="min-height:40px;">
         <div class="" style="float: left;">
-            <h1>Delivery Detail</h1>
+            <h1>Purchase Detail</h1>
         </div>
         <div class="hard_copy" style="float: right;">
 
@@ -183,11 +183,13 @@ Supplier Detail
                                     <thead>
                                         <tr>
                                             <th class="center">#</th>
-                                            <th style="width:30%" >Product</th>
-                                            <th style="width:30%" >Attribute</th>
-                                            <th class="hidden-480">Qty</th>
-                                            <th class="hidden-480">UOM</th>
-                                            <th class="hidden-480">Unit Price</th>
+                                            <th style="width:20%" >Product</th>
+                                            <th style="width:20%" >Shop</th>
+                                            <th style="width:5%" >Attribute</th>
+                                            
+                                            <th >Qty</th>
+                                            <th >UOM</th>
+                                            <th >Unit Price</th>
                                             <th class="hidden-480">Total Price</th>
                                             <th>Serial Numbers</th>
                                         </tr>
@@ -427,7 +429,7 @@ Supplier Detail
                 if (res.data.length > 0) {
                     $(res.data).each(function(index, ele) {
                         var serial_number_link = '<a href="javascript:void(0);" onclick="show_serials(' + ele.id + ');" >Show Serial</a>'; 
-                        html += '<tr><td>' + (sr) + '</td><td style="width:30%" >'+ ele.product_name +'<br>'+ ele.product_category_name + '</td><td>' + ele.product_attribute + '</td><td>' + ele.quantity + '</td><td>'+ele.uom_code+'</td><td>' + ele.unit_price + '</td><td>' + ele.total_price + '</td><td class="sn_tags col-lg-1" >' + ele.sn_tags + '</td></tr>';
+                        html += '<tr><td>' + (sr) + '</td><td style="width:30%" >'+ ele.product_name +'<br>'+ ele.product_category_name + '</td><td>' + ele.shop_name + '</td><td>' + ele.product_attribute + '</td><td>' + ele.quantity + '</td><td>'+ele.uom_code+'</td><td>' + ele.unit_price + '</td><td>' + ele.total_price + '</td><td class="sn_tags col-lg-1" >' + ele.sn_tags + '</td></tr>';
                         sr++;
                     });
                     $('#product_list').html(html);

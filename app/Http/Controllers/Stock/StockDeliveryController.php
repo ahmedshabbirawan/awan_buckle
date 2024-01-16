@@ -23,8 +23,7 @@ use App\Models\ProductCategory;
 use Illuminate\Support\Str;
 
 use App\Traits\Definitions;
-
-
+use Carbon\Carbon;
 
 class StockDeliveryController extends Controller{
 
@@ -55,14 +54,14 @@ class StockDeliveryController extends Controller{
             })->addColumn('project_name', function ($row) {
                     return optional(Project::find($row->project_id))->name;
             })->addColumn('items_count', function ($row) {
-                return StockItem::where('stock_delivery_id', $row->id)->count();
+                return StockDeliveryProduct::where('stock_delivery_id', $row->id)->count();
             })->addColumn('status_label', function ($row) {
                 return '';
             })
             ->addColumn('purchased_date_new', function ($row) {
-                return $row->created_at->format('d-m-Y');
+                return Carbon::parse($row->purchased_date)->format('d-m-Y');
             })->addColumn('create', function ($row) {
-                return ''; //$row->created_at->format('d-m-Y');
+                return Carbon::parse($row->created_at)->format('d-m-Y');
             })
             ->addColumn('action', function ($row) {
                 $statusIcon = 'fa fa-ban';

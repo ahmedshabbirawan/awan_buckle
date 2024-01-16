@@ -13,6 +13,7 @@ use App\Models\Supplier;
 use App\Models\Warehouse;
 use App\Models\Uom;
 use App\Models\Product;
+use App\Models\Shop;
 use App\Models\Category;
 use App\Models\Stock;
 use App\Models\StockDeliveryItem;
@@ -56,11 +57,14 @@ class StockDeliveryProductController extends Controller{
              })->addColumn('product_description', function ($row) {
                 return optional($row->product)->description;
              })->addColumn('product_category_name', function ($row) {
-                     $cat =  optional($row->product)->categories_tree();
+                    return ''; 
+                    $cat =  optional($row->product)->categories_tree();
                      return  $cat['category']['name'].' / '.$cat['sub_category']['name'].' / '.$cat['product_category']['name']; 
              })->addColumn('attributes_tags', function ($row) {
                  return '';
-             })
+             })->addColumn('shop_name', function ($row) {
+                return optional(Shop::find($row->shop_id))->name;
+            })
              ->addColumn('total_price', function ($row) {
                 $qty    = (Int) $row->quantity;
                 $price  = (Int) $row->unit_price;

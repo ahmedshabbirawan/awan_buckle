@@ -80,7 +80,7 @@ class SaleBoardController extends Controller
 
 
             $items = ProductAvailable::select('*',DB::raw('sum(qty) as total_qty'))
-            ->with(['product:id,name,price','shop:id,name'])
+            ->with(['product:id,name,price,image','shop:id,name'])
             ->where('shop_id',$shopID)
             ->groupBy(DB::raw('product_id'))->get();
 

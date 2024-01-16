@@ -284,7 +284,7 @@ $qty = '';
 
                  <!------>
       <div class="modal-footer" style="margin: 15px 0px;">
-        <button type="button" class="btn btn-primary btn-minier btn-block" id="add-item-purchase" onclick="saveProduct();">Add item to purchase</button>
+        <button type="button" class="btn btn-primary btn-block" id="add-item-purchase" onclick="saveProduct();">Add item to purchase</button>
       </div>
       <!----->
      

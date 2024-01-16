@@ -1,7 +1,7 @@
 @extends('Layout.master')
 
 @section('title')
-Order Lists
+Sale
 @endsection
 
 @section('content')
@@ -9,7 +9,7 @@ Order Lists
 <div class="page-content">
 <div class="page-header" style="min-height:40px;">
     <div class="" style="float: left;">
-        <h1>Sales Orders</h1>
+        <h1>Sales</h1>
     </div>
     <div class="" style="float: right;">
         <a href="javascript:void(0);" onclick="pos_app.orderBackSearchModal();" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-floppy-o"></i> Order Return </a> 
@@ -128,12 +128,14 @@ Order Lists
             ajax: "{{ route('sale.order.list') }}?group_by=issue_key",
             columns: [
                 {
-                    "data": "id",
-                    title: 'Sr.',
+                    data: 'id',
+                    name: 'id',
+                    title: 'ID.',
                     width:'5%',
-                    render: function(data, type, row, meta) {
-                        return meta.row + meta.settings._iDisplayStart + 1;
-                    }
+
+                    // render: function(data, type, row, meta) {
+                    //     return meta.row + meta.settings._iDisplayStart + 1;
+                    // }
                 },{
                     data: 'title',
                     name: 'title',

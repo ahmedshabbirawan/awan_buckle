@@ -73,17 +73,19 @@ class SaleOrderController extends Controller{
             $shop       = Shop::find($order->shop_id);
             $manager    = User::find($order->created_by);
             $view       = 'order.detail';
-            if($viewType == 'print'){
-                $view = 'order.order_detail_table';
-            }
-            return view($view, [
+            $data = [
                 'viewType' => $viewType,
                 'order' => $order,
                 'orderItem' => $orderItem,
                 'shop' => $shop,
                 'customer' => $customer,
                 'manager' => $manager
-            ]);
+            ];
+            if($viewType == 'print'){
+                $data['hideInfo'] = false; 
+                $view = 'order.order_detail_table';
+            }
+            return view($view,$data);
         }
 
 
