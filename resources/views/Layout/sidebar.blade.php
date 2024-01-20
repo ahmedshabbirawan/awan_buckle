@@ -30,7 +30,7 @@
             <!--------------- Stock Exchange -------------------->
             <li class="{{request()->is('stock_exchange/*') ? 'active' : '' }}">
                 <a href="{{route('stock_exchange.list')}}">
-                    <i class="menu-icon fa fa-arrows-h"></i>
+                    <i class="menu-icon fa fa-exchange"></i>
                     <span class="menu-text"> Stock Exchange </span>
                 </a>
 

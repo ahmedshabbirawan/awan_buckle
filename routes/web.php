@@ -556,11 +556,16 @@ Route::middleware(['web','auth'])->group(function () {
             Route::get('delete/board_item/{sale_key?}',[SaleBoardController::class,'deleteKeyItems'])->name('delete.board_item');
         });
 
+        
+
         Route::group(['prefix'=>'order/','as' => 'order.'],function(){            
             Route::get('list',[SaleOrderController::class,'index'])->name('list');
             Route::get('detail/{id}',[SaleOrderController::class,'detail'])->name('detail');
             Route::get('order/search_order',[SaleOrderController::class,'detail'])->name('order.search_order');
             Route::get('order_back_search_modal',[SaleOrderController::class,'OrderBackSearchModal'])->name('order_back_search_modal');
+             
+            Route::get('sale-return/{id}',[SaleOrderController::class,'saleReturnView'])->name('sale_return_view');
+            Route::post('sale-return-save',[SaleOrderController::class,'saleReturnSave'])->name('sale_return_save');
         });
         
 
