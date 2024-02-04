@@ -117,8 +117,7 @@ class StockExchangeController extends Controller{
             endforeach;
             DB::commit();
 
-            dd('Done!');
-            // return response()->json(['status' => false, 'message' => 'Error.Please Contact   Support'. $e->getMessage()], 500);
+            return response()->json(['status' => true, 'message' => 'Successfully Posted.'], 200);
         }catch(\Exception $e){
             DB::rollBack();
             return response()->json(['status' => false, 'message' => 'Error.Please Contact   Support'. $e->getMessage()], 500);

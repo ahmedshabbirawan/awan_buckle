@@ -579,6 +579,8 @@ Route::middleware(['web','auth'])->group(function () {
  // StockExchangeController  
     Route::group(['prefix'=>'stock-exchange/','as' => 'stock_exchange.'],function(){
         // 
+
+        
         
         Route::post('add_item_to_exchange',[StockExchangeController::class,'addItemToExchange'])->name('add_item_to_exchange');
         Route::get('get_request_cart_data',[StockExchangeController::class,'getRequestCart'])->name('get_request_cart_data');

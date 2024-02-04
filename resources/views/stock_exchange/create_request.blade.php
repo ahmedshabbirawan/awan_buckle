@@ -271,7 +271,8 @@ Issuance Items
                             action: function() {
                                 placeOrder();
                             }
-                        }
+                        },
+                        no: { text: 'Cancel', action: function() {} }
                     }
                 });
     }
@@ -296,18 +297,14 @@ Issuance Items
             },
             error:ajaxFailBlock,
             success: function(res) {
-                // $.confirm({
-                //     title: 'Response',
-                //     content: res.message,
-                //     buttons: {
-                //         yes: {
-                //             text: 'OK',
-                //             action: function() {
-                //                 cartDataTable.ajax.reload();
-                //             }
-                //         }
-                //     }
-                // });
+                if(res.status){
+                    window.location = "{{ route('stock_exchange.list') }}";
+                }else{
+                    $.confirm({
+                        title: 'warning',
+                        content: res.message
+                    });
+                }
             }
         });
     }
