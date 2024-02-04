@@ -166,14 +166,14 @@ Stock Deliveries
             serverSide: true,
             ajax: "{{ route('stocks.delivery.list') }}",
             columns: [
-                //   {data: 'id', name: 'id', title : 'ID'},
-                {
-                    "data": "id",
-                    title: 'Sr.',
-                    render: function(data, type, row, meta) {
-                        return meta.row + meta.settings._iDisplayStart + 1;
-                    }
-                },
+                  {data: 'id', name: 'id', title : 'ID'},
+                // {
+                //     "data": "id",
+                //     title: 'Sr.',
+                //     render: function(data, type, row, meta) {
+                //         return meta.row + meta.settings._iDisplayStart + 1;
+                //     }
+                // },
                 {
                     data: 'info_no',
                     name: 'info_no',

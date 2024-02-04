@@ -146,6 +146,7 @@ class SaleOrderController extends Controller{
             foreach($items as $item){
                 $returnQty = $returnsQty[$index];
                 if( ($returnQty == 0)){
+                    $index++;
                     continue;
                 }
                 $saleOrder = SaleOrderItem::find($item);
@@ -153,7 +154,7 @@ class SaleOrderController extends Controller{
                 $saleOrder->save();
 
                 ProductAvailable::where(['shop_id' => $shopID, 'product_id' => $saleOrder->product_id])->increment('qty', $returnQty);
-                
+                $index++;
             }
 
 

@@ -29,10 +29,10 @@ Issuance Items
     
 
     <div class="col-sm-12">
-        <div class="widget-box">
+        <div class="widget-box" style="display:none;" >
 
 
-            <div class="widget-header">
+            <div class="widget-header" >
             <h5 class="widget-title smaller"> Request Stock Exchange | {{ $exchangeKey }}</h5>
 
             <div class="widget-toolbar">
@@ -111,8 +111,10 @@ Issuance Items
 
 <div class="col-6 col-lg-6" >
     <div class="widget-box widget-color-blue ui-sortable-handle" >
-    <div class="widget-header"><h4 class="widget-title">Cart</h4></div>
+    <div class="widget-header"><h4 class="widget-title">Exchange Cart</h4></div>
     <div class="card radius-10 border-top border-0 border-4 border-danger">
+
+    <form action="#" method="post" id="cart_items_form">
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-striped table-bordered yajratable" id="cart_table" style="width:100%"></table>
@@ -122,16 +124,18 @@ Issuance Items
             <table class="table">
                 
 
-                <tr><td class="total-label" >Total Item</td><td id="total_item" class="total-label" > -- </td></tr>
+                <!-- <tr><td class="total-label" >Total Item</td><td id="total_item" class="total-label" > -- </td></tr>
                 <tr><td class="total-label" >Sub Total</td><td id="sub_total" class="total-label" > -- </td></tr>
                 <tr><td class="total-label" >Total Discount</td><td id="total_discount" class="total-label" > -- </td></tr>
-                <tr><td class="total-label" >Grand Total / BillAmount </td><td   id="billAmount" class="total-label" > -- </td></tr>
+                <tr><td class="total-label" >Grand Total / BillAmount </td><td   id="billAmount" class="total-label" > -- </td></tr> -->
             </table>
 
-            <a href="javascript:void(0);" onclick="placeOrderConfirm();"  class="btn btn-primary btn-block" >Place Order</a>
-            <a href="{{ route('sale.cart.preview',$exchangeKey) }}" class="btn btn-primary btn-block" >Preview</a>
+            <a href="javascript:void(0);" onclick="placeOrderConfirm();"  class="btn btn-primary btn-block" >Post Request</a>
+            <!-- <a href="{{ route('sale.cart.preview',$exchangeKey) }}" class="btn btn-primary btn-block" >Preview</a> -->
 
         </div>
+    </form>
+
     </div>
     </div>
 </div>
@@ -202,26 +206,23 @@ Issuance Items
         }
     }
 
-    function addOneToCart(productID){
+    function addOneToCart(productID,shopID){
         console.log('pki');
-         addToCart(productID,'1','add');
+         addToCart(productID,'1','add',shopID);
     }
 
-    function updateToCart(productID, ele){
+    function updateToCart(productID, ele, shopID){
         var val = $(ele).val();
-
-        console.log(productID);
-       
-        addToCart(productID,val,'update');
+        addToCart(productID,val,'update', shopID);
     }
 
-    function addToCart(productID,qty,action){
+    function addToCart(productID,qty,action, shopID){
         var exchangeKey = $('#exchange_key').val();   
         $.ajax({
             //  dataType: 'json',
             type: 'post',
-            data:{'product_id':productID, 'qty':qty, 'action' : action, 'exchange_key' :  exchangeKey},
-            url: "{{ route('sale.cart.add') }}",
+            data:{'product_id':productID, 'qty':qty, 'action' : action, 'exchange_key' :  exchangeKey, 'shop_id' : shopID},
+            url: "{{ route('stock_exchange.add_item_to_exchange') }}",
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             },
@@ -233,24 +234,24 @@ Issuance Items
         });
     }
 
-
-    function applyDiscount(productID, discountAmount){
-        var exchangeKey = $('#exchange_key').val();   
+    function deleteCartItem(itemID){
         $.ajax({
             //  dataType: 'json',
             type: 'post',
-            data:{'product_id':productID, 'discount_amount':discountAmount,'exchange_key' :  exchangeKey},
-            url: "{{ route('sale.cart.apply_dicount_single') }}",
+            data:{'item_id':itemID},
+            url: "{{ route('stock_exchange.delete_cart_item') }}",
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             },
             error:ajaxFailBlock,
             success: function(res) {
-                console.log(res);
                 cartDataTable.ajax.reload();
             }
         });
     }
+
+
+    
 
     function applyDiscountOnSingleProduct(productID, $inputField){
         var discountAmount = $($inputField).val();
@@ -278,7 +279,7 @@ Issuance Items
 
     function placeOrder(){
 
-        var formData = new FormData($('#customer_form')[0]);
+        var formData = new FormData($('#cart_items_form')[0]);
 
         console.log(formData);
 
@@ -287,7 +288,7 @@ Issuance Items
             dataType: 'json',
             type: 'POST',
             data: formData,
-            url:  "{{ route('sale.cart.place_order') }}",
+            url:  "{{ route('stock_exchange.place_request') }}",
             contentType: false,
             processData: false,
             headers: {
@@ -295,95 +296,103 @@ Issuance Items
             },
             error:ajaxFailBlock,
             success: function(res) {
-                $.confirm({
-                    title: 'Response',
-                    content: res.message,
-                    buttons: {
-                        yes: {
-                            text: 'OK',
-                            action: function() {
-                                cartDataTable.ajax.reload();
-                            }
-                        }
-                    }
-                });
+                // $.confirm({
+                //     title: 'Response',
+                //     content: res.message,
+                //     buttons: {
+                //         yes: {
+                //             text: 'OK',
+                //             action: function() {
+                //                 cartDataTable.ajax.reload();
+                //             }
+                //         }
+                //     }
+                // });
             }
         });
     }
 
     $(document).ready(function() {
-        var exchangeKey = $('#exchange_key').val();  
-        setTimeout(function(){
-        table = $('#item_table').DataTable({
+        var dataColumns = [
+            { data: 'id', name: 'id', title: 'ID.', width: '10%'  },
+            {"data": "image_url",title: 'Image',
+                render: function(data, type, row, meta) {
+                    return '<image src="'+data+'" style="width:75px; height:75px;" >';
+                }, width: '10%'
+            },
+
+            {"data": "product_name",title: 'Image',
+                render: function(data, type, row, meta) {
+                    return data+' <br/> '+' Unit : '+row.code+' <br/> ';
+                }, width: '15%'
+            }
+        ];
+        <?php 
+        foreach($shops as $id => $name):
+            
+        ?>
+                dataColumns.push({ data: 'shop_<?=$id?>', name: 'shop_<?=$id?>', title: '<?=$name?>', render : function(data, type, row, meta){
+                    <?php if(auth()->user()->shop_id != $id){ ?>
+                            if(data){
+                                return '<button type="button" class="btn btn-xs btn-info" onclick="addOneToCart('+row.id+',<?=$id?>)" ><span class="label label-sm label-primary"><b>'+data+' </b></span>  Add </button>';
+                            }else{
+                                return data;
+                            }
+                    <?php }else{ ?>
+                        return data;
+                    <?php } ?>
+                } });
+        <?php
+        endforeach;
+        ?>
+        setTimeout(() => {
+            listTable = $('#item_table').DataTable({
+            sort:true,
+            dom: 'Bfrtip',
+            buttons: [
+            'excel', 'pdf'
+            ],
+            // paging: false,
             processing: true,
             serverSide: true,
-            // ajax: "{{ route('sale.board.product_items') }}?="+exchangeKey,
             ajax: {
-                url: "{{ route('sale.board.product_items') }}",
+                url: "{{ route('product.list') }}",
                 type: 'GET',
                 data: function (d) {
-                    d.exchangeKey   =    exchangeKey;
-                    d.shop_id       = '{{ auth()->user()->shop_id }}';
+                    var idz = [];
+                    $($('.attributes_id')).each(function(index,ele){
+                        idz.push($(ele).val());
+                    });
+                    d.product_category_id       = $('#product_category_id').val();
+                    d.attribute_idz = idz;
                 }
             },
-            columns: [
-                // {
-                //     "data": "id",
-                //     title: 'Sr.',
-                //     width:'5%',
-                //     render: function(data, type, row, meta) {
-                //         return meta.row + meta.settings._iDisplayStart + 1;
-                //     }
-                // },
-                {"data": "image_url",title: 'Image',
-                    render: function(data, type, row, meta) {
-                        return '<image src="'+data+'" style="width:75px; height:75px;" >';
-                    }, width: '10%'
-                },
-                {
-                    data: 'product_detail',
-                    name: 'product_detail',
-                    title: 'Product',
-                    width:'50%'
-                },
-                {
-                    data: 'product.price',
-                    name: 'product.price',
-                    title: 'Price',
-                },
-                {
-                    data: 'total_qty',
-                    name: 'total_qty',
-                    title: 'Qty',
-                },{
-                    data: 'action',
-                    name: 'action',
-                    title: 'Action',
-                } 
-            ],
-            order: [[0, 'desc']]
+            columns: dataColumns,
+            order: [[ 2 , 'asc']]
         });
-
-    },500);
-
-
-
+        }, 500);
+        var exchangeKey = $('#exchange_key').val();  
+            ///////////////////////////////////////////////////////////////////////////////////////
     /* Cart Table */
-    
-    cartDataTable = $('#cart_table').DataTable({
+
+  //  url: "{{ route('stock_exchange.get_request_cart_data') }}?for=datatable&exchange_key="+exchangeKey,
+        // cartDataTable 
+
+        cartDataTable =    $('#cart_table').DataTable({
         dom: 'Bfrtip',
-        buttons: [
-        {
-            extend: 'print',
-            footer: false
-        }        
-        ],
+    buttons: [
+       {
+           extend: 'print',
+           footer: false
+       }        
+    ] ,
             processing: true,
             serverSide: true,
             searching : false,
             paging : false,
+            // ajax: "{{ route('sale.cart.index') }}?for=datatable",
             ajax: {
-                url: "{{ route('sale.cart.index') }}?for=datatable&exchange_key="+exchangeKey,
+                url: "{{ route('stock_exchange.get_request_cart_data') }}?for=datatable&exchange_key="+exchangeKey,
                 // success:function(res){
                   //  console.log('hello :::: ', res);
                     // return res;
@@ -391,6 +400,7 @@ Issuance Items
                 complete:function(res){
                     var data = res['responseJSON'];
                     $('#total_item').html(data.recordsTotal);
+                    
                     $('#sub_total').html(data.subTotal);
                     $('#total_discount').html(data.totalDiscount);
                     $('#billAmount').html(data.billAmount);
@@ -402,40 +412,33 @@ Issuance Items
                     title: 'Sr.',
                     width:'5%',
                     render: function(data, type, row, meta) {
-                        return meta.row + meta.settings._iDisplayStart + 1;
+                        return '<input type="hidden" name="item_ids[]" value="'+data+'" >'+(meta.row + meta.settings._iDisplayStart + 1);
                     }
                 },{
                     data: 'product_name',
                     name: 'product_name',
                     title: 'Product',
-                    width:'40%',
-                },{
-                    data: 'qty',
-                    name: 'qty',
-                    title: 'Qty',
-                    render: function(data, type, row, meta) {
-                        console.log(row);
-                        return '<input type="text" id="'+row.item_id+'_qty"  onblur="updateToCart('+row.product_id+',this)" class="input-sm col-xs-12"  value="'+data+'" >';
-                    }
-                },{
-                    data: 'offer_price',
-                    name: 'offer_price',
-                    title: 'Price'
-                },{
-                    data: 'discount',
-                    name: 'discount',
-                    title: 'Discount',
-                    render: function(data, type, row, meta) {
-                        return '<input type="text" id="'+row.item_id+'_discount" onblur="applyDiscountOnSingleProduct('+row.product_id+',this)" value="'+data+'" class="input-sm col-xs-12" >';
-                    }
-                },{
-                    data: 'product_total_price',
-                    name: 'product_total_price',
-                    title: 'Final'
+                    width:'35%',
                 },
-
-
-
+                {
+                    data: 'shop_name',
+                    name: 'shop_name',
+                    title: 'Shop',
+                    width:'20%',
+                    render: function(data, type, row, meta) {
+                        return data;
+                    }
+                },
+                {
+                    data: 'req_qty',
+                    name: 'req_qty',
+                    title: 'Qty',
+                    width:'20%',
+                    render: function(data, type, row, meta) {
+                        return '<input type="text" id="'+row.id+'_qty"  onblur="updateToCart('+row.product_id+',this, '+row.req_receive_shop_id+' )" class="input-sm col-xs-12"  value="'+data+'" >';
+                    }
+                },
+                { data: 'action',name: 'action',title: 'Action' },
             ],
             order: [[0, 'desc']]
         });

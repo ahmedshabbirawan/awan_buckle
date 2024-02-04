@@ -131,11 +131,7 @@ Sale
                     data: 'id',
                     name: 'id',
                     title: 'ID.',
-                    width:'5%',
-
-                    // render: function(data, type, row, meta) {
-                    //     return meta.row + meta.settings._iDisplayStart + 1;
-                    // }
+                    width:'5%'
                 },{
                     data: 'title',
                     name: 'title',

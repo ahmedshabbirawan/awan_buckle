@@ -110,7 +110,7 @@ Order Detail
                         <td></td>
 						<td></td>
                         <td></td>
-                        <td >0</td>
+                        <td id="total_return_amount" >0</td>
                     </tr>
 					</tbody>
                     </table>							
@@ -144,6 +144,7 @@ Order Detail
 			var itemQtys 		= $('.item_qty');
 			var returnQtys 		= $('.retun_qty');
 			var isValid 		= true;
+			var totalReturn		= 0;
 
 			$('.item_ids').each(function(index,ele){
 
@@ -162,9 +163,11 @@ Order Detail
 					alert('Return Qty is not allow more then Buy Qty');
 					return false;
 				}
+				totalReturn = totalReturn + (productPrice*retunQty);
 				console.log(index,itemID, productID, retunQty, productPrice );
 				$('#order_item_id_total_'+itemID).html(productPrice*retunQty);
 			});
+			$('#total_return_amount').html(totalReturn);
 			return isValid;
 		}
 

@@ -1,11 +1,8 @@
 @extends('Layout.master')
-
 @section('title')
 Products
 @endsection
-
 @section('content')
-
 <div class="page-content">
 <div class="page-header" style="min-height:40px;">
     <div class="" style="float: left;">
@@ -16,14 +13,9 @@ Products
         <a href="{{ route('simple_product.create') }}" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-floppy-o"></i> Add Record </a> 
     </div>
 </div>
-
 <?php 
 $actionURL =  route('simple_product.store');
 ?>
-
-
-
-
 <!-------------------------------------------------------------------->
 <div class="row ">
 
@@ -76,46 +68,19 @@ $actionURL =  route('simple_product.store');
         </div>
     </div>
     </div>
-</div>
-
-
-    
-            
+</div>     
 </form>
-                                
-
-
-                                    
-
 </div>
 <!-------------------------------------------------------------------->
-
-
-
-
-
 <div class="row ">
     <div class="col-12 col-lg-12" style="margin-top:20px;">
         <div class="card radius-10 border-top border-0 border-4 border-danger">
-          
-        <!-- <div class="card-header " style="background-color: #f5f5f5; margin:5px 0px; padding:10px 10px;">
-
-        include('product.category_selector') 
-
-        </div>-->
-
-
             <div class="card-body">
-
                 @include('Layout.alerts')
-
                 <div class="table-responsive">
                     <table class="table table-striped table-bordered yajratable" id="yajra-table" style="width:100%"></table>
                 </div>
             </div>
-
-
-
         </div>
     </div>
 </div>
@@ -257,11 +222,6 @@ var listTable;
 
     $(document).ready(function() {
         var dataColumns = [
-            // {"data": "id",title: 'Sr.',
-            //     render: function(data, type, row, meta) {
-            //         return meta.row + meta.settings._iDisplayStart + 1;
-            //     }, width: '10%'
-            // },
             { data: 'id', name: 'id', title: 'ID.', width: '10%'  },
             {"data": "image_url",title: 'Image',
                 render: function(data, type, row, meta) {

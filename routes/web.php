@@ -314,15 +314,6 @@ Route::middleware(['web','auth'])->group(function () {
 
     });
 
-
-
-
-
-
-
-
-
-
     Route::group(['prefix'=>'supplier','as' => 'supplier.'],function(){
         Route::get('/list', [SupplierController::class, 'index'] )->name('list')->middleware('permission:supplier.read');
         Route::get('/create', [SupplierController::class, 'create'] )->name('create')->middleware('permission:supplier.create');
@@ -455,6 +446,9 @@ Route::middleware(['web','auth'])->group(function () {
 
     });
 
+
+    
+
     Route::group(['prefix'=>'Stocks/','as' => 'stocks.'],function(){
 
 
@@ -485,6 +479,12 @@ Route::middleware(['web','auth'])->group(function () {
         Route::get('dp/download-sample',[StockDeliveryProductController::class,'downloadSample'])->name('dp.download');
         Route::post('dp/read-sn-file',[StockDeliveryProductController::class,'readSerialNumber'])->name('dp.read_sn_file');
 
+
+
+        Route::get('purchase-return/{id}',[StockDeliveryProductController::class,'purchaseReturnView'])->name('purchase_return_view');
+        Route::post('purchase-return-save',[StockDeliveryProductController::class,'purchaseReturnSave'])->name('purchase_return_save');
+
+
         //--------------------------------------
         Route::get('item/search',[StockItemController::class,'searchStockItem'])->name('item.search');
         Route::get('item/available_item_by_product_ajax',[StockItemController::class,'available_item_by_product_ajax'])->name('item.by_product');
@@ -493,6 +493,9 @@ Route::middleware(['web','auth'])->group(function () {
 
         Route::get('item/history/{id}',[StockItemController::class,'itemHistory'])->name('item.history'); 
         Route::get('shop_wise_product_stock/list',[ShopWiseProductStockController::class,'shopWiseStock'])->name('shop_wise_product_stock.list');
+
+
+        
 
 
         
@@ -576,6 +579,14 @@ Route::middleware(['web','auth'])->group(function () {
  // StockExchangeController  
     Route::group(['prefix'=>'stock-exchange/','as' => 'stock_exchange.'],function(){
         // 
+        
+        Route::post('add_item_to_exchange',[StockExchangeController::class,'addItemToExchange'])->name('add_item_to_exchange');
+        Route::get('get_request_cart_data',[StockExchangeController::class,'getRequestCart'])->name('get_request_cart_data');
+        Route::post('delete_cart_item',[StockExchangeController::class,'deleteCartItem'])->name('delete_cart_item');
+        Route::post('place_request',[StockExchangeController::class,'placeRequest'])->name('place_request');
+        Route::get('records',[StockExchangeController::class,'getRecords'])->name('records');
+
+
         Route::get('create_req_view_modal',[StockExchangeController::class,'createReqViewModal'])->name('create_req_view_modal');
         Route::get('request-form',[StockExchangeController::class,'requestForm'])->name('req_form');
         Route::post('request-post-form',[StockExchangeController::class,'requestPost'])->name('req_post');
@@ -588,7 +599,7 @@ Route::middleware(['web','auth'])->group(function () {
         Route::get('darft-list',[StockExchangeController::class,'darftList'])->name('darft_list');
         Route::post('final-submit',[StockExchangeController::class,'finalSubmit'])->name('final_submit');
         Route::get('list',[StockExchangeController::class,'indexList'])->name('list');
-        Route::get('records',[StockExchangeController::class,'getRecords'])->name('records');
+
         Route::get('request-mark-receive/{exchange_key}',[StockExchangeController::class,'markReceive'])->name('mark_receive');
 
     });

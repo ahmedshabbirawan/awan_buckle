@@ -20,7 +20,7 @@ class StockExchange extends Model implements Auditable{
     protected $table="stock_exchanges";
 
     protected $fillable = ['stock_delivery_id','shop_id','parent_cat_id','sub_cat_id','product_cat_id','product_id','project_id','uom_id','uom_code','quantity','unit_price',
-    'warranty_date','serial_numbers', 'status','issue_qty','req_send_user_id','req_aprove_user_id','req_send_shop_id','req_receive_shop_id',
+    'warranty_date','serial_numbers', 'status','issue_qty','req_qty','req_send_user_id','req_aprove_user_id','req_send_shop_id','req_receive_shop_id',
     'created_by','updated_by','deleted_by','deleted_at','created_at','updated_at']; 
 
 

@@ -12,7 +12,6 @@ Issuance Items
         <h1>Stock Exchange</h1>
     </div>
     <div class="" style="float: right;">
-    <a href="javascript:void(0);" onclick="pos_app.openStockRequestForm();" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-add-o"></i> Create Request </a> 
         <a href="{{ route('stock_exchange.req_form') }}" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-add-o"></i> Create Request </a> 
     </div>
 </div>
@@ -21,7 +20,7 @@ Issuance Items
 <div class="row ">
     <div class="col-6 col-lg-6" style="margin-top:20px;">
         <div class="card radius-10 border-top border-0 border-4 border-danger">
-            <div class="widget-header"><h4 class="widget-title">Send</h4></div>
+            <div class="widget-header"><h4 class="widget-title">Request Send</h4></div>
             <div class="card-body">
                 @include('Layout.alerts')
                 <div class="table-responsive">
@@ -35,7 +34,7 @@ Issuance Items
 
     <div class="col-6 col-lg-6" style="margin-top:20px;">
         <div class="card radius-10 border-top border-0 border-4 border-danger">
-            <div class="widget-header"><h4 class="widget-title">Receive</h4></div>
+            <div class="widget-header"><h4 class="widget-title">Request Receive</h4></div>
             <div class="card-body">
                 
                 @include('Layout.alerts')
@@ -148,17 +147,28 @@ Issuance Items
                     title: 'Sr.',
                     width:'5%',
                     render: function(data, type, row, meta) {
-                        return meta.row + meta.settings._iDisplayStart + 1;
+                        return data; //meta.row + meta.settings._iDisplayStart + 1;
                     }
                 },{
-                    data: 'exchange_key',
-                    name: 'exchange_key',
-                    title: 'Exchange Key'
+                    data: 'product_name',
+                    name: 'product_name',
+                    title: 'Product'
                 },{
-                    data: 'item_count',
-                    name: 'item_count',
-                    title: 'Items',
-                 
+                    data: 'req_receive_shop',
+                    name: 'req_receive_shop',
+                    title: 'Receive from Shop',
+                },{
+                    data: 'req_qty',
+                    name: 'req_qty',
+                    title: 'Quantity',
+                },{
+                    data: 'date_time',
+                    name: 'date_time',
+                    title: 'Date Time',
+                },{
+                    data: 'status',
+                    name: 'status',
+                    title: 'Status',
                 },
                 {
                     data: 'action',
@@ -183,17 +193,28 @@ Issuance Items
                     title: 'Sr.',
                     width:'5%',
                     render: function(data, type, row, meta) {
-                        return meta.row + meta.settings._iDisplayStart + 1;
+                        return data; //  meta.row + meta.settings._iDisplayStart + 1;
                     }
                 },{
-                    data: 'exchange_key',
-                    name: 'exchange_key',
-                    title: 'Exchange Key'
+                    data: 'product_name',
+                    name: 'product_name',
+                    title: 'Product'
                 },{
-                    data: 'item_count',
-                    name: 'item_count',
-                    title: 'Items',
-                 
+                    data: 'req_receive_shop',
+                    name: 'req_receive_shop',
+                    title: 'Exchange Shop',
+                },{
+                    data: 'req_qty',
+                    name: 'req_qty',
+                    title: 'Quantity',
+                },{
+                    data: 'date_time',
+                    name: 'date_time',
+                    title: 'Date Time',
+                },{
+                    data: 'status',
+                    name: 'status',
+                    title: 'Status',
                 },
                 {
                     data: 'action',

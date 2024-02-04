@@ -70,6 +70,7 @@ class StockDeliveryController extends Controller{
                 }
                 $action = '<div class="hidden-sm hidden-xs btn-group">';
                 $action .= '<a href="'.route('stocks.delivery.detail',$row->id).'" class="btn btn-xs btn-success" data-toggle="tooltip" title="Detail" ><i class="ace-icon fa fa-eye bigger-120"></i></a>';
+                $action .= '<a href="'.route('stocks.purchase_return_view',$row->id).'" class="btn btn-xs btn-primary" data-toggle="tooltip" title="Sale Return" ><i class="ace-icon fa fa-undo bigger-120"></i></a>';
                 $action .= '</div>';
                 return $action;
             })->rawColumns(['status_label','rec_info','hand_info','action'])
@@ -84,9 +85,6 @@ class StockDeliveryController extends Controller{
         $data['warehouses']     = Warehouse::all()->pluck('name');
         // $data['projects']       = Project::with('manager')->whereNotNull('manager_id')->pluck('name','id', 'manager.name');
         $data['projects']       = Project::orderBy('name','ASC')->get();
-    //    dd($data);
-    
-
         $data['shops']          = Shop::all()->pluck('name','id');
         $data['suppliers']      = Supplier::all()->pluck('name','id');
         $data['designations']   = Util::designations();

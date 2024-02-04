@@ -17,6 +17,9 @@ use App\Models\Shop;
 use App\Models\Category;
 use App\Models\Stock;
 use App\Models\StockDeliveryItem;
+use App\Models\ProductAvailable;
+
+use Illuminate\Support\Facades\Validator;
 
 use App\Util\Util;
 use Illuminate\Support\Facades\DB;
@@ -83,6 +86,7 @@ class StockDeliveryProductController extends Controller{
                  //     $action .= '<a href="'.route('product.edit', $row->id).'" class="btn btn-xs btn-info"  data-toggle="tooltip" title="Edit" ><i class="ace-icon fa fa-pencil bigger-120"></i></a>';
                   
                      $action .= '<a href="javascript:void(0);" onclick="deleteConfirmation('.$row->id.');" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Delete" ><i class="ace-icon fa fa-trash-o bigger-120"></i></a>';
+                     
                      $action .= '</div>';
                      return $action;
              })->rawColumns(['action','product_category_name','product_name','product_attribute','sn_tags'])
@@ -172,56 +176,117 @@ class StockDeliveryProductController extends Controller{
      function readSerialNumber(Request $request){
         // $file= public_path(). "/download/serial_number_sample.csv";
        //  return response()->download($file, " _serial_number_sample.csv");
-
-
          $file = $request->file('serial_number_file');
-
         // // Create a CSV reader instance
         // $reader = Reader::createFromFileObject($file->openFile());
-
-        // dd($reader);
-
-
-
-
         //load the CSV document from a file path
         $csv = Reader::createFromPath($file, 'r');
         $csv->setHeaderOffset(0);
 
         $header = $csv->getHeader(); //returns the CSV header record
         $records = $csv->getRecords(); 
+        //         //load the CSV document from a file path
+        // $csv = Reader::createFromPath($file, 'r');
+        // $csv->setHeaderOffset(0);
 
-
-
-//         //load the CSV document from a file path
-// $csv = Reader::createFromPath($file, 'r');
-// $csv->setHeaderOffset(0);
-
-// $header = $csv->getHeader(); //returns the CSV header record
-// $records = $csv->getRecords(); 
+        // $header = $csv->getHeader(); //returns the CSV header record
+        // $records = $csv->getRecords(); 
 
         $serialNumber = [];
         foreach($records as $rec){
             $serialNumber[] = $rec['serial-number']; //print_r($rec);
         }
-
          return $serialNumber;
-
-       //  dd($records);
-
-
-//        echo implode(",",$serialNumber); 
-// exit;
-
-
-
-
      }
 
 
      function getStockItemByProductID($id){
         return StockItem::where('stock_delivery_product_id',$id)->get();
      }
+
+
+
+
+     function purchaseReturnView($purchaseID){
+
+        $purchase      = StockDelivery::findOrFail($purchaseID);
+        $purchaseItem  = StockDeliveryProduct::with('product')->where('stock_delivery_id',$purchaseID)->get();
+        $supplier      = Supplier::find($purchase->supplier_id);
+        $view          = 'Stock.Delivery.purchase_return';
+        $data = [
+            'purchase' => $purchase,
+            'purchaseItem' => $purchaseItem,
+            'supplier' => $supplier,
+        ];
+        return view($view,$data);
+    }
+
+
+    function purchaseReturnSave(Request $request){
+        // purchase_id
+        $validator = Validator::make($request->all(), [
+            'purchase_id'          => 'required',
+            'order_item_id'     => 'required',
+            'product_id'        => 'required',
+            // 'order_item_price'  => 'required',
+            'qty'               => 'required',
+            'return_qty'        => 'required',
+            'order_item_price'  => 'required'
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()],406);
+        }
+       // dd($request->all());
+
+        $purchaseID    = $request->get('purchase_id');
+        $items      = $request->get('order_item_id');
+        $returnsQty = $request->get('return_qty');
+        $purchase      = StockDelivery::findOrFail($purchaseID);
+      //  $shopID     = $purchase->shop_id; 
+
+        $index = 0;
+        foreach($items as $item){
+            $returnQty = $returnsQty[$index];
+                if( ($returnQty == 0)){
+                    $index++;
+                    continue;
+                }
+           //  dd($item, $returnQty);
+        //    echo $item.'----'.$returnQty;
+        //    echo '<br>';
+          
+            $saleOrder = StockDeliveryProduct::find($item);
+            $saleOrder->quantity = $saleOrder->quantity - $returnQty;
+            $saleOrder->save();
+            $shopID = $saleOrder->shop_id;
+
+            ProductAvailable::where(['shop_id' => $shopID, 'product_id' => $saleOrder->product_id])->decrement('qty', $returnQty);
+            $index++;
+        }
+
+       // dd('-----');
+
+
+        // $priceOffer = SaleOrderItem::where('order_id', $orderID)->sum('offer_price');
+        // $priceOffer = SaleOrderItem::where('order_id', $orderID)->sum('offer_price');
+
+        $purchaseItems          = StockDeliveryProduct::where('stock_delivery_id', $purchaseID)->get();
+        $priceOfferTotal    = 0;
+        $discountTotal      = 0;
+        $priceTotal         = 0; 
+        foreach($purchaseItems as $purchaseItem){
+            $priceOfferTotal = $priceOfferTotal + ( $purchaseItem->quantity *  $purchaseItem->offer_price );
+            $discountTotal   = $discountTotal + ( $purchaseItem->quantity *  $purchaseItem->discount );
+            $priceTotal      = $priceTotal + ( $purchaseItem->quantity *  $purchaseItem->price );
+        }
+        $purchase->delivery_amount   = $purchase->delivery_amount -  $priceTotal;
+        $purchase->save();
+
+        return response()->json(['status' => true, 'message' => 'Done', 'url' => route('stocks.delivery.detail',$purchaseID) ],200);
+
+    }
+
+
 
     
 }
