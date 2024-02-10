@@ -27,8 +27,11 @@ use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\DataTables;
 
 use App\Http\Requests\StockDeliveryProductFormRequest;
+use App\Models\PurchaseReturn;
+use App\Models\PurchaseReturnItem;
 use App\Models\StockItem;
 use App\Models\SubCategory;
+use Hamcrest\Arrays\IsArray;
 use League\Csv\Reader;
 
 
@@ -208,7 +211,6 @@ class StockDeliveryProductController extends Controller{
 
 
      function purchaseReturnView($purchaseID){
-
         $purchase      = StockDelivery::findOrFail($purchaseID);
         $purchaseItem  = StockDeliveryProduct::with('product')->where('stock_delivery_id',$purchaseID)->get();
         $supplier      = Supplier::find($purchase->supplier_id);
@@ -222,55 +224,72 @@ class StockDeliveryProductController extends Controller{
     }
 
 
+
+
     function purchaseReturnSave(Request $request){
-        // purchase_id
         $validator = Validator::make($request->all(), [
-            'purchase_id'          => 'required',
+            'purchase_id'       => 'required',
             'order_item_id'     => 'required',
             'product_id'        => 'required',
-            // 'order_item_price'  => 'required',
             'qty'               => 'required',
             'return_qty'        => 'required',
             'order_item_price'  => 'required'
         ]);
+        
         if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => $validator->errors()->first()],406);
         }
-       // dd($request->all());
 
-        $purchaseID    = $request->get('purchase_id');
-        $items      = $request->get('order_item_id');
-        $returnsQty = $request->get('return_qty');
-        $purchase      = StockDelivery::findOrFail($purchaseID);
-      //  $shopID     = $purchase->shop_id; 
+        $purchaseID     = $request->get('purchase_id');
+        $items          = $request->get('order_item_id');
+        $returnsQty     = $request->get('return_qty');
+        $purchase       = StockDelivery::findOrFail($purchaseID);
+        $desc           = $request->get('description');
 
-        $index = 0;
+        // [ 'supplier_id', 'purchase_id', 'shop_id', 'total_amount', 'description', 'status', 'created_by', 'updated_by', 'deleted_by', 'deleted_at', 'created_at', 'updated_at'];
+
+        $purchaseReturn = PurchaseReturn::create([
+            'supplier_id' => $purchase->supplier_id, 
+            'purchase_id' => $purchase->id, 
+          //  'shop_id', 
+          //  'total_amount', 
+            'description' => $desc
+        ]);
+
+        $index          = 0;
+        $totalReturnPrice = 0;  
         foreach($items as $item){
             $returnQty = $returnsQty[$index];
-                if( ($returnQty == 0)){
+                if( ($returnQty < 1)){
                     $index++;
                     continue;
                 }
-           //  dd($item, $returnQty);
-        //    echo $item.'----'.$returnQty;
-        //    echo '<br>';
-          
             $saleOrder = StockDeliveryProduct::find($item);
             $saleOrder->quantity = $saleOrder->quantity - $returnQty;
             $saleOrder->save();
             $shopID = $saleOrder->shop_id;
-
             ProductAvailable::where(['shop_id' => $shopID, 'product_id' => $saleOrder->product_id])->decrement('qty', $returnQty);
+
+
+
+            PurchaseReturnItem::create([
+                'purchase_return_id' => $purchaseReturn->id , 
+                'product_id' => $saleOrder->product_id, 
+                'unit_price' => $saleOrder->unit_price, 
+                'qty' => $returnQty
+            ]);
+
+
+            $totalReturnPrice =  $totalReturnPrice + ($returnQty * $saleOrder->unit_price);
+            
+
             $index++;
         }
 
-       // dd('-----');
+        $purchaseReturn->total_amount = $totalReturnPrice;
+        $purchaseReturn->save();
 
-
-        // $priceOffer = SaleOrderItem::where('order_id', $orderID)->sum('offer_price');
-        // $priceOffer = SaleOrderItem::where('order_id', $orderID)->sum('offer_price');
-
-        $purchaseItems          = StockDeliveryProduct::where('stock_delivery_id', $purchaseID)->get();
+        $purchaseItems      = StockDeliveryProduct::where('stock_delivery_id', $purchaseID)->get();
         $priceOfferTotal    = 0;
         $discountTotal      = 0;
         $priceTotal         = 0; 
@@ -284,6 +303,125 @@ class StockDeliveryProductController extends Controller{
 
         return response()->json(['status' => true, 'message' => 'Done', 'url' => route('stocks.delivery.detail',$purchaseID) ],200);
 
+    }
+
+    // 
+
+    function unknowPurchaseReturnView(Request $request){
+        $data['suppliers']      = Supplier::all();
+        $data['shops']          = Shop::all();
+        $data['products']       = Product::with('productQtyShopWise')->get();
+        return view('Stock.Delivery.unknow_purchase_return',$data);
+    }
+
+    // 
+
+    function unknowPurchaseReturnSave(Request $request){
+        $validator = Validator::make($request->all(), [
+           'supplier_id'       => 'required',
+          //  'order_item_id'     => 'required',
+            'product_ids'        => 'required',
+          //  'qty'               => 'required',
+            'return_qty'        => 'required',
+         //   'order_item_price'  => 'required'
+        ]);
+        
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()],406);
+        }
+
+      //   $purchaseID     = $request->get('purchase_id');
+        $items          = $request->get('order_item_id');
+        $returnsQty     = $request->get('return_qty');
+       //  $purchase       = StockDelivery::findOrFail($purchaseID);
+        $desc           = $request->get('description');
+        $shopIDs           = $request->get('shop_ids');
+        $productIDs = $request->get('product_ids');
+
+        
+        $supplierID     = $request->get('supplier_id');
+
+        $purchaseReturn = PurchaseReturn::create([
+            'supplier_id' => $supplierID, 
+            'purchase_id' => 0, 
+            'description' => $desc
+        ]);
+
+        $index          = 0;
+        $totalReturnPrice = 0;  
+
+        if(is_array($productIDs)){
+        foreach($productIDs as $item){
+            $returnQty = $returnsQty[$index];
+                if( ($returnQty < 1)){
+                    $index++;
+                    continue;
+                }
+              //  dd($index, $shopIDs);
+
+            $shopID =     $shopIDs[$index];
+            $productID = $productIDs[$index];
+            
+            // $saleOrder = StockDeliveryProduct::find($item);
+            // $saleOrder->quantity = $saleOrder->quantity - $returnQty;
+            // $saleOrder->save();
+
+
+
+            ProductAvailable::where(['shop_id' => $shopID, 'product_id' => $productID])->decrement('qty', $returnQty);
+            $product = Product::find($productID);
+
+
+
+            PurchaseReturnItem::create([
+                'purchase_return_id' => $purchaseReturn->id , 
+                'product_id' => $productID, 
+                'unit_price' => $product->price, 
+                'qty' => $returnQty
+            ]);
+
+
+            $totalReturnPrice =  $totalReturnPrice + ($returnQty * $product->price);
+            
+
+            $index++;
+        }
+    }
+
+        $purchaseReturn->total_amount = $totalReturnPrice;
+        $purchaseReturn->save();
+        return response()->json(['status' => true, 'message' => 'Done', 'url' => route('stocks.purchase_return_list') ],200);
+
+    }
+
+
+    
+
+    function purchaseReturnList(Request $request){
+        if($request->ajax()){
+            $items      = PurchaseReturn::where(function($query) use ($request) {});
+            
+            $items = $items->get();
+            return Datatables::of($items)
+            ->addColumn('title', function ($row) {
+                return '<a href="'.route('sale.order.detail',$row->id).'" target="_blank" >'.$row->sale_key.'</a>';
+            })->addColumn('order_time', function ($row) {
+                return $row->created_at->format('h:i / d-m-Y');
+            })->addColumn('description', function ($row) {
+                return $row->description;
+            })->addColumn('supplier_name', function ($row) {
+                return ($row->supplier_id)? optional(Supplier::find($row->supplier_id))->name : 'Local Supplier'; 
+            })
+            ->addColumn('action', function ($row) {
+                $action = '<div class="hidden-sm hidden-xs btn-group">';
+               //  $action .= '<a href="'.route('sale.order.detail',$row->id).'" class="btn btn-xs btn-success" data-toggle="tooltip" title="Detail" ><i class="ace-icon fa fa-eye bigger-120"></i></a>';
+                $action .= '</div>';
+                return $action;
+            })->rawColumns(['title','product_attribute','status_label','action'])
+            ->make(true);
+        }else{
+            return view('Stock.Delivery.purchase_return_lists');
+        }  
     }
 
 

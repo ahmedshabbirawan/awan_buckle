@@ -108,9 +108,6 @@ class StockExchangeController extends Controller{
                             'qty' => $reqQty
                         ]);
                     }
-
-
-
                 }else{
                     throw new Exception("Product Qty not available");
                 }

@@ -54,15 +54,11 @@ class StockAdjustmentController extends Controller{
 
     function form(){
         $data['products'] = Product::with('productQtyShopWise')->get();
-
-        // dd($data['products']);
         return view('stock_adjustment.form',$data);
     }
 
 
     function save(Request $request){
-        // echo auth()->user()->shop_id; 
-        // exit;
         $validator = Validator::make($request->all(), [
             'product_id'    => 'required',
             'stock'         => 'required',

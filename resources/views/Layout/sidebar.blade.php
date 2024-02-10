@@ -51,13 +51,32 @@
 
 
             <!--------------- Orders -------------------->
-            <li class="{{request()->is('sale/order/*') ? 'active' : '' }}">
-                <a href="{{route('sale.order.list')}}">
-                    <i class="menu-icon fa fa-list"></i>
-                    <span class="menu-text"> Sale </span>
+            
+
+
+            <li class="{{request()->is('sale/order/*') || request()->is('sale/sale-return/*') ? 'active open' : '' }}">
+                <a href="#" class="dropdown-toggle ">
+                    <i class="menu-icon ace-icon glyphicon glyphicon-qrcode "></i>
+                    <span class="menu-text">
+                        Sale
+                    </span>
+                    <b class="arrow fa fa-angle-down"></b>
                 </a>
                 <b class="arrow"></b>
+                <ul class="submenu">
+                    
+                    <li class="{{request()->is('sale/order/*') ? 'active' : '' }}">
+                        <a href="{{route('sale.order.list')}}"><i class="menu-icon fa fa-caret-right"></i>Sale</a>
+                        <b class="arrow"></b>
+                    </li>
+
+                    <li class="{{request()->is('sale/sale-return/*') ? 'active' : '' }}">
+                        <a href="{{route('sale.sale_return.list')}}"><i class="menu-icon fa fa-caret-right"></i>Sale Return</a>
+                        <b class="arrow"></b>
+                    </li>
+                </ul>
             </li>
+
             <!---------------Sale Board End-------------------->
             
             <!--------------- Products -------------------->
@@ -360,6 +379,12 @@
                         <a href="{{ route('stocks.delivery.list') }}"><i class="menu-icon fa fa-caret-right"></i>List</a><b class="arrow"></b>
                     </li>
                 @endcan
+
+                
+                <li class="{{request()->is('Stocks/list*') ? 'active' : '' }}">
+                        <a href="{{route('stocks.purchase_return_list')}}"><i class="menu-icon fa fa-caret-right"></i>Purchase Return</a>
+                        <b class="arrow"></b>
+                    </li>
 
 
                 @can('stock_delivery.create')

@@ -82,10 +82,10 @@ Order Detail
                     <?php foreach($purchaseItem as $item): ?>
                     <tr class="item">
                         <td>
-							<input type="text" name="order_item_id[]" value="{{ $item->id }}" class="item_ids item_input" >
-							<input type="text" name="product_id[]" value="{{ $item->product_id }}" class="product_ids item_input" ><br>
-							<input type="text" name="order_item_price[]" value="{{ $item->unit_price }}" class="order_item_price item_input" >
-							<input type="text" name="qty[]" value="{{ $item->quantity }}" class="item_qty item_input" >
+							<input type="hidden" name="order_item_id[]" value="{{ $item->id }}" class="item_ids item_input" >
+							<input type="hidden" name="product_id[]" value="{{ $item->product_id }}" class="product_ids item_input" ><br>
+							<input type="hidden" name="order_item_price[]" value="{{ $item->unit_price }}" class="order_item_price item_input" >
+							<input type="hidden" name="qty[]" value="{{ $item->quantity }}" class="item_qty item_input" >
 							
 							{{ optional($item->product)->name }}
 						</td>
@@ -107,10 +107,23 @@ Order Detail
                     </table>							
 </div>
 </div>
+
+
+
+          <div class="col-lg-12 col-sm-12">
+                <label for="form-field-1"> Reason / Description : </label>
+                <div class="">  
+                    <textarea name="description" id="description" class="form-control " placeholder="Description"></textarea>
+                </div>
+            </div>
+      
+
+
 </div>
 											<hr>
+											
 											<div class="wizard-actions">
-												<button class="btn btn-success btn-next" onclick="placeOrderConfirm();" type="button" data-last="Finish">
+												<button class="btn btn-success btn-next" style="margin-top: 15px;" onclick="placeOrderConfirm();" type="button" data-last="Finish">
 													Return Item Submit
 													<i class="ace-icon fa fa-arrow-right icon-on-right"></i>
 												</button>

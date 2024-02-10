@@ -52,6 +52,7 @@ use App\Http\Controllers\Stock\StockItemController;
 use App\Http\Controllers\Customer\CustomerController;
 use App\Http\Controllers\Shop\ShopController;
 use App\Http\Controllers\Sale\SaleCartController;
+use App\Http\Controllers\Sale\SaleReturnController;
 
 
 use App\Http\Controllers\StockAdjustment\StockAdjustmentController;
@@ -480,9 +481,15 @@ Route::middleware(['web','auth'])->group(function () {
         Route::post('dp/read-sn-file',[StockDeliveryProductController::class,'readSerialNumber'])->name('dp.read_sn_file');
 
 
-
+        // Bill Wise
         Route::get('purchase-return/{id}',[StockDeliveryProductController::class,'purchaseReturnView'])->name('purchase_return_view');
         Route::post('purchase-return-save',[StockDeliveryProductController::class,'purchaseReturnSave'])->name('purchase_return_save');
+
+        // Unknow Wise
+        Route::get('unknow-purchase-return',[StockDeliveryProductController::class,'unknowPurchaseReturnView'])->name('unknow_purchase_return_view');
+        Route::post('unknow-purchase-return-save',[StockDeliveryProductController::class,'unknowPurchaseReturnSave'])->name('unknow_purchase_return_save');
+
+        Route::get('purchase-return-list',[StockDeliveryProductController::class,'purchaseReturnList'])->name('purchase_return_list');
 
 
         //--------------------------------------
@@ -569,18 +576,25 @@ Route::middleware(['web','auth'])->group(function () {
              
             Route::get('sale-return/{id}',[SaleOrderController::class,'saleReturnView'])->name('sale_return_view');
             Route::post('sale-return-save',[SaleOrderController::class,'saleReturnSave'])->name('sale_return_save');
+
+
+            Route::get('unknow-sale-return',[SaleOrderController::class,'unknowSaleReturnView'])->name('unkonw_sale_return_view');
+            Route::post('unknow-sale-return-save',[SaleOrderController::class,'unknowSaleReturnSave'])->name('unkonw_sale_return_save');
+
+        });
+
+        Route::group(['prefix'=>'sale-return/','as' => 'sale_return.'],function(){            
+            Route::get('list',[SaleReturnController::class,'index'])->name('list');
         });
         
 
     });
 
+
     
 
  // StockExchangeController  
     Route::group(['prefix'=>'stock-exchange/','as' => 'stock_exchange.'],function(){
-        // 
-
-        
         
         Route::post('add_item_to_exchange',[StockExchangeController::class,'addItemToExchange'])->name('add_item_to_exchange');
         Route::get('get_request_cart_data',[StockExchangeController::class,'getRequestCart'])->name('get_request_cart_data');

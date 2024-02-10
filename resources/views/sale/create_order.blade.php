@@ -32,7 +32,7 @@ Issuance Items
 
 <div class="col-sm-6">
 <div class="widget-box">
-<div class="widget-header"><h5 class="widget-title smaller"> Sale Board / POS | {{ $salekey }}</h5></div>
+<div class="widget-header"><h5 class="widget-title smaller"> Sale Board / POS</h5></div>
 <div class="widget-body">
     <div class="widget-main">
         <form id="customer_form" action="javascript:void(0);" >
@@ -57,7 +57,7 @@ Issuance Items
     <div class="col-sm-6">
         <div class="widget-box">
             <div class="widget-header">
-                <h5 class="widget-title smaller"> Sale Order | {{ $salekey }}</h5>
+                <h5 class="widget-title smaller"> Sale Order</h5>
                 <div class="widget-toolbar">
                     <a href="javascript:void(0);" onclick="pos_app.showOnHoldListModal();" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-plus-o"></i> OnHolds </a> 
                     <a href="{{ route('sale.board.create') }}" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-plus-o"></i> Create New Order </a> 
@@ -160,6 +160,7 @@ Issuance Items
 
         </div>
     </div>
+    <small> --- {{ $salekey }} --- </small>
 </div>
 <!--- delete confirmation modal end --->
 
