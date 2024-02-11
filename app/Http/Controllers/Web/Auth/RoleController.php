@@ -179,7 +179,7 @@ class RoleController extends Controller
         $role = Role::where('id',$id)->first();
         $permissions = Permission::all();
         $rolePermissions = DB::table('role_has_permissions')->where('role_id',$id)->pluck('permission_id')->toArray();
-        return view('UserManagement.Role.permission',compact('permissions','rolePermissions','roleId','role'));
+        return view('user_management.role.permission',compact('permissions','rolePermissions','roleId','role'));
     }
     public function permissionsStore(Request $request,$roleId){
 

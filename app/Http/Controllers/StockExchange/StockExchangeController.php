@@ -25,6 +25,58 @@ use Exception;
 
 class StockExchangeController extends Controller{
 
+
+    function getRecords(Request $request){
+        $loginShopID        = auth()->user()->shop_id;
+        $listFor            = $request->get('list_for');
+        $whereArr           = [];
+
+        if( $listFor == 'send' ){
+            $whereArr['req_send_shop_id']    = $loginShopID;
+        }elseif( $listFor == 'receive' ){
+            $whereArr['req_receive_shop_id'] = $loginShopID;
+        }
+
+        $results    = StockExchange::with(['product'])->where(function($query) use ($whereArr){
+            $query->where($whereArr);
+        });
+
+        return Datatables::of($results)
+            ->addColumn('product_name', function ($row) {
+                return optional($row->product)->name;
+            })->addColumn('date_time', function ($row) {
+                return     $row->created_at->format('h:i d-m-y');
+            })->addColumn('status', function ($row) {
+                 return $row->status;
+            })->addColumn('req_send_shop', function ($row) {
+                return Shop::find($row->req_send_shop_id)->name;
+            })->addColumn('req_receive_shop', function ($row) {
+                return Shop::find($row->req_receive_shop_id)->name;
+            })->addColumn('item_count', function ($row) {
+                return (isset($row->total_items))?$row->total_items:'';
+            })->addColumn('action', function ($row) use ($listFor) {
+                
+                $action = '<div class="hidden-sm hidden-xs btn-group">';   
+                
+                if($listFor == 'send'){
+                    if($row->status == 'darft'){
+                        $action .= '<a href="javascript:void(0);" onclick="deleteCartItem('.$row->id.');" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Delete" ><i class="ace-icon fa fa-trash-o bigger-120"></i></a>';
+                    }
+                }
+
+                if($listFor == 'receive'){
+                    if($row->status == 'post'){
+                        $action .= '<a href="javascript:void(0);" onclick="markApprove('.$row->id.');" class="btn btn-xs btn-primary" data-toggle="tooltip" title="Click For Approve and Send" ><i class="ace-icon fa fa-check bigger-120"></i></a>';
+                    }
+                }
+                
+                $action .= '</div>';
+                return $action;
+            })->rawColumns(['action','product_category_name','product_name','product_attribute','sn_tags'])
+             //  ->orderColumn('id', 'DESC')
+            ->make(true);
+    }
+
     function requestForm($exchangeKey=''){
         if($exchangeKey == ''){
             $exchangeKey = time();
@@ -38,10 +90,8 @@ class StockExchangeController extends Controller{
         return view('stock_exchange.lists'); 
     }
 
-
     function deleteCartItem(Request $request){
         $itemID = $request->get('item_id');
-      //   dd(StockExchange::find($itemID));
         StockExchange::find($itemID)->delete();
         return response()->json(['status' => true, 'message' => 'Deleted Successfully']);
     }
@@ -49,31 +99,24 @@ class StockExchangeController extends Controller{
 
 
     function placeRequest(Request $request){
-
-
         $validator = Validator::make($request->all(), [
             'item_ids'   => 'required'
         ]);
 
-//         $customerID = $request->get('customer_id');
         if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => $validator->errors()->first()],406);
         }
 
         $itemsIDs           = $request->item_ids;
-        $exchangeItems          = StockExchange::whereIn('id',$itemsIDs)->get();  
+        $exchangeItems      = StockExchange::whereIn('id',$itemsIDs)->get();  
         $itemFound          = count($exchangeItems);
+
         if($itemFound == 0){
             return response(['message' => 'No items available'],422);
         }
 
-      //   dd($exchangeItems);
-
-
-
         try{
             DB::beginTransaction();
-
             foreach($exchangeItems as $item):
                 
                 $reqQty         = $item->req_qty;
@@ -85,19 +128,18 @@ class StockExchangeController extends Controller{
 
                 if($productAvail && ($productAvail->qty > 0) ){
                     
-                    $productAvail->qty = $productAvail->qty - $reqQty;
-                    $productAvail->save();
-
-
+                    // $productAvail->qty = $productAvail->qty - $reqQty;
+                    // $productAvail->save();
+                    
                     $item->status = 'post';
                     $item->save();
 
+                    /*
+                    $reqProductAvailable = ProductAvailable::where([
+                        'product_id'    => $productID, 
+                        'shop_id'       => $reqFromShopID
+                    ])->first();
 
-                 //    ProductAvailable::where(['shop_id' => $reqToShopID, 'product_id' => $productID])->first();
-                $reqProductAvailable = ProductAvailable::where([
-                    'product_id' => $productID, 
-                    'shop_id'=> $reqFromShopID
-                ])->first();
                     if($reqProductAvailable){
                         $reqProductAvailable->qty = $reqProductAvailable->qty + $reqQty;
                         $reqProductAvailable->save();
@@ -108,6 +150,8 @@ class StockExchangeController extends Controller{
                             'qty' => $reqQty
                         ]);
                     }
+                    */
+
                 }else{
                     throw new Exception("Product Qty not available");
                 }
@@ -119,97 +163,48 @@ class StockExchangeController extends Controller{
             DB::rollBack();
             return response()->json(['status' => false, 'message' => 'Error.Please Contact   Support'. $e->getMessage()], 500);
         }    
-
-
-
-
-
-
-        // $saleOrder          = SaleOrder::create(['sale_key' => $saleKey, 'item_count' => count($cartItems), 'customer_id' => $customerID, 'shop_id' => auth()->user()->shop_id , 'created_by' => auth()->user()->id]);
-        // $notFound           = 0;
-        // $itemWillDelete     = [];
-
-        // try{
-        //     DB::beginTransaction();
-        //     $totalOfferPrice    = 0;
-        //     $totalPrice = 0;
-        //     $billAmount = 0;
-        //     $totalDiscount      = 0;
-        //     foreach($cartItems as $tItem):
-        //         //   echo $tItem->product_id; exit;
-        //         //  $stockItem = StockItem::findOrFail($tItem->item_id);
-        //         $shopID = auth()->user()->shop_id;
-        //         $proAvail = ProductAvailable::where('product_id',$tItem->product_id)->where('shop_id',$shopID)->first();
-
-        //       //   print_r($proAvail); exit;
-        //         if( !($proAvail) ){
-        //             $notFound++;
-        //             continue;
-        //         }
-
-        //         if( ($tItem->qty < 1) || ($proAvail->qty < 1) || ($proAvail->qty <  $tItem->qty) ){
-        //             $notFound++;
-        //             continue;
-        //         }
-        //         // sale cart ==> ['product_id', 'product_name', 'item_id', 'sale_key', 'qty', 'offer_price', 'price', 'status', 'created_by','updated_by','deleted_by' ];
-        //         // sale orer item ==>  ['product_id', 'item_id', 'sale_key', 'order_id', 'customer_id', 'qty', 'offer_price', 'discount', 'price', 'status']; 
-
-        //         $itemData['product_id']     =    $tItem->product_id;
-        //         // $itemData['item_id']        =    $stockItem->id;
-        //         $itemData['order_id']       =    $saleOrder->id;
-        //         $itemData['customer_id']    =    $saleOrder->customer_id;
-        //         $itemData['qty']            =    $tItem->qty;
-                                
-        //         $itemData['offer_price']    =    $tItem->offer_price;
-        //         $itemData['discount']       =    $tItem->discount;
-        //         $itemData['price']          =    $tItem->final_price;
-
-        //         $totalOfferPrice            =    $totalOfferPrice + ( $tItem->offer_price * $tItem->qty );
-        //         $totalPrice                 =    $totalPrice + ( $tItem->final_price * $tItem->qty ) ;
-        //         $totalDiscount              =    $totalDiscount + ( $tItem->discount * $tItem->qty );
-                
-
-        //         SaleOrderItem::create($itemData);
-
-        //         $proAvail->qty = $proAvail->qty - $tItem->qty;
-        //         $proAvail->save();
-
-
-        //         /*
-        //         $stockItem->available_qty = $stockItem->available_qty - $tItem->qty;
-        //         $stockItem->save();
-        //         */
-
-        //         $itemWillDelete[] = $tItem->id;
-        //     endforeach;
-
-        //     $saleOrder->total_offer_price   = $totalOfferPrice;
-        //     $saleOrder->total_discount      = $totalDiscount;
-        //     $saleOrder->total_price         = $totalPrice;
-        //     $saleOrder->save();
-
-        //     DB::commit();
-        //  //    dd('testing');
-
-        //  //   SaleCart::whereIn('id',$itemWillDelete)->delete();
-
-        //     if( $notFound > 0 ){
-        //         DB::rollBack();
-        //     }else{
-        //         DB::commit();
-        //     }
-
-        //     if( $notFound > 0 ){
-        //         return response(['status' => false, 'message' => $notFound.' items not available in quantity']);
-        //     }else{
-        //         return response(['status' => true, 'message' => 'Order created successfully!', 'data' => $saleOrder]);
-        //     }            
-        // }catch(\Exception $e){
-        //     return response()->json(['status' => false, 'message' => 'Error.Please Contact   Support'. $e->getMessage()], 500);
-        // }
     }
 
 
+    function markApproveReq(Request $request){
+        $itemID         = $request->get('item_id');
+        $item           = StockExchange::find($itemID);
+
+        $reqQty         = $item->req_qty;
+        $reqToShopID    = $item->req_receive_shop_id;
+        $reqFromShopID  = $item->req_send_shop_id;
+        $productID      = $item->product_id;
+
+        $productAvail = ProductAvailable::where(['shop_id' => $reqToShopID, 'product_id' => $productID])->first();
+
+        if($productAvail && ($productAvail->qty > 0) ){
+            
+            $productAvail->qty = $productAvail->qty - $reqQty;
+            $productAvail->save();
+            
+            $item->status = 'approve';
+            $item->save();
+
+            $reqProductAvailable = ProductAvailable::where([
+                'product_id' => $productID, 
+                'shop_id'=> $reqFromShopID
+            ])->first();
+
+            if($reqProductAvailable){
+                $reqProductAvailable->qty = $reqProductAvailable->qty + $reqQty;
+                $reqProductAvailable->save();
+            }else{
+                ProductAvailable::create([
+                    'product_id' => $productID, 
+                    'shop_id'=> $reqFromShopID,
+                    'qty' => $reqQty
+                ]);
+            }
+
+        }else{
+            throw new Exception("Product Qty not available");
+        }
+    }
 
     function getRequestCart(Request $request){
 
@@ -258,6 +253,77 @@ class StockExchangeController extends Controller{
             // ->orderColumn('id', 'DESC')
             ->make(true);
     }
+
+
+
+    /*
+    
+    function placeRequest(Request $request){
+        $validator = Validator::make($request->all(), [
+            'item_ids'   => 'required'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()],406);
+        }
+
+        $itemsIDs           = $request->item_ids;
+        $exchangeItems      = StockExchange::whereIn('id',$itemsIDs)->get();  
+        $itemFound          = count($exchangeItems);
+
+        if($itemFound == 0){
+            return response(['message' => 'No items available'],422);
+        }
+
+        try{
+            DB::beginTransaction();
+            foreach($exchangeItems as $item):
+                
+                $reqQty         = $item->req_qty;
+                $reqToShopID    = $item->req_receive_shop_id;
+                $reqFromShopID  = $item->req_send_shop_id;
+                $productID      = $item->product_id;
+
+                $productAvail = ProductAvailable::where(['shop_id' => $reqToShopID, 'product_id' => $productID])->first();
+
+                if($productAvail && ($productAvail->qty > 0) ){
+                    
+                    $productAvail->qty = $productAvail->qty - $reqQty;
+                    $productAvail->save();
+                    
+                    $item->status = 'post';
+                    $item->save();
+
+                    $reqProductAvailable = ProductAvailable::where([
+                        'product_id'    => $productID, 
+                        'shop_id'       => $reqFromShopID
+                    ])->first();
+
+                    if($reqProductAvailable){
+                        $reqProductAvailable->qty = $reqProductAvailable->qty + $reqQty;
+                        $reqProductAvailable->save();
+                    }else{
+                        ProductAvailable::create([
+                            'product_id' => $productID, 
+                            'shop_id'=> $reqFromShopID,
+                            'qty' => $reqQty
+                        ]);
+                    }
+
+                }else{
+                    throw new Exception("Product Qty not available");
+                }
+            endforeach;
+            DB::commit();
+
+            return response()->json(['status' => true, 'message' => 'Successfully Posted.'], 200);
+        }catch(\Exception $e){
+            DB::rollBack();
+            return response()->json(['status' => false, 'message' => 'Error.Please Contact   Support'. $e->getMessage()], 500);
+        }    
+    }
+    
+    */
 
 
 
@@ -464,54 +530,7 @@ class StockExchangeController extends Controller{
     }
 
 
-    function getRecords(Request $request){
-        $loginShopID        = auth()->user()->shop_id;
-        $listFor            = $request->get('list_for');
-        $whereArr           = [];
-
-        if( $listFor == 'send' ){
-            $whereArr['req_send_shop_id']    = $loginShopID;
-        }elseif( $listFor == 'receive' ){
-            $whereArr['req_receive_shop_id'] = $loginShopID;
-        }
-
-        $results    = StockExchange::with(['product'])->where(function($query) use ($whereArr){
-            $query->where($whereArr);
-        });
-
-        return Datatables::of($results)
-            ->addColumn('product_name', function ($row) {
-                return optional($row->product)->name;
-            })->addColumn('date_time', function ($row) {
-                return     $row->created_at->format('h:m d-m-y');
-            })->addColumn('status', function ($row) {
-                 return $row->status;
-            })->addColumn('req_send_shop', function ($row) {
-                return Shop::find($row->req_send_shop_id)->name;
-            })->addColumn('req_receive_shop', function ($row) {
-                return Shop::find($row->req_receive_shop_id)->name;
-            })->addColumn('item_count', function ($row) {
-                return (isset($row->total_items))?$row->total_items:'';
-            })->addColumn('action', function ($row) {
-                $statusIcon = 'fa fa-ban';
-                // if($row->status == 1){
-                    // $statusIcon = 'fa fa-check-circle-o';
-                // }
-                $action = '<div class="hidden-sm hidden-xs btn-group">';    
-                //if($row->exchange_key != ''){
-                        //$action .= '<a href="'.route('stock_exchange.req_detail', $row->exchange_key).'" class="btn btn-xs btn-info"  data-toggle="tooltip" title="Edit" ><i class="ace-icon fa fa-pencil bigger-120"></i></a>';
-                //  }
-                //  $action .= '<a href="javascript:void(0);" onclick="deleteConfirmation('.$row->id.');" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Delete" ><i class="ace-icon fa fa-trash-o bigger-120"></i></a>';
-                // 
-                if( ($row->status == 'approve') || ($row->status == 'darft') ){
-                // $action .= '<a href="javascript:void(0);" data-link="'.route('stock_exchange.mark_receive',$row->exchange_key).'" onclick="markReceive(this);" class="btn btn-xs btn-success" data-toggle="tooltip" title="Mark Receive" ><i class="ace-icon fa fa-download bigger-120"></i></a>';
-                }
-                $action .= '</div>';
-                return $action;
-            })->rawColumns(['action','product_category_name','product_name','product_attribute','sn_tags'])
-             //  ->orderColumn('id', 'DESC')
-            ->make(true);
-    }
+   
 
 
 

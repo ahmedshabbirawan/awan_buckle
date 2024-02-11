@@ -160,7 +160,7 @@ Issuance Items
 
         </div>
     </div>
-    <small> --- {{ $salekey }} --- </small>
+
 </div>
 <!--- delete confirmation modal end --->
 
@@ -465,19 +465,14 @@ Issuance Items
                         return '<input type="text" id="'+row.item_id+'_discount" onblur="applyDiscountOnSingleProduct('+row.product_id+',this)" value="'+data+'" class="input-sm col-xs-12" >';
                     }
                 },
-                // {
-                //     data: 'offer_price',
-                //     name: 'offer_price',
-                //     title: 'Price'
-                // },
                 {
                     data: 'product_total_price',
                     name: 'product_total_price',
                     title: 'Final'
                 },
                 { data: 'action',name: 'action',title: 'Action' },
-            ],
-            order: [[0, 'desc']]
+            ]
+           //  ,order: [[0, 'desc']]
         });
         
 

@@ -18,6 +18,7 @@ class CreateSalesReturnTable extends Migration
             $table->integer('customer_id')->nullable();
             $table->integer('order_id')->nullable();
             $table->integer('shop_id')->nullable();
+            $table->integer('item_count')->nullable();
             $table->text('description')->nullable();
             $table->string('status')->nullable();
             $table->integer('created_by')->nullable();

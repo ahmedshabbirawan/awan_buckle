@@ -45,7 +45,7 @@ class SaleCartController extends Controller{
                     //     if( $empID != '' ){
                     //         $query->where('emp_id',$empID);
                     //     }
-                });
+                })->orderBy('id','ASC');
                 
                 $items = $items->get();
 

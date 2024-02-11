@@ -136,7 +136,10 @@ Purchase
                     data: 'supplier_name',
                     name: 'supplier_name',
                     title: 'Supplier'
-                 
+                },{
+                    data: 'item_count',
+                    name: 'item_count',
+                    title: 'Count'
                 },{
                     data: 'description',
                     name: 'description',

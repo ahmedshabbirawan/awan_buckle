@@ -18,6 +18,7 @@ class CreatePurchaseReturnTable extends Migration
             $table->integer('supplier_id')->nullable();
             $table->integer('purchase_id')->nullable();
             $table->integer('shop_id')->nullable();
+            $table->integer('item_count')->nullable();
             $table->double('total_amount', 8, 2);
             $table->text('description')->nullable();
             $table->string('status')->nullable();

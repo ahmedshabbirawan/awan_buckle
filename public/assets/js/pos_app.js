@@ -206,25 +206,21 @@ showOnHoldListModal : function(){
                             return meta.row + meta.settings._iDisplayStart + 1;
                         }
                     },{
-                        data: 'title',
-                        name: 'title',
-                        title: 'Sale Key',
-                       
+                        data: 'last_update',
+                        name: 'last_update',
+                        title: 'Date Time',
+                     
                     },{
                         data: 'item_count',
                         name: 'item_count',
-                        title: 'Items',
-                     
-                    },{
-                        data: 'last_update',
-                        name: 'last_update',
-                        title: 'Items',
+                        title: 'Items Count',
                      
                     },
                     {
                         data: 'action',
                         name: 'action',
-                        title: 'Action'
+                        title: 'Action',
+                        width:'100px',
                     }
                 ],
                 order: [[0, 'desc']]

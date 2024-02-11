@@ -133,12 +133,13 @@ Sale
                     name: 'id',
                     title: 'ID.',
                     width:'5%'
-                },{
-                    data: 'title',
-                    name: 'title',
-                    title: 'Sale Key',
-                   
                 },
+                // {
+                //     data: 'title',
+                //     name: 'title',
+                //     title: 'Sale Key',
+                   
+                // },
                 {
                     data: 'customer_name',
                     name: 'customer_name',
@@ -175,7 +176,7 @@ Sale
                     title: 'Action'
                 }
             ],
-            order: [[8, 'desc']]
+            order: [[0, 'desc']]
         });
 
     },500);

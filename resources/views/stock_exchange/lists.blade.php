@@ -109,6 +109,57 @@ Issuance Items
     }
   }
 
+  function deleteCartItem(itemID){
+        $.ajax({
+            //  dataType: 'json',
+            type: 'post',
+            data:{'item_id':itemID},
+            url: "{{ route('stock_exchange.delete_cart_item') }}",
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            error:ajaxFailBlock,
+            success: function(res) {
+                sendTable.ajax.reload();
+            }
+        });
+    }
+
+
+    function markApprove(itemID){
+        $.confirm({
+            title: 'Confirmation',
+            content: 'Do you really want to approve and send ? ',
+            buttons: {
+                yes: {
+                    text: 'Approve',
+                    action: function() {
+                            
+                        $.ajax({
+            //  dataType: 'json',
+            type: 'post',
+            data:{'item_id':itemID},
+            url: "{{ route('stock_exchange.mark_approve_cart_item') }}",
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            error:ajaxFailBlock,
+            success: function(res) {
+                sendTable.ajax.reload();
+                receiveTable.ajax.reload();
+            }
+        });
+
+
+                    }
+                }
+            }
+        });
+    }
+
+
+
+
     function markReceive(ele){
         var linkURL = $(ele).data('link');
         $.ajax({

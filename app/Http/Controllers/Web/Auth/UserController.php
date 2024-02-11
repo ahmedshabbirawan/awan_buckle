@@ -286,7 +286,8 @@ class UserController extends Controller
         try {
             DB::beginTransaction();
             $user = User::where('id',$userID)->first();
-            $user->password = $request->name;
+           //  $user->password = $request->name;
+            $user->password = Hash::make($request->password);
             $user->save();
             if ($user->id) {
                 DB::commit();

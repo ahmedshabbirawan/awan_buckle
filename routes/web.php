@@ -100,18 +100,12 @@ Route::post('/loginpost',[AuthController::class,'login'])->name('do-login');
 
 Route::middleware(['web','auth'])->group(function () {
     
-    // Route::get('/',[AuthController::class,'loginPageView'])->name('loginpage');
-
     Route::get('/',[DashboardController::class,'view']);
-
     Route::get('/dashboard',[DashboardController::class,'view'])->name('dashboard');
-    Route::get('/logout',[AuthController::class,'logout'])->name('logout');
-    // 
-
+    Route::get('/logout',[AuthController::class,'logout'])->name('logout'); 
     Route::get('/dashboard_stats',[DashboardController::class,'dashboardStats'])->name('dashboard_stats');
 
     Route::group(['prefix'=>'usermanagement','as' => 'usermanagement.'],function(){
-
         //Role
         Route::group(['prefix'=>'role/','as' => 'role.'],function(){
             Route::get('list',[RoleController::class,'index'])->name('list')->middleware('permission:role.read');
@@ -162,16 +156,13 @@ Route::middleware(['web','auth'])->group(function () {
     });
 
 
-   //  Route::resource('brand', BrandController::class );
-   //  Route::resource('category', CategoryController::class );
-
-  //   Route::resource('product', ProductController::class );
+    //  Route::resource('brand', BrandController::class );
+   //   Route::resource('category', CategoryController::class );
+  //    Route::resource('product', ProductController::class );
     
 
     Route::group(['prefix'=>'product','as' => 'product.'],function(){
 
-        // product.create
-        
         Route::get('/list', [ProductController::class, 'index'] )->name('list')->middleware('permission:product.read');
         Route::get('/create', [ProductController::class, 'create'] )->name('create')->middleware('permission:product.create');
         Route::post('store', [ProductController::class, 'store'] )->name('store')->middleware('permission:product.create');
@@ -186,8 +177,6 @@ Route::middleware(['web','auth'])->group(function () {
         Route::get('/ajax/attribute/product_attribute',[ProductController::class,'getProductAttribute'])->name('ajax_product_attribute');
         Route::get('/ajax/ajax_product_by_product_category',[ProductController::class,'getProductByProductCategory'])->name('ajax_product_by_product_category');
         Route::get('/ajax/category/get_product_cat_detail',[ProductController::class,'getProductCategoryDetail'])->name('get_product_cat_detail');
-
-
         Route::get('/ajax/products',[ProductController::class,'getProducts'])->name('ajax_products');
 
     });
@@ -195,9 +184,6 @@ Route::middleware(['web','auth'])->group(function () {
 
 
     Route::group(['prefix'=>'simple_product','as' => 'simple_product.'],function(){
-
-        
-        
         Route::get('/create_by_modal', [SimpleProductController::class, 'createByModal'] )->name('create_by_modal')->middleware('permission:product.create');
         Route::get('/create', [SimpleProductController::class, 'create'] )->name('create')->middleware('permission:product.create');
         Route::post('store', [SimpleProductController::class, 'store'] )->name('store')->middleware('permission:product.create');
@@ -601,6 +587,8 @@ Route::middleware(['web','auth'])->group(function () {
         Route::post('delete_cart_item',[StockExchangeController::class,'deleteCartItem'])->name('delete_cart_item');
         Route::post('place_request',[StockExchangeController::class,'placeRequest'])->name('place_request');
         Route::get('records',[StockExchangeController::class,'getRecords'])->name('records');
+        Route::post('mark_approve_cart_item',[StockExchangeController::class,'markApproveReq'])->name('mark_approve_cart_item');
+
 
 
         Route::get('create_req_view_modal',[StockExchangeController::class,'createReqViewModal'])->name('create_req_view_modal');

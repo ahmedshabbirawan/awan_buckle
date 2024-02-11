@@ -131,13 +131,17 @@ Sale
                     name: 'id',
                     title: 'ID.',
                     width:'5%'
-                },
-                {
+                },{
                     data: 'customer_name',
                     name: 'customer_name',
                     title: 'Customer'
-                 
-                },{
+                },
+                {
+                    data: 'item_count',
+                    name: 'item_count',
+                    title: 'Items',
+                },
+                {
                     data: 'description',
                     name: 'description',
                     title: 'Description'
@@ -145,7 +149,6 @@ Sale
                     data: 'order_time',
                     name: 'order_time',
                     title: 'Date N Time',
-                 
                 },
                 {
                     data: 'action',

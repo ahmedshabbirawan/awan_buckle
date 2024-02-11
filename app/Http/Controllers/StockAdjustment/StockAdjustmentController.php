@@ -17,22 +17,9 @@ class StockAdjustmentController extends Controller{
     public function index(Request $request){
 
 
-        if($request->ajax()){
-        $userID             = auth()->user()->id;
-        $deliveryID         = $request->get('stock_delivery_id');
-        $loginShopID        = auth()->user()->shop_id;
-        $requestToShopID    = 2; //$request->get('shop_id');
-        // if($deliveryID != ''){
-        //     $results    = StockExchange::with(['product'])->where('stock_delivery_id',$deliveryID)->get();
-        // }else{
-        //     $results    = StockExchange::with(['product'])->where('created_by',$userID)->where('status',0)->get();
-        // }
-        $results    = StockAdjustment::with(['product'])->where('shop_id',$loginShopID)->get();
-
-
-
-
-
+if($request->ajax()){
+    $loginShopID        = auth()->user()->shop_id;
+    $results            = StockAdjustment::with(['product'])->where('shop_id',$loginShopID)->get();
         return Datatables::of($results)->addColumn('product_name', function ($row) {
             return optional($row->product)->name;
         })->addColumn('product_attribute', function ($row) {
@@ -46,9 +33,9 @@ class StockAdjustmentController extends Controller{
         })->rawColumns(['action','product_category_name','product_name','product_attribute','sn_tags'])
             //  ->orderColumn('id', 'DESC')
         ->make(true);
-    }else{
-        return view('stock_adjustment.lists');
-    }
+        }else{
+            return view('stock_adjustment.lists');
+        }
     }
 
 
@@ -83,52 +70,47 @@ class StockAdjustmentController extends Controller{
             return response()->json(['status' => false, 'message' => 'No Quantity Found'],406);
         }
 
-
         $loginShopID    = auth()->user()->shop_id; 
-
-        $index = 0;
-
+        $index          = 0;
 
         try{
             DB::beginTransaction();
-
-        foreach($productIDzArr as $id){
-            $productID  = $productIDzArr[$index];
-            $stock      = $stockArr[$index];
-            $qty        = (int) $qtyArr[$index];
-            if( $qty < 1 ){
-                continue;
-            }
-            
-            $sa = StockAdjustment::create([
-                'product_id' => $productID,
-                'stock_type' => $stockArr[$index],
-                'qty_when_adjust'   => $currentQtyArr[$index],
-                'qty'               => $qtyArr[$index],
-                'description'       => $descArr[$index],
-                'shop_id'       => $loginShopID
-            ]);
-            // dd($sa);
-            $product = ProductAvailable::where([
-                'shop_id'       => $loginShopID,
-                'product_id'    => $productID
-            ])->first();
-
-            if($product){
-                if($stock == 'in'){
-                    $product->qty = $product->qty + $qty;
-                }elseif($stock == 'out'){
-                    $product->qty = $product->qty - $qty;
+            foreach($productIDzArr as $id){
+                $productID  = $productIDzArr[$index];
+                $stock      = $stockArr[$index];
+                $qty        = (int) $qtyArr[$index];
+                if( $qty < 1 ){
+                    continue;
                 }
-                $product->save();
-            }else{
-                ProductAvailable::create([
-                    'shop_id'       => $loginShopID,
-                    'product_id'    => $productID,
-                    'qty' => $qty
+                
+                $sa = StockAdjustment::create([
+                    'product_id' => $productID,
+                    'stock_type' => $stockArr[$index],
+                    'qty_when_adjust'   => $currentQtyArr[$index],
+                    'qty'               => $qtyArr[$index],
+                    'description'       => $descArr[$index],
+                    'shop_id'       => $loginShopID
                 ]);
+                $product = ProductAvailable::where([
+                    'shop_id'       => $loginShopID,
+                    'product_id'    => $productID
+                ])->first();
+
+                if($product){
+                    if($stock == 'in'){
+                        $product->qty = $product->qty + $qty;
+                    }elseif($stock == 'out'){
+                        $product->qty = $product->qty - $qty;
+                    }
+                    $product->save();
+                }else{
+                    ProductAvailable::create([
+                        'shop_id'       => $loginShopID,
+                        'product_id'    => $productID,
+                        'qty' => $qty
+                    ]);
+                }
             }
-        }
 
         DB::commit();
 

@@ -105,7 +105,6 @@ Issuance Items
                     data: 'item_count',
                     name: 'item_count',
                     title: 'Items',
-                 
                 },
                 {data: 'return_date', name: 'return_date',title: 'Return Date'},
                 {data: 'received_by', name: 'received_by',title: 'Received By'},

@@ -130,14 +130,15 @@ Issuance Items
                     title: 'Sr.',
                     width:'5%',
                     render: function(data, type, row, meta) {
-                        return meta.row + meta.settings._iDisplayStart + 1;
+                       return data; //return meta.row + meta.settings._iDisplayStart + 1;
                     }
-                },{
-                    data: 'title',
-                    name: 'title',
-                    title: 'Sale Key',
-                   
-                },{
+                },
+                // {
+                //     data: 'title',
+                //     name: 'title',
+                //     title: 'Sale Key',
+                // },
+                {
                     data: 'item_count',
                     name: 'item_count',
                     title: 'Items',

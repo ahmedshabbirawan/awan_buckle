@@ -276,6 +276,7 @@ class StockDeliveryProductController extends Controller{
                 'purchase_return_id' => $purchaseReturn->id , 
                 'product_id' => $saleOrder->product_id, 
                 'unit_price' => $saleOrder->unit_price, 
+                'shop_id' => auth()->user()->shop_id,
                 'qty' => $returnQty
             ]);
 
@@ -318,27 +319,19 @@ class StockDeliveryProductController extends Controller{
 
     function unknowPurchaseReturnSave(Request $request){
         $validator = Validator::make($request->all(), [
-           'supplier_id'       => 'required',
-          //  'order_item_id'     => 'required',
-            'product_ids'        => 'required',
-          //  'qty'               => 'required',
-            'return_qty'        => 'required',
-         //   'order_item_price'  => 'required'
+           'supplier_id'    => 'required',
+            'product_ids'   => 'required',
+            'return_qty'    => 'required',
         ]);
         
         if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => $validator->errors()->first()],406);
         }
 
-      //   $purchaseID     = $request->get('purchase_id');
-        $items          = $request->get('order_item_id');
         $returnsQty     = $request->get('return_qty');
-       //  $purchase       = StockDelivery::findOrFail($purchaseID);
         $desc           = $request->get('description');
-        $shopIDs           = $request->get('shop_ids');
-        $productIDs = $request->get('product_ids');
-
-        
+        $shopIDs        = $request->get('shop_ids');
+        $productIDs     = $request->get('product_ids');
         $supplierID     = $request->get('supplier_id');
 
         $purchaseReturn = PurchaseReturn::create([
@@ -347,8 +340,8 @@ class StockDeliveryProductController extends Controller{
             'description' => $desc
         ]);
 
-        $index          = 0;
-        $totalReturnPrice = 0;  
+        $index              = 0;
+        $totalReturnPrice   = 0;  
 
         if(is_array($productIDs)){
         foreach($productIDs as $item){
