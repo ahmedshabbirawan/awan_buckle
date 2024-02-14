@@ -24,7 +24,7 @@
 
             <li class="grey dropdown-modal">
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#">
-                        Shop : {{ auth()->user()->shop->name }} 
+                        Shop : {{ optional(auth()->user()->shop)->name }} 
                     </a>
             </li>
 
