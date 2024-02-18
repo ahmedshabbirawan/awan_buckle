@@ -352,10 +352,6 @@ class SimpleProductController extends Controller
         foreach($records as $product){
             $index++;
 
-
-
-            // print_r($product);
-
             /*
                 [product_name] => AW08NIC HOOK
                 [product_description] => 08 NIC HOOK
@@ -364,17 +360,11 @@ class SimpleProductController extends Controller
                 [product_unit] => Pair
             */
 
-            
             $name = $product['product_name'];
             $desc = $product['product_description'];
             $price  = (isset($product['product_price']))? $product['product_price'] : 0;
             $qty    = (isset($product['product_qty']))? $product['product_qty'] : null;
             $unit = ucfirst($product['product_unit']);
-
-            // echo $price;
-            // echo '<br>';
-            // continue;
-
 
             $product = Product::where('name',$name)->first();
 
@@ -406,33 +396,21 @@ class SimpleProductController extends Controller
                 }
             }
 
-           // dd($unitObj);
+            $productArr = [
+                'name' => $name,
+                'uom_id' => $unitObj->id,
+                'code' => $unitObj->code,
+                'description' => $desc
+            ];
+            if($price){
+                $productArr['price'] = $price;
+            }
 
             if($product){
-                print_r([
-                    'price' => $price,
-                    'uom_id' => $unitObj->id,
-                    'code' => $unitObj->code,
-                    'description' => $desc
-                ]);
-
-                echo '<br>';
-
-                $product->update([
-                    'price' => $price,
-                    'uom_id' => $unitObj->id,
-                    'code' => $unitObj->code,
-                    'description' => $desc
-                ]);
+                $product->update($productArr);
                 $updateCount++;
             }else{
-                $product = Product::create([
-                    'name' => $name,
-                    'price' => $price,
-                    'uom_id' => $unitObj->id,
-                    'code' => $unitObj->code,
-                    'description' => $desc
-                ]);
+                $product = Product::create($productArr);
                 $insertCount++;
             }
 
@@ -454,8 +432,6 @@ class SimpleProductController extends Controller
                     ]);   
                 }
             }
-              
-            
             
         }
 
@@ -467,6 +443,16 @@ class SimpleProductController extends Controller
 
     }
 
+
+    function updateProductName(){
+        foreach( Product::all() as $pro ){
+            if( strtolower(substr($pro->name ,0,2))  == 'aw'){
+                $pro->name =  substr($pro->name,2);
+                $pro->save();
+            } 
+        }
+        echo 'The End';
+    }
 
 
 
