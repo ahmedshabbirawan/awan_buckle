@@ -314,7 +314,7 @@ class SimpleProductController extends Controller
      //   dd($request->file('product_list_file'));
 
         $validator = Validator::make($request->all(), [
-            'shop_id' => 'required',
+           //  'shop_id' => 'required',
             'product_list_file'   => 'required'
         ]);
 
@@ -364,8 +364,8 @@ class SimpleProductController extends Controller
             
             $name = $product['product_name'];
             $desc = $product['product_description'];
-            $price = $product['product_price'];
-            $qty = (int) $product['product_qty'];
+            $price  = (isset($product['product_price']))? $product['product_price'] : 0;
+            $qty    = (isset($product['product_qty']))? $product['product_qty'] : null;
             $unit = ucfirst($product['product_unit']);
 
 
@@ -420,23 +420,27 @@ class SimpleProductController extends Controller
                 $insertCount++;
             }
 
-            $productAvail = ProductAvailable::where([
-                'shop_id' => $shopID,
-                'product_id' => $product->id
-            ])->first();
-
-
-
-            if($productAvail){
-                $productAvail->qty = $qty;
-                $productAvail->save();
-            }else{
-                ProductAvailable::create([
+            if($qty){
+                $qty = (int) $qty;
+                $productAvail = ProductAvailable::where([
                     'shop_id' => $shopID,
-                    'product_id' => $product->id,
-                    'qty' => $qty
-                ]);   
-            }      
+                    'product_id' => $product->id
+                ])->first();
+    
+                if($productAvail){
+                    $productAvail->qty = $qty;
+                    $productAvail->save();
+                }else{
+                    ProductAvailable::create([
+                        'shop_id' => $shopID,
+                        'product_id' => $product->id,
+                        'qty' => $qty
+                    ]);   
+                }
+            }
+              
+            
+            
         }
 
 
