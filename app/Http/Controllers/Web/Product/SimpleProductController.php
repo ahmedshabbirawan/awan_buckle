@@ -351,6 +351,9 @@ class SimpleProductController extends Controller
         $index = 1; 
         foreach($records as $product){
             $index++;
+
+
+
             // print_r($product);
 
             /*
@@ -367,6 +370,10 @@ class SimpleProductController extends Controller
             $price  = (isset($product['product_price']))? $product['product_price'] : 0;
             $qty    = (isset($product['product_qty']))? $product['product_qty'] : null;
             $unit = ucfirst($product['product_unit']);
+
+            // echo $price;
+            // echo '<br>';
+            // continue;
 
 
             $product = Product::where('name',$name)->first();
@@ -402,6 +409,15 @@ class SimpleProductController extends Controller
            // dd($unitObj);
 
             if($product){
+                print_r([
+                    'price' => $price,
+                    'uom_id' => $unitObj->id,
+                    'code' => $unitObj->code,
+                    'description' => $desc
+                ]);
+
+                echo '<br>';
+
                 $product->update([
                     'price' => $price,
                     'uom_id' => $unitObj->id,
