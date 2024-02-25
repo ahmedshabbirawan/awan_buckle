@@ -18,9 +18,9 @@ class CreateUpdateMeasureUnitColumnsTable extends Migration
         //     $table->timestamps();
         // });
 
-        Schema::table('measure_units', function (Blueprint $table) {
-            $table->string('code')->nullable()->after('name');
-        });
+        // Schema::table('measure_units', function (Blueprint $table) {
+        //     $table->string('code')->nullable()->after('name');
+        // });
 
     }
 

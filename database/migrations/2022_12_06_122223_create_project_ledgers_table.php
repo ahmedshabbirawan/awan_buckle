@@ -13,6 +13,7 @@ class CreateProjectLedgersTable extends Migration
      */
     public function up()
     {
+        /*
         Schema::create('project_ledgers', function (Blueprint $table) {
             $table->id();
             $table->string("name")->nullable();
@@ -25,6 +26,7 @@ class CreateProjectLedgersTable extends Migration
             $table->softDeletes();
             $table->timestamps();
         });
+        */
     }
 
     /**

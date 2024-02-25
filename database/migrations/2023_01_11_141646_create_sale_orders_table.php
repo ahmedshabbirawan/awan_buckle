@@ -18,7 +18,7 @@ class CreateSalesTable extends Migration
             $table->id();
             $table->integer("customer_id")->nullable();
             $table->integer("sale_key")->nullable();
-            
+            $table->integer("shop_id")->nullable();            
             $table->integer("item_count")->nullable();
             $table->integer("total_offer_price")->nullable();
             $table->integer("total_discount")->nullable();

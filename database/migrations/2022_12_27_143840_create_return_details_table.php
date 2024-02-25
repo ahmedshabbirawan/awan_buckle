@@ -13,6 +13,7 @@ class CreateReturnDetailsTable extends Migration
      */
     public function up()
     {
+        /*
         Schema::create('return_details', function (Blueprint $table) {
             $table->id();
             $table->integer("emp_id")->nullable();
@@ -27,6 +28,7 @@ class CreateReturnDetailsTable extends Migration
             $table->softDeletes();
             $table->timestamps();
         });
+        */
     }
 
     /**

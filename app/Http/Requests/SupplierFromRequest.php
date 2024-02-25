@@ -27,9 +27,9 @@ class SupplierFromRequest extends FormRequest
         $email     = $this->request->get('email');
         $rules  = [];
         if($id != ''){
-            $rules['name']  =  [ 'required', Rule::unique('organizations')->ignore($id)];
+            $rules['name']  =  [ 'required', Rule::unique('suppliers')->ignore($id)];
         }else{
-            $rules['name']  =  'required|unique:organizations';
+            $rules['name']  =  'required|unique:suppliers';
         }
         $rules['address']  =  'required';
         $rules['phone']  =  'required';

@@ -13,11 +13,13 @@ class AddReturnDateInIssuanceItemTable extends Migration
      */
     public function up()
     {
+        /*
         Schema::table('issuance_item', function (Blueprint $table) {
             $table->integer("return_detail_id")->nullable();
             $table->integer("return_condition_status")->nullable();
             
         });
+        */
     }
 
     /**

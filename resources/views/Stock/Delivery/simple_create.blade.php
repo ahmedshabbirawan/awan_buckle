@@ -254,7 +254,7 @@ $qty = '';
           <label class="" for="form-field-1"> Shop : </label>
           <div>
           <select name="shop_id" id="shop_id" class="chosen-select form-control select21" required style="width:100%" >
-            <option> -- Select -- </option>
+            <option value=""> -- Select -- </option>
             <?php foreach($shops as $id => $name): ?>
                 <option value="<?=$id?>"><?=$name?></option>
             <?php endforeach; ?>

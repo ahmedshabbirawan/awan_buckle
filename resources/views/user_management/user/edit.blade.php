@@ -58,6 +58,7 @@
                                 <option value="{{$id}}" {{ ($id == auth()->user()->shop_id)?'selected="selected"':'' }}  >{{ $val }}</option>
                                 @endforeach
                               </select>
+                              <small class="" style="color:red" >Only one user assign to one shop</small>
                             </div>
 
                         </div>

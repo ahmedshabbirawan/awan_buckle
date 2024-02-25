@@ -104,13 +104,7 @@ Route::middleware(['web','auth'])->group(function () {
     Route::get('/dashboard',[DashboardController::class,'view'])->name('dashboard');
     Route::get('/logout',[AuthController::class,'logout'])->name('logout'); 
     Route::get('/dashboard_stats',[DashboardController::class,'dashboardStats'])->name('dashboard_stats');
-
-    // 
-
     Route::get('/update-product-name', [SimpleProductController::class, 'updateProductName'] );
-
-
-
 
     Route::group(['prefix'=>'usermanagement','as' => 'usermanagement.'],function(){
         //Role
@@ -130,23 +124,16 @@ Route::middleware(['web','auth'])->group(function () {
 
         //Permissions
         Route::group(['prefix'=>'permission/','as' => 'permission.'],function(){
-            Route::get('list',[PermissionController::class,'index'])->name('list');
-            // ->middleware('permission:read.role');
-            // Route::get('/create',[RoleController::class,'create'])->name('create');
-            // // ->middleware('permission:create.role');
-            // Route::get('/store',[RoleController::class,'store'])->name('store');
-            // // ->middleware('permission:create.role');
-            // Route::get('/edit',[RoleController::class,'edit'])->name('edit');
-            // // ->middleware('permission:update.role');
-            // Route::get('/update',[RoleController::class,'update'])->name('update');
-            // // ->middleware('permission:update.role');
-            // Route::get('/status/{id}',[RoleController::class,'status'])->name('status');
-            // // ->middleware('permission:changestatus.role');
-            // Route::get('/delete/{id}',[RoleController::class,'destroy'])->name('delete');
-            // // ->middleware('permission:delete.role');
+            Route::get('list',[PermissionController::class,'index'])->name('list')->middleware('permission:read.role');
+            Route::get('/create',[RoleController::class,'create'])->name('create')->middleware('permission:create.role'); 
+            Route::get('/store',[RoleController::class,'store'])->name('store')->middleware('permission:create.role');
+            Route::get('/edit',[RoleController::class,'edit'])->name('edit')->middleware('permission:update.role');
+            Route::get('/update',[RoleController::class,'update'])->name('update')->middleware('permission:update.role');
+            Route::get('/status/{id}',[RoleController::class,'status'])->name('status')->middleware('permission:changestatus.role');
+            Route::get('/delete/{id}',[RoleController::class,'destroy'])->name('delete')->middleware('permission:delete.role');
         });
 
-        //Permissions
+        //User
         Route::group(['prefix'=>'user/','as' => 'user.'],function(){
             Route::get('list',[UserController::class,'index'])->name('list')->middleware('permission:user.read');
             Route::get('create',[UserController::class,'create'])->name('create')->middleware('permission:user.create');
@@ -158,14 +145,7 @@ Route::middleware(['web','auth'])->group(function () {
             Route::get('change_password_modal_view/{id}',[UserController::class,'changePasswordModalView'])->name('change_password_modal')->middleware('permission:user.update');
             Route::post('save_password',[UserController::class,'savePassword'])->name('save_password')->middleware('permission:user.update');
         });
-
-
     });
-
-
-    //  Route::resource('brand', BrandController::class );
-   //   Route::resource('category', CategoryController::class );
-  //    Route::resource('product', ProductController::class );
     
 
     Route::group(['prefix'=>'product','as' => 'product.'],function(){
@@ -197,10 +177,8 @@ Route::middleware(['web','auth'])->group(function () {
         Route::get('/edit/{id}',[SimpleProductController::class,'edit'])->name('edit')->middleware('permission:product.update');
         Route::post('/update/{id}',[SimpleProductController::class,'update'])->name('update')->middleware('permission:product.update');
         Route::get('/ajax/products',[SimpleProductController::class,'getProducts'])->name('ajax_products');
-        // 
         Route::get('/import_products_modal',[SimpleProductController::class,'importProductsModal'])->name('import_products_modal');
         Route::post('/save_import_products',[SimpleProductController::class,'importProductsSave'])->name('save_import_products');
-
     });
 
 
@@ -210,8 +188,6 @@ Route::middleware(['web','auth'])->group(function () {
         Route::resource('location', LocationController::class )->middleware('permission:warehouse.read');
         Route::resource('uom', UomController::class )->middleware('permission:warehouse.read');
         Route::get('/uom/status/{id}',[UomController::class,'changeStatus'])->name('uom.changeStatus');
-
-        
 
         Route::group(['prefix'=>'employee','as' => 'employee.'],function(){
             Route::get('/list', [EmployeeController::class, 'index'] )->name('index')->middleware('permission:employee.read');
@@ -225,11 +201,6 @@ Route::middleware(['web','auth'])->group(function () {
             Route::get('/search',[EmployeeController::class,'search'])->name('search')->middleware('permission:employee.read');
             Route::get('/auto_complete',[EmployeeController::class,'auto_complete'])->name('auto_complete')->middleware('permission:employee.read');
         });
-
-        
-
-        
-
         
         Route::group(['prefix'=>'Designations','as' => 'designations.'],function(){
             Route::get('/list', [DesignationController::class, 'index'] )->name('list')->middleware('permission:designation.read');
@@ -263,9 +234,7 @@ Route::middleware(['web','auth'])->group(function () {
             Route::get('/status/{id}',[ProjectController::class,'status'])->name('status')->middleware('permission:project.status');
             Route::get('/delete/{id}',[ProjectController::class,'destroy'])->name('delete')->middleware('permission:project.delete');
             Route::get('/view/{id}',[ProjectController::class,'show'])->name('view')->middleware('permission:project.read');
-            // getProjectByAvailableStockItemAndProductCat
             Route::get('/by-available-stock-and-product-cat',[ProjectController::class,'getProjectByAvailableStockItemAndProductCat'])->name('by-available-stock-and-product-cat');
-            
             Route::get('sync-project-data', [ProjectController::class, 'sync_project_data'] )->middleware('permission:project.update');
         });
 
@@ -274,36 +243,8 @@ Route::middleware(['web','auth'])->group(function () {
 
 
 
-        Route::group(['prefix'=>'project-ledger','as' => 'project-ledger.'],function(){
-            Route::get('/list/{project_id}', [ProjectLedgerController::class, 'index'] )->name('list')->middleware('permission:project_ledger.read');
-            Route::post('/store', [ProjectLedgerController::class, 'store'] )->name('store')->middleware('permission:project_ledger.read');
-            // ledger_by_project
-            Route::get('id/{id}', [ProjectLedgerController::class, 'ledger_by_project'] )->name('ledger_by_project')->name('list')->middleware('permission:project_ledger.read');
-            Route::get('/delete/{id}',[ProjectLedgerController::class,'destroy'])->name('delete')->middleware('permission:project_ledger.delete');
 
-            // Route::get('/create', [ProjectController::class, 'create'] )->name('create');
-            // Route::post('/store', [ProjectController::class, 'store'] )->name('store');
-            // Route::get('/edit/{id}',[ProjectController::class,'edit'])->name('edit');
-            // Route::post('/update/{id}',[ProjectController::class,'update'])->name('update');
-            // Route::get('/status/{id}',[ProjectController::class,'status'])->name('status');
-            // Route::get('/delete/{id}',[ProjectController::class,'destroy'])->name('delete');
-            // Route::get('/view/{id}',[ProjectController::class,'show'])->name('view');
-        });
-
-
-        Route::group(['prefix'=>'manager','as' => 'manager.'],function(){
-            Route::get('/list', [ManagerController::class, 'index'] )->name('list')->middleware('permission:project_ledger.read');
-            Route::get('/create', [ManagerController::class, 'create'] )->name('create')->middleware('permission:project_ledger.read');
-            Route::post('/store', [ManagerController::class, 'store'] )->name('store')->middleware('permission:project_ledger.read');
-            Route::get('/edit/{id}',[ManagerController::class,'edit'])->name('edit')->middleware('permission:project_ledger.read');
-            Route::post('/update/{id}',[ManagerController::class,'update'])->name('update')->middleware('permission:project_ledger.read');
-            Route::get('/status/{id}',[ManagerController::class,'status'])->name('status')->middleware('permission:project_ledger.read');
-            Route::get('/delete/{id}',[ManagerController::class,'destroy'])->name('delete')->middleware('permission:project_ledger.read');
-            Route::get('/view/{id}',[ManagerController::class,'show'])->name('view');
-            Route::get('by_project_id/{project_id}',[ManagerController::class,'getMangerByProject'])->name('get_manager_by_project_id');
-
-
-        });
+        
 
 
     });
@@ -361,12 +302,6 @@ Route::middleware(['web','auth'])->group(function () {
         Route::get('/list', [AttributeController::class, 'index'] )->name('list')->middleware('permission:attribute.read');
     });
 
-    Route::prefix('employees')->group(function () {
-        Route::get('datatable', [EmployeeController::class, 'getDatatable'] )->name('employees/datatable');
-        Route::get('change-status/{eid}', [EmployeeController::class, 'changeStatus'] );
-        Route::get('sync-remote-data', [EmployeeController::class, 'sync_remote_data'] );
-
-    });
 
     Route::prefix('suppliers')->group(function () {
         Route::get('datatable', [SupplierController::class, 'getDatatable'] )->name('suppliers/datatable');
@@ -542,19 +477,13 @@ Route::middleware(['web','auth'])->group(function () {
             Route::post('attach_customer_with_cart',[SaleCartController::class,'attachCustomerWithCart'])->name('attach_customer_with_cart');
             Route::get('search_product',[SaleCartController::class,'searchProducts'])->name('search_product');
             Route::post('apply_dicount_on_single_product',[SaleCartController::class,'applyDiscountOnSingleProduct'])->name('apply_dicount_single');
-            // update_product_price
             Route::post('update_price_on_single_product',[SaleCartController::class,'updatePriceOnSingleProduct'])->name('update_product_price');
         });
         
         Route::group(['prefix'=>'board/','as' => 'board.'],function(){            
             Route::get('product_items',[SaleBoardController::class,'getProductItems'])->name('product_items');
-
-           //  Route::get('product_items',[SaleBoardController::class,'getProductItems'])->name('product_items');
             Route::get('list',[SaleBoardController::class,'index'])->name('list');
-            
-            // 
             Route::get('on_hold_modal_view',[SaleBoardController::class,'onHoldModalView'])->name('on_hold_modal_view');
-            
             Route::get('create/{sale_key?}',[SaleBoardController::class,'create'])->name('create');
             Route::get('delete/board_item/{sale_key?}',[SaleBoardController::class,'deleteKeyItems'])->name('delete.board_item');
         });
@@ -566,11 +495,8 @@ Route::middleware(['web','auth'])->group(function () {
             Route::get('detail/{id}',[SaleOrderController::class,'detail'])->name('detail');
             Route::get('order/search_order',[SaleOrderController::class,'detail'])->name('order.search_order');
             Route::get('order_back_search_modal',[SaleOrderController::class,'OrderBackSearchModal'])->name('order_back_search_modal');
-             
             Route::get('sale-return/{id}',[SaleOrderController::class,'saleReturnView'])->name('sale_return_view');
             Route::post('sale-return-save',[SaleOrderController::class,'saleReturnSave'])->name('sale_return_save');
-
-
             Route::get('unknow-sale-return',[SaleOrderController::class,'unknowSaleReturnView'])->name('unkonw_sale_return_view');
             Route::post('unknow-sale-return-save',[SaleOrderController::class,'unknowSaleReturnSave'])->name('unkonw_sale_return_save');
 
@@ -597,7 +523,7 @@ Route::middleware(['web','auth'])->group(function () {
         Route::post('mark_approve_cart_item',[StockExchangeController::class,'markApproveReq'])->name('mark_approve_cart_item');
 
 
-
+/*
         Route::get('create_req_view_modal',[StockExchangeController::class,'createReqViewModal'])->name('create_req_view_modal');
         Route::get('request-form',[StockExchangeController::class,'requestForm'])->name('req_form');
         Route::post('request-post-form',[StockExchangeController::class,'requestPost'])->name('req_post');
@@ -612,6 +538,7 @@ Route::middleware(['web','auth'])->group(function () {
         Route::get('list',[StockExchangeController::class,'indexList'])->name('list');
 
         Route::get('request-mark-receive/{exchange_key}',[StockExchangeController::class,'markReceive'])->name('mark_receive');
+        */
 
     });
 

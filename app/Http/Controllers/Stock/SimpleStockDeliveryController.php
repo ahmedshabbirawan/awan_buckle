@@ -54,7 +54,7 @@ class SimpleStockDeliveryController extends Controller{
             })->addColumn('hand_info', function ($row) {
                 return '<b> Name : ';//m.$row->hand_name.' <br> Designation : '.$row->hand_designation.' <br>   Cell : '.$row->hand_phone.'</b>';
             })->addColumn('project_name', function ($row) {
-                    return optional(Project::find($row->project_id))->name;
+                    return ''; // optional(Project::find($row->project_id))->name;
             })->addColumn('items', function ($row) {
                 return StockItem::where('stock_delivery_id', $row->id)->count();
             })->addColumn('status_label', function ($row) {
@@ -81,7 +81,7 @@ class SimpleStockDeliveryController extends Controller{
 
     public function create(){
         $data['warehouses']     = Warehouse::all()->pluck('name');
-        $data['projects']       = Project::orderBy('name','ASC')->get();
+        $data['projects']       = [];
         $data['shops']          = Shop::all()->pluck('name','id');
         $data['suppliers']      = Supplier::all()->pluck('name','id');
         $data['designations']   = Util::designations();
@@ -159,10 +159,10 @@ class SimpleStockDeliveryController extends Controller{
                     $proAvail['qty'] = $qty;
                     ProductAvailable::create($proAvail);
                 }
-                $proAvail['qty_when_adjust'] = $qtyWhenAdjust;
-                $proAvail['qty'] = $qty;
-                $proAvail['description'] = '';
-                StockAdjustment::create($proAvail);
+                // $proAvail['qty_when_adjust'] = $qtyWhenAdjust;
+                // $proAvail['qty'] = $qty;
+                // $proAvail['description'] = '';
+                // StockAdjustment::create($proAvail);
             }
             DB::commit();
             if($request->ajax()){
@@ -290,7 +290,7 @@ class SimpleStockDeliveryController extends Controller{
     public function detail($deliveryID){
         return '';
         $data['row']     = StockDelivery::find($deliveryID);
-        $data['project']        =  Project::find($data['row']->project_id); //Project::with('manager')->whereNotNull('manager_id')->pluck('name','id', 'manager.name');
+        $data['project']        =  []; //Project::find($data['row']->project_id); //Project::with('manager')->whereNotNull('manager_id')->pluck('name','id', 'manager.name');
         $data['suppliers']      = Supplier::all()->pluck('name','id');
         $data['designations']   = Util::designations();
 

@@ -17,8 +17,8 @@ class UserSeeder extends Seeder
      */
     public function run()
     {
-        User::updateOrCreate(['id'=>1],['name'=>'PITB','email'=>'superadmin@pitb.gov.pk','userName'=>'superadmin@pitb','password'=>'$2y$10$OURI7FLfOFOON3OFudqHOOencdd2eJ8qgnhYpFMC8mU1F8mYAwqq2','status'=>1]);
-        
+        User::updateOrCreate(['id'=>1],['name'=>'admin','email'=>'admin@sellme.pk','userName'=>'admin','password'=>'$2y$10$RnHh5.2nR99CTLxpTxc2du.7SwcqO4wI8YVPYHJCzvqnD4ojRRNa.','status'=>1]);
+        // lahore
         /* Permission - user */
         Permission::updateOrCreate(['id'=>1],['name'=>'user.create','description'=>'Create User','guard_name'=>'web']);
         Permission::updateOrCreate(['id'=>2],['name'=>'user.read','description'=>'Read User','guard_name'=>'web']);
@@ -26,51 +26,6 @@ class UserSeeder extends Seeder
         Permission::updateOrCreate(['id'=>4],['name'=>'user.delete','description'=>'Delete User','guard_name'=>'web']);
         Permission::updateOrCreate(['id'=>5],['name'=>'user.status','description'=>'Delete User','guard_name'=>'web']);
 
-        /* Permission - employee */
-        Permission::updateOrCreate(['id'=>6],['name'=>'employee.create','description'=>'Create employee','guard_name'=>'web']);
-        Permission::updateOrCreate(['id'=>7],['name'=>'employee.read','description'=>'Read employee','guard_name'=>'web']);
-        Permission::updateOrCreate(['id'=>8],['name'=>'employee.update','description'=>'Edit employee','guard_name'=>'web']);
-        Permission::updateOrCreate(['id'=>9],['name'=>'employee.delete','description'=>'Delete employee','guard_name'=>'web']);
-        Permission::updateOrCreate(['id'=>10],['name'=>'employee.status','description'=>'Delete employee','guard_name'=>'web']);
-
-
-        /* Permission - project */
-        Permission::updateOrCreate(['id'=>11],['name'=>'project.create','description'=>'Create project','guard_name'=>'web']);
-        Permission::updateOrCreate(['id'=>12],['name'=>'project.read','description'=>'Read project','guard_name'=>'web']);
-        Permission::updateOrCreate(['id'=>13],['name'=>'project.update','description'=>'Edit project','guard_name'=>'web']);
-        Permission::updateOrCreate(['id'=>14],['name'=>'project.delete','description'=>'Delete project','guard_name'=>'web']);
-        Permission::updateOrCreate(['id'=>15],['name'=>'project.status','description'=>'Delete project','guard_name'=>'web']);
-
-
-        /* Permission - project_manager */
-        Permission::updateOrCreate(['id'=>16],['name'=>'project_manager.create','description'=>'Create project_manager','guard_name'=>'web']);
-        Permission::updateOrCreate(['id'=>17],['name'=>'project_manager.read','description'=>'Read project_manager','guard_name'=>'web']);
-        Permission::updateOrCreate(['id'=>18],['name'=>'project_manager.update','description'=>'Edit project_manager','guard_name'=>'web']);
-        Permission::updateOrCreate(['id'=>19],['name'=>'project_manager.delete','description'=>'Delete project_manager','guard_name'=>'web']);
-        Permission::updateOrCreate(['id'=>20],['name'=>'project_manager.status','description'=>'Delete project_manager','guard_name'=>'web']);
-
-
-        /* Permission - project_ledger */
-        Permission::updateOrCreate(['id'=>21],['name'=>'project_ledger.create','description'=>'Create project_ledger','guard_name'=>'web']);
-        Permission::updateOrCreate(['id'=>22],['name'=>'project_ledger.read','description'=>'Read project_ledger','guard_name'=>'web']);
-        Permission::updateOrCreate(['id'=>23],['name'=>'project_ledger.update','description'=>'Edit project_ledger','guard_name'=>'web']);
-        Permission::updateOrCreate(['id'=>24],['name'=>'project_ledger.delete','description'=>'Delete project_ledger','guard_name'=>'web']);
-        Permission::updateOrCreate(['id'=>25],['name'=>'project_ledger.status','description'=>'Delete project_ledger','guard_name'=>'web']);
-
-        /* Permission - designation */
-        Permission::updateOrCreate(['id'=>26],['name'=>'designation.create','description'=>'Create designation','guard_name'=>'web']);
-        Permission::updateOrCreate(['id'=>27],['name'=>'designation.read','description'=>'Read designation','guard_name'=>'web']);
-        Permission::updateOrCreate(['id'=>28],['name'=>'designation.update','description'=>'Edit designation','guard_name'=>'web']);
-        Permission::updateOrCreate(['id'=>29],['name'=>'designation.delete','description'=>'Delete designation','guard_name'=>'web']);
-        Permission::updateOrCreate(['id'=>30],['name'=>'designation.status','description'=>'Delete designation','guard_name'=>'web']);
-
-
-        /* Permission - organization */
-        Permission::updateOrCreate(['id'=>31],['name'=>'organization.create','description'=>'Create organization','guard_name'=>'web']);
-        Permission::updateOrCreate(['id'=>32],['name'=>'organization.read','description'=>'Read organization','guard_name'=>'web']);
-        Permission::updateOrCreate(['id'=>33],['name'=>'organization.update','description'=>'Edit organization','guard_name'=>'web']);
-        Permission::updateOrCreate(['id'=>34],['name'=>'organization.delete','description'=>'Delete organization','guard_name'=>'web']);
-        Permission::updateOrCreate(['id'=>35],['name'=>'organization.status','description'=>'Delete organization','guard_name'=>'web']);
 
 
         /* Permission - warehouse */

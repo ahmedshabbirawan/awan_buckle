@@ -13,6 +13,7 @@ class MeasureUnitsSeeder extends Seeder
      */
     public function run(){
         \DB::table('measure_units')->insert(array (
+            /*
             array (
                 'id' => 1,
                 'name' => 'Packet',
@@ -45,14 +46,14 @@ class MeasureUnitsSeeder extends Seeder
                 'created_at' => '2022-03-02 07:42:09',
                 'updated_at' => '2022-03-02 07:42:09',
             ),
-            // array (
-            //     'id' => 5,
-            //     'name' => 'Quantity',
-            //     'code' => 'Qty.',
-            //     'status' => '1',
-            //     'created_at' => '2022-03-02 07:42:09',
-            //     'updated_at' => '2022-03-02 07:42:09',
-            // ),
+            array (
+                'id' => 5,
+                'name' => 'Quantity',
+                'code' => 'Qty.',
+                'status' => '1',
+                'created_at' => '2022-03-02 07:42:09',
+                'updated_at' => '2022-03-02 07:42:09',
+            ),
             array (
                 'id' => 6,
                 'name' => 'Box',
@@ -97,6 +98,15 @@ class MeasureUnitsSeeder extends Seeder
                 'id' => 11,
                 'name' => 'Cubic Feet',
                 'code' => 'CuFt',
+                'status' => '1',
+                'created_at' => '2022-03-02 07:42:09',
+                'updated_at' => '2022-03-02 07:42:09',
+            ),
+            */
+            array (
+                'id' => 1,
+                'name' => 'Pair',
+                'code' => 'pair',
                 'status' => '1',
                 'created_at' => '2022-03-02 07:42:09',
                 'updated_at' => '2022-03-02 07:42:09',

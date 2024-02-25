@@ -39,6 +39,23 @@
             </div>
 
 
+
+
+            <div class="form-group">
+                <label class="col-sm-3 control-label no-padding-right" for="form-field-1"> Shop Manager </label>
+                <div class="col-sm-9">
+                <select class="form-control" name="user_id">
+                    <option value="" hidden selected>Choose Shop</option>
+                    @foreach ($users as $user )
+                    <option value="{{$user->id}}" {{ (isset($shop) && $shop->id == $user->shop_id  )? 'selected'  : '' }} >{{ $user->name }}</option>
+                    @endforeach
+                    </select>
+                    <small class="" style="color:red" >Only one user assign to one shop</small>
+                </div>
+            </div>
+
+
+
             <div class="form-group">
                 <label class="col-sm-3 control-label no-padding-right" for="form-field-1"> Address </label>
                 <div class="col-sm-9">

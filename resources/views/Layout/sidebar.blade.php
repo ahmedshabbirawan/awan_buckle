@@ -161,34 +161,9 @@
                 <b class="arrow"></b>
 
                 <ul class="submenu">
-                    @can('organization.read')
-                    <li class="{{request()->is('Settings/org*') ? 'active' : '' }}">
-                        <a href="{{ route('Settings.org.list') }}"><i class="menu-icon fa fa-caret-right"></i>Organizations</a><b class="arrow"></b>
-                    </li>
-                    @endcan
                     @can('warehouse.read')
                     <li class="{{request()->is('Settings/warehouse*') ? 'active' : '' }}">
                         <a href="{{ route('Settings.warehouse.index') }}"><i class="menu-icon fa fa-caret-right"></i>Warehouses</a><b class="arrow"></b>
-                    </li>
-                    @endcan
-                    @can('project_ledger.read')
-                    <li class="{{request()->is('Settings/manager*') ? 'active' : '' }}">
-                        <a href="{{ route('Settings.manager.list') }}"><i class="menu-icon fa fa-caret-right"></i>DG / ADG</a><b class="arrow"></b>
-                    </li>
-                    @endcan
-                    @can('project.read')
-                    <li class="{{request()->is('Settings/project*') ? 'active' : '' }}">
-                        <a href="{{ route('Settings.project.list') }}"><i class="menu-icon fa fa-caret-right"></i>Projects </a><b class="arrow"></b>
-                    </li>
-                    @endcan
-                    @can('employee.read')
-                    <li class="{{request()->is('Settings/employee*') ? 'active' : '' }}">
-                        <a href="{{ route('Settings.employee.index') }}"><i class="menu-icon fa fa-caret-right"></i>Employees</a><b class="arrow"></b>
-                    </li>
-                    @endcan
-                    @can('designation.read')
-                    <li class="{{request()->is('Settings/designations*') ? 'active' : '' }}">
-                        <a href="{{ route('Settings.designations.list') }}"><i class="menu-icon fa fa-caret-right"></i>Designations</a><b class="arrow"></b>
                     </li>
                     @endcan
                     @can('locagtion.read')
@@ -196,14 +171,15 @@
                         <a href="{{ route('Settings.location.index') }}"><i class="menu-icon fa fa-caret-right"></i>Locations</a><b class="arrow"></b>
                     </li>
                     @endcan
+                    @can('uom.read')
                     <li class="{{request()->is('Settings/uom*') ? 'active' : '' }}">
                         <a href="{{ route('Settings.uom.index') }}">
                             <i class="menu-icon fa fa-caret-right"></i>
                             UOM
                         </a>
-
                         <b class="arrow"></b>
                     </li>
+                    @endcan
                 </ul>
             </li>
             <!--------------- End Settings-------------------->

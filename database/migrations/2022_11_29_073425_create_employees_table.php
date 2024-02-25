@@ -13,12 +13,9 @@ class CreateEmployeesTable extends Migration
      */
     public function up()
     {
+        /*
         Schema::create('employees', function (Blueprint $table) {
             $table->id();
-
-
-          
-
             $table->integer('org_id')->default('0');
             $table->string('emp_code')->default('20');
             $table->string('first_name')->nullable();
@@ -48,6 +45,7 @@ class CreateEmployeesTable extends Migration
             $table->integer('deleted_by')->nullable();
             $table->softDeletes();
         });
+        */
     }
 
     /**

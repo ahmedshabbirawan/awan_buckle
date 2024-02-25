@@ -19,6 +19,7 @@ class CreateStockDeliveriesProductsTable extends Migration
             $table->string("ref_no",255)->nullable();
 
             $table->integer("stock_delivery_id")->nullable();
+            $table->integer("shop_id")->nullable();
             $table->integer("parent_cat_id")->nullable();
             $table->integer("sub_cat_id")->nullable();
             $table->integer("product_cat_id")->nullable();

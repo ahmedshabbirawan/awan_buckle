@@ -13,10 +13,11 @@ class AddConditionStatusInStockItemsTable extends Migration
      */
     public function up()
     {
+        /*
         Schema::table('stock_items', function (Blueprint $table) {
-            // 	condition_status
             $table->integer("condition_status")->nullable();
         });
+        */
     }
 
     /**

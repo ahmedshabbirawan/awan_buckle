@@ -79,16 +79,22 @@ if($request->ajax()){
                 $productID  = $productIDzArr[$index];
                 $stock      = $stockArr[$index];
                 $qty        = (int) $qtyArr[$index];
+                $currentQty = $currentQtyArr[$index];
+                $desc = $descArr[$index];
+                $stockType = $stockArr[$index];
+
+                $index++;
+
                 if( $qty < 1 ){
                     continue;
                 }
                 
                 $sa = StockAdjustment::create([
                     'product_id' => $productID,
-                    'stock_type' => $stockArr[$index],
-                    'qty_when_adjust'   => $currentQtyArr[$index],
-                    'qty'               => $qtyArr[$index],
-                    'description'       => $descArr[$index],
+                    'stock_type' => $stockType,
+                    'qty_when_adjust'   => $currentQty,
+                    'qty'               => $qty,
+                    'description'       => $desc,
                     'shop_id'       => $loginShopID
                 ]);
                 $product = ProductAvailable::where([

@@ -13,6 +13,7 @@ class CreateIssuanceItemTable extends Migration
      */
     public function up()
     {
+        /*
         Schema::create('issuance_item', function (Blueprint $table) {
             $table->id();
             $table->integer("item_id")->nullable();
@@ -49,6 +50,7 @@ class CreateIssuanceItemTable extends Migration
             $table->softDeletes();
             $table->timestamps();
         });
+        */
     }
 
     /**

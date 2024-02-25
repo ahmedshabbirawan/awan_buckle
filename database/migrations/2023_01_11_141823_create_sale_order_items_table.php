@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateSalesItemsTempTable extends Migration
+class CreateSalesItemsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,15 @@ class CreateSalesItemsTempTable extends Migration
      */
     public function up()
     {
-        Schema::create('sale_carts', function (Blueprint $table) {
+        Schema::create('sale_order_items', function (Blueprint $table) {
             $table->id();
+            $table->integer("order_id")->nullable();
             $table->integer("product_id")->nullable();
             $table->integer("item_id")->nullable();
             $table->integer("sale_key")->nullable();
+
+            $table->integer("sale_id")->nullable();
+            $table->integer("customer_id")->nullable();
 
             $table->integer("qty")->nullable();
 
@@ -42,6 +46,6 @@ class CreateSalesItemsTempTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('sales_items_temp');
+        Schema::dropIfExists('sales_items');
     }
 }

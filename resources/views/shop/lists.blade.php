@@ -178,12 +178,12 @@ Shop
                         return row.name;
                     }
                 },
-                // {
-                //     data: 'ntn',
-                //     name: 'ntn',
-                //     title: 'NTN',
-                //     width: '10%'
-                // },
+                {
+                    data: 'shop_manager',
+                    name: 'shop_manager',
+                    title: 'Shop Manager',
+                    width: '10%'
+                },
                 // {
                 //     data: 'phone',
                 //     name: 'phone',

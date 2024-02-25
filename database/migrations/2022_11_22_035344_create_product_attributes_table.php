@@ -13,6 +13,7 @@ class CreateProductAttributesTable extends Migration
      */
     public function up()
     {
+        
         Schema::create('product_attributes', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->integer('product_id');

@@ -13,6 +13,7 @@ class CreateOrganizationsTable extends Migration
      */
     public function up()
     {
+        /*
         Schema::create('organizations', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -23,6 +24,7 @@ class CreateOrganizationsTable extends Migration
             $table->integer('deleted_by')->nullable();
             $table->softDeletes();
         });
+        */
     }
 
     /**

@@ -13,7 +13,7 @@ class AttributeTypeSeeder extends Seeder
      */
     public function run(){
         
-
+/*
         \DB::table('attribute_types')->insert(array (
             array (
                 'id' => 1,
@@ -135,6 +135,7 @@ class AttributeTypeSeeder extends Seeder
                 'updated_at' => '2022-03-02 07:42:09',
             ),
         ));
+*/
 
 
     }

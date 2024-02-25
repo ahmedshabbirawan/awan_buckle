@@ -13,6 +13,7 @@ class CreateManagersTable extends Migration
      */
     public function up()
     {
+        /*
         Schema::create('managers', function (Blueprint $table) {
             $table->id();
             $table->string('name',251)->nullable();
@@ -29,6 +30,7 @@ class CreateManagersTable extends Migration
             $table->integer('deleted_by')->nullable();
             $table->softDeletes();
         });
+        */
     }
 
     /**

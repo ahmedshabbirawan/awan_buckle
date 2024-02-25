@@ -28,7 +28,8 @@ class StockDeliveryProductFormRequest extends FormRequest
       $isExpiryDate = $this->request->get('is_expiry_date');
       if($isExpiryDate != ''){
         $rules['warranty_date']  =  'required';
-      }     
+      } 
+        $rules['shop_id']         =  'required';    
         $rules['product_id']      =  'required';
         $rules['qty']             =  'required';
         $rules['unit_price']      =  'required';

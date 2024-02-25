@@ -13,6 +13,7 @@ class CreateDesignationsTable extends Migration
      */
     public function up()
     {
+        /*
         Schema::create('designations', function (Blueprint $table) {
             $table->id();
             $table->string("name")->nullable();
@@ -24,6 +25,7 @@ class CreateDesignationsTable extends Migration
             $table->softDeletes();
             $table->timestamps();
         });
+        */
     }
 
     /**

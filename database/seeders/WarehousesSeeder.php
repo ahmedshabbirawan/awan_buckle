@@ -15,9 +15,9 @@ class WarehousesSeeder extends Seeder
         \DB::table('warehouses')->insert(array (
             array (
                 'id' => 1,
-                'name' => 'ASTP',
+                'name' => 'Warehouse 1',
                 'code' => 'wh-01',
-                'address' => 'Ferozepur Rd, Lahore, Punjab',
+                'address' => 'Lahore, Punjab',
                 'created_at' => '2022-01-01 00:00:01',
                 'updated_at' => '2022-01-01 00:00:01',
             )
