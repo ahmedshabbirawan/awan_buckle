@@ -10,6 +10,7 @@ use App\Models\Customer;
 use App\Models\User;
 use App\Models\SaleReturn;
 use App\Models\Shop;
+use App\Models\SaleReturnItem;
 
 use Illuminate\Support\Facades\Validator;
 
@@ -36,7 +37,7 @@ class SaleReturnController extends Controller{
                 })
                 ->addColumn('action', function ($row) {
                     $action = '<div class="hidden-sm hidden-xs btn-group">';
-                   //  $action .= '<a href="'.route('sale.order.detail',$row->id).'" class="btn btn-xs btn-success" data-toggle="tooltip" title="Detail" ><i class="ace-icon fa fa-eye bigger-120"></i></a>';
+                    $action .= '<a href="'.route('sale.sale_return.detail',$row->id).'" class="btn btn-xs btn-success" data-toggle="tooltip" title="Detail" ><i class="ace-icon fa fa-eye bigger-120"></i></a>';
                     $action .= '</div>';
                     return $action;
                 })->rawColumns(['title','product_attribute','status_label','action'])
@@ -49,24 +50,25 @@ class SaleReturnController extends Controller{
         function detail($orderID,Request $request){
 
             $viewType   = $request->get('view');
-            $order      = SaleOrder::findOrFail($orderID);
-            $orderItem  = SaleOrderItem::with('product')->where('order_id',$order->id)->get();
-            $customer   = Customer::find($order->customer_id);
-            $shop       = Shop::find($order->shop_id);
-            $manager    = User::find($order->created_by);
-            $view       = 'order.detail';
+            $saleReturn      = SaleReturn::findOrFail($orderID);
+            $orderItem  = SaleReturnItem::with('product')->where('sale_return_id',$saleReturn->id)->get();
+            $customer   = Customer::find($saleReturn->customer_id);
+            $shop       = Shop::find($saleReturn->shop_id);
+            $manager    = User::find($saleReturn->created_by);
+            $view       = 'sale.sale_return_detail';
+
             $data = [
-                'viewType' => $viewType,
-                'order' => $order,
-                'orderItem' => $orderItem,
-                'shop' => $shop,
-                'customer' => $customer,
-                'manager' => $manager
+                'viewType'          => $viewType,
+                'order'        => $saleReturn,
+                'orderItem'    => $orderItem,
+                'shop'              => $shop,
+                'customer'          => $customer,
+                'manager'           => $manager
             ];
-            if($viewType == 'print'){
-                $data['hideInfo'] = false; 
-                $view = 'order.order_detail_table';
-            }
+            // if($viewType == 'print'){
+            //     $data['hideInfo'] = false; 
+            //     $view = 'sale.sale_return_detail';
+            // }
             return view($view,$data);
         }
 

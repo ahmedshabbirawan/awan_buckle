@@ -504,6 +504,7 @@ Route::middleware(['web','auth'])->group(function () {
 
         Route::group(['prefix'=>'sale-return/','as' => 'sale_return.'],function(){            
             Route::get('list',[SaleReturnController::class,'index'])->name('list');
+            Route::get('detail/{id}',[SaleReturnController::class,'detail'])->name('detail');
         });
         
 
@@ -521,7 +522,7 @@ Route::middleware(['web','auth'])->group(function () {
         Route::post('place_request',[StockExchangeController::class,'placeRequest'])->name('place_request');
         Route::get('records',[StockExchangeController::class,'getRecords'])->name('records');
         Route::post('mark_approve_cart_item',[StockExchangeController::class,'markApproveReq'])->name('mark_approve_cart_item');
-
+        Route::get('list',[StockExchangeController::class,'indexList'])->name('list');
 
 /*
         Route::get('create_req_view_modal',[StockExchangeController::class,'createReqViewModal'])->name('create_req_view_modal');
@@ -535,7 +536,7 @@ Route::middleware(['web','auth'])->group(function () {
         
         Route::get('darft-list',[StockExchangeController::class,'darftList'])->name('darft_list');
         Route::post('final-submit',[StockExchangeController::class,'finalSubmit'])->name('final_submit');
-        Route::get('list',[StockExchangeController::class,'indexList'])->name('list');
+        
 
         Route::get('request-mark-receive/{exchange_key}',[StockExchangeController::class,'markReceive'])->name('mark_receive');
         */
