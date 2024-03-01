@@ -81,18 +81,136 @@
                         </h1>
                     </div><!-- /.page-header -->
 
+
+
+<!---------------------------------------------------------------------------------------------------------------------------------------------------------------->
+
+<div class="row" >
+<style>
+    .total_label{
+        margin: 0px; font-size: 13px;
+    }
+    .dashboard_btn{
+        width: fit-content; padding:15px; min-width:120px; 
+    }
+</style>
+<?php 
+    $classes = 'btn btn-app btn-primary btn-xs no-radius dashboard_btn';
+?>
+    <div class="col-xs-12 col-sm-12 widget-container-col ui-sortable">
+        <a href="{{route('sale.board.create')}}" class="{{ $classes }}" >
+            <i class="ace-icon fa fa-shopping-cart bigger-160"></i> <p class="total_label" > <b>&nbsp;</b></p>
+            <p class="total_label"><b>POS</b></p>
+        </a>
+        <a  @can('product.read') href="{{ route('product.list') }}"  @endcan  class="{{ $classes }}" >
+            <i class="ace-icon fa fa-gift bigger-160"></i> <p class="total_label" > <b>&nbsp;</b></p>
+            <p class="total_label"><b>Products</b></p>
+        </a>
+        <a href="{{route('stock_exchange.list')}}" class="{{ $classes }}" >
+            <i class="ace-icon fa fa-exchange bigger-160"></i> <p class="total_label" > <b>&nbsp;</b></p>
+            <p class="total_label"><b>Stock Exchange</b></p>
+        </a>
+
+        <a href="{{route('stock_adjustment.list')}}" class="{{ $classes }}  " >
+            <i class="ace-icon fa fa-balance-scale bigger-160"></i> <p class="total_label" > <b>&nbsp;</b></p>
+            <p class="total_label"><b>Stock Adjustment</b></p>
+        </a>
+
+        <a @can('stock_delivery.create')  href="{{ route('stocks.delivery.list') }}" @endcan class="{{ $classes }}  " >
+            <i class="ace-icon fa fa-cart-arrow-down bigger-160"></i> <p class="total_label" > <b>150</b></p>
+            <p class="total_label"><b>Purchases</b></p>
+        </a>
+
+    </div>
+</div>
+
+<!------------------------------------------------------------------------------------------------------------------------------------------------------------------->
+
+
+
                     <div class="row"  >
                         <div class="col-xs-12">
                             <!-- PAGE CONTENT BEGINS -->
-                            <div class="alert alert-block alert-success">
+                            <!-- <div class="alert alert-block alert-success">
                                 <button type="button" class="close" data-dismiss="alert">
                                     <i class="ace-icon fa fa-times"></i>
                                 </button>
                                 <i class="ace-icon fa fa-check green"></i>
                                 Welcome to <strong class="green">IMS</strong>
-                            </div>
+                            </div> -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+                            
 
                             <div class="row">
+
+
+
+                            <div class="col-xs-12 col-sm-12 widget-container-col ui-sortable" id="widget-container-col-2">
+											<div class="widget-box widget-color-green2" id="widget-box-2">
+												<div class="widget-header">
+													<h5 class="widget-title bigger lighter">
+														<i class="ace-icon fa fa-table"></i>
+														Stats
+													</h5>
+
+												
+												</div>
+
+												<div class="widget-body">
+													<div class="widget-main no-padding">
+														<table class="table table-striped table-bordered table-hover">
+															<thead class="thin-border-bottom">
+																<tr>
+																	<th><i class="ace-icon fa fa-user"></i>
+																		Days
+																	</th>
+
+																	<th>
+																		<i>@</i>
+																		Sale Count
+																	</th>
+
+                                                                    <th>
+																		<i>@</i>
+																		Sale Amount
+																	</th>
+
+                                                                    <th>
+																		<i>@</i>
+																		Purchase Count
+																	</th>
+
+
+                                                                    <th>
+																		<i>@</i>
+																		Purchase Amount
+																	</th>
+
+
+																	<th class="hidden-480">Customer Create</th>
+																</tr>
+															</thead>
+															<tbody id="stats_body" ></tbody>
+														</table>
+													</div>
+												</div>
+											</div>
+										</div>
+
+
+
                                 <div class="space-6"></div>
 
                                 <div class="col-sm-6">
@@ -1306,6 +1424,17 @@ function getDashboardStats() {
 				$('#physical_total_item').html(res.physical.item_total);
                 $('#physical_in_hand').html(res.physical.item_available);
                 $('#physical_issue').html(res.physical.item_issued);
+
+                // stats_body
+
+                var statsBody = '';
+
+                $(res.dayWiseReport).each(function(index, row){
+                    console.log(index, row);
+                    statsBody += '<tr><td>'+row.labels.days+'</td><td>'+row.reports.sale_order_count+'</td><td>'+row.reports.sale_amount+'</td><td>'+row.reports.purchase_count+'</td><td>'+row.reports.purchase_amount+'</td><td>'+row.reports.customer_create+'</td></tr>';
+                });
+                $('#stats_body').html(statsBody);
+
 			}
 		});
 	}

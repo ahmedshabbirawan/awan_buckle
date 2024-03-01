@@ -523,10 +523,11 @@ Route::middleware(['web','auth'])->group(function () {
         Route::get('records',[StockExchangeController::class,'getRecords'])->name('records');
         Route::post('mark_approve_cart_item',[StockExchangeController::class,'markApproveReq'])->name('mark_approve_cart_item');
         Route::get('list',[StockExchangeController::class,'indexList'])->name('list');
-
-/*
         Route::get('create_req_view_modal',[StockExchangeController::class,'createReqViewModal'])->name('create_req_view_modal');
         Route::get('request-form',[StockExchangeController::class,'requestForm'])->name('req_form');
+
+/*
+
         Route::post('request-post-form',[StockExchangeController::class,'requestPost'])->name('req_post');
         Route::get('request-send-list',[StockExchangeController::class,'requestSendList'])->name('req_send_list');
         Route::get('request-receive-list',[StockExchangeController::class,'requestReceiveList'])->name('req_receive_list');
