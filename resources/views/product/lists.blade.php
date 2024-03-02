@@ -229,6 +229,7 @@ var listTable;
                 }, width: '10%'
             },
             { data: 'product_name', name: 'product_name', title: 'Name',},
+            { data: 'cost_price', name: 'cost_price', title: 'Cost Price',},
             { data: 'price', name: 'price', title: 'Sale Price',},
             { data: 'code', name: 'code', title: 'UOM', width: '10%'  },
             { data: 'stock_available', name: 'stock_available', title: 'Total Stock', width: '10%'  }

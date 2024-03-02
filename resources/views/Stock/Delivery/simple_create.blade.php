@@ -510,45 +510,7 @@ $qty = '';
   }
 
 
-  function project_change(ele) {
-    $('#project_dg').html('<option >--Select--</option>');
-    var id = $(ele).val();
-
-    if(id == ''){
-      return false;
-    }
-
-    $.ajax({
-      dataType: 'json',
-      type: 'get',
-      url: "{{ route('Settings.manager.get_manager_by_project_id','') }}/" + id,
-      success: function(res) {
-        var html_ = '';
-        $(res).each(function(index, row) {
-          $('#project_dg_name').html(row.name);
-          // html_ += '<option value="' + row.id + '">' + row.name + '</option>';
-        });
-         
-      }
-    });
-
-    $.ajax({
-      dataType: 'json',
-      type: 'get',
-      // http://localhost/-web/public/Settings/project-ledger/id/4
-      url: "" + id,
-      success: function(res) {
-        console.log(res);
-        var html_ = '';
-        $(res).each(function(index, row) {
-          console.log(row);
-          html_ += '<option value="' + row.id + '">' + row.name + '</option>';
-        });
-
-        $('#stock_ledger_reference').html(html_);
-      }
-    });
-  }
+  
 
 
 
@@ -895,7 +857,7 @@ $qty = '';
       readSNFile();
     });
 
-    project_change($('#project_id'));
+   // project_change($('#project_id'));
 
     $('#is_invoice_delivery').change(function(){
         if($(this).is(':checked')){

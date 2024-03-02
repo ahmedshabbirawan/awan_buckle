@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
 use App\Models\ParentCategory;
-use App\Models\Project;
+use App\Models\Product;
 use App\Models\StockDelivery;
 use App\Models\StockDeliveryProduct;
 use App\Models\Supplier;
@@ -147,6 +147,11 @@ class SimpleStockDeliveryController extends Controller{
                 $proAvail = [];
                 $proAvail['shop_id'] = $shopID;
                 $proAvail['product_id'] = $productID;
+
+                
+
+                Product::where(['id' => $productID])->update(['cost_price' => $deliverProduct->unit_price]);
+
                 $productAvailable = ProductAvailable::where($proAvail)->first();
                 $qtyWhenAdjust = 0;
                 $newQty = 0; 

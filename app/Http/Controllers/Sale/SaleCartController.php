@@ -426,6 +426,7 @@ class SaleCartController extends Controller{
                 //  $stockItem = StockItem::findOrFail($tItem->item_id);
                 $shopID = auth()->user()->shop_id;
                 $proAvail = ProductAvailable::where('product_id',$tItem->product_id)->where('shop_id',$shopID)->first();
+                $product = Product::find($tItem->product_id);
 
               //   print_r($proAvail); exit;
                 if( !($proAvail) ){
@@ -449,6 +450,9 @@ class SaleCartController extends Controller{
                 $itemData['offer_price']    =    $tItem->offer_price;
                 $itemData['discount']       =    $tItem->discount;
                 $itemData['price']          =    $tItem->final_price;
+                
+                $itemData['cost_price']     =    $product->cost_price;
+
 
                 $totalOfferPrice            =    $totalOfferPrice + ( $tItem->offer_price * $tItem->qty );
                 $totalPrice                 =    $totalPrice + ( $tItem->final_price * $tItem->qty ) ;
