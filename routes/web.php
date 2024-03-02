@@ -105,6 +105,7 @@ Route::middleware(['web','auth'])->group(function () {
     Route::get('/logout',[AuthController::class,'logout'])->name('logout'); 
     Route::get('/dashboard_stats',[DashboardController::class,'dashboardStats'])->name('dashboard_stats');
     Route::get('/update-product-name', [SimpleProductController::class, 'updateProductName'] );
+    Route::get('/create_first_purchase', [SimpleProductController::class, 'create_first_purchase'] );
 
     Route::group(['prefix'=>'usermanagement','as' => 'usermanagement.'],function(){
         //Role

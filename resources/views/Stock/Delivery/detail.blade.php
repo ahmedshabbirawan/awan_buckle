@@ -79,7 +79,7 @@ Supplier Detail
                                             <div class="profile-info-row">
                                                 <div class="profile-info-name"> Supplier </div>
                                                 <div class="profile-info-value">
-                                                    <span class="editable editable-click" id="username">{{ $row->supplier->name }}</span>
+                                                    <span class="editable editable-click" id="username">{{ optional($row->supplier)->name }}</span>
                                                 </div>
                                             </div>
                                             

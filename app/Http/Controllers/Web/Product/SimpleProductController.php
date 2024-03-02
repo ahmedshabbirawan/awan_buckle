@@ -33,6 +33,9 @@ use Nette\Utils\Image;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
+use App\Models\StockDelivery;
+use App\Models\StockDeliveryProduct;
+
 
 
 use League\Csv\Reader;
@@ -308,7 +311,7 @@ class SimpleProductController extends Controller
     }
 
 
-    function importProductsSave(Request $request){
+    function importProductsSave_done(Request $request){
 
 
      //   dd($request->file('product_list_file'));
@@ -453,6 +456,134 @@ class SimpleProductController extends Controller
         }
         echo 'The End';
     }
+
+
+    function create_first_purchase(){
+        
+        try{
+            DB::beginTransaction();
+
+            $data['purchased_date'] = date('Y-m-d');
+            $data['delivery_challan_no'] = 'First Purchase';
+            $data['supplier_id'] = 1;
+
+
+            $row                = StockDelivery::create($data);
+            $stockDeliveryID    = $row->id;
+            $time               = time();
+
+            $products = Product::get();
+
+            // $deliveryAmount = 0;
+
+
+
+            foreach($products as $product){
+
+                $productID = $product->id;
+                
+                $productsAvail = ProductAvailable::where('product_id',$productID)->get();
+
+
+                if($productsAvail){
+                foreach($productsAvail as $proAvail){
+                    if(isset($proAvail)){
+                    StockDeliveryProduct::create([
+                        'shop_id' => $proAvail->shop_id,
+                        'stock_delivery_id' => $stockDeliveryID,
+                        'product_id' => $productID,
+                        'quantity' => $proAvail->qty,
+                        'uom_id' => 12,
+                        'uom_code' => 'pair'
+                    ]);
+                    }
+                }
+                }
+
+
+
+
+
+            }
+            DB::commit();
+            
+        }catch(\Exception $e){
+            DB::rollBack();
+            return response()->json(['message' => 'Error : '. $e->getMessage(). '. Please Contact to Developer'], 500);
+        }
+    }
+
+
+
+
+
+    function importProductsSave(Request $request){
+
+            $validator = Validator::make($request->all(), [
+                'product_list_file'   => 'required'
+            ]);
+   
+   
+           if ($validator->fails()) {
+               return response()->json(['status' => false, 'message' => $validator->errors()->first()],406);
+           }
+   
+           $fileNameWithExt = $request->file('product_list_file')->getClientOriginalName();
+           $extension       = $request->file('product_list_file')->getClientOriginalExtension();
+           $fileNameToStore = "product-csv".'-'.time().'.'.$extension;
+           $path            = $request->file('product_list_file')->storeAs('public/product_images', $fileNameToStore);
+           $path            = Storage::path('public/product_images/'.$fileNameToStore);
+           
+           //load the CSV document from a file path
+           $csv = Reader::createFromPath($path, 'r');
+           $csv->setHeaderOffset(0);
+   
+           $header = $csv->getHeader(); //returns the CSV header record
+   
+           //returns all the records as
+           $records = $csv->getRecords(); // an Iterator object containing arrays
+   
+   
+           $unitArr = array();
+           $shopID = $request->get('shop_id');
+   
+           $insertCount = 0;
+           $updateCount = 0;
+           $index = 1; 
+           foreach($records as $product){
+               $index++;
+
+               // dd($product);
+
+
+
+               $name = $product['product_name'];
+               // $desc = $product['product_description'];
+               $costPrice  = (isset($product['cost_price']))? $product['cost_price'] : 0;
+               $salePrice  = (isset($product['sale_price']))? $product['sale_price'] : 0;
+
+              //  $qty     = (isset($product['product_qty']))? $product['product_qty'] : null;
+              // $unit    = ucfirst($product['product_unit']);
+   
+               $product = Product::where('name',$name)->first();
+
+               if($product){
+                $product->price = $salePrice;
+                $product->cost_price = $costPrice;
+                $product->save();
+ 
+                StockDeliveryProduct::where('product_id',$product->id)->update([
+                    'unit_price' => $costPrice
+                ]);
+
+               }
+
+               
+   
+               
+           }
+           return response(['status' => true, 'message' => $insertCount. ' new Product added and '.$updateCount.' products updated' ]);
+       }
 
 
 
