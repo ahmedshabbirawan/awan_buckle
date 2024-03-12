@@ -14,15 +14,10 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
 
-class UserController extends Controller
-{
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index(Request $request)
-    {
+class UserController extends Controller{
+    
+
+    public function index(Request $request){
         if ($request->ajax()) {
             $data = User::with(['roles']);
             return DataTables::of($data)
@@ -34,10 +29,11 @@ class UserController extends Controller
                     if($row->status == 1){
                     $statusIcon = 'fa fa-check-circle-o';
                     }
-                     $action = '<div class="hidden-sm hidden-xs btn-group">';
+                     $action = '<div class="btn-group">';
                   //    $action .= '<a href="'.route('product.view', $row->id).'" class="btn btn-xs btn-success" data-toggle="tooltip" title="Detail" ><i class="ace-icon fa fa-eye bigger-120"></i></a>';
                      $action .= '<a href="'. route('usermanagement.user.edit', ['id' => $row->id]) .'" class="btn btn-xs btn-info"  data-toggle="tooltip" title="Edit" ><i class="ace-icon fa fa-pencil bigger-120"></i></a>';
                      $action .= '<a href="'.route('usermanagement.user.status', ['id' => $row->id]).'"  class="btn btn-xs btn-warning" data-toggle="tooltip" title="Change Status" ><i class="ace-icon '.$statusIcon.' bigger-120"></i></a>';
+                     $action .= '<a href="javascript:void(0);"  class="btn btn-xs btn-warning" data-toggle="tooltip" title="Change Role" onclick="pos_app.showRoleAssignFormModal('.$row->id.');" ><i class="ace-icon fa fa-user bigger-120"></i></a>';
                     // $action .= '<a href="'. route('usermanagement.user.delete', ['id' => $row->id]) .'" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Delete" ><i class="ace-icon fa fa-trash-o bigger-120"></i></a>';
                     $action .= '<a href="javascript:void(0);" onclick="pos_app.showChangePasswordModal('.$row->id.')"  class="btn btn-xs btn-success" data-toggle="tooltip" title="Change Password" ><i class="ace-icon fa fa-lock bigger-120"></i></a>';
                      $action .= '</div>';
@@ -71,26 +67,15 @@ class UserController extends Controller
 
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
+
+    public function create(){
         $roles = Role::orderBy('name','asc')->get();
         $shops = Shop::orderBy('name','asc')->get()->pluck('name', 'id');
         return view('user_management.user.create',compact('roles','shops'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
+    
+    public function store(Request $request){
 
         $validator = Validator::make($request->all(), [
             'name'      => 'required',
@@ -158,14 +143,8 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function status($id)
-    {
+
+    public function status($id){
         try{
             DB::beginTransaction();
             $obj = User::where('id',$id)->first();
@@ -247,16 +226,7 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
-    }
+    
 
 
     function changePasswordModalView($userID){
@@ -274,19 +244,13 @@ class UserController extends Controller
             'password'  => ['required', 'confirmed', Password::min(6)],
            // 'password_confirmation' => 'required|password_confirmation'
         ]);
-
         if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => $validator->errors()->first()],406);
         }
-
-
         $userID = $request->get('user_id');
-
-
         try {
             DB::beginTransaction();
             $user = User::where('id',$userID)->first();
-           //  $user->password = $request->name;
             $user->password = Hash::make($request->password);
             $user->save();
             if ($user->id) {
@@ -299,14 +263,18 @@ class UserController extends Controller
             DB::rollBack();
             return response()->json(['status' => false, 'message' => 'Error.Please Contact Support Department'],406);
         }
+    }
 
-
-
-
-
-
-
-        
+    function assignRoleView(){
+        $data['shops'] = Shop::all();
+        return response()->json([
+            'view' => View('user_management.user.assign_role_modal',$data)->render(),
+            'data' =>   [],
+            'status' => true,
+            'message' => 'OK'
+        ]);
     }
 
 }
+
+// php artisan make:migration shops_admin_table

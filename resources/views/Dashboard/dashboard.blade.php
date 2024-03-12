@@ -99,36 +99,41 @@
 ?>
     <div class="col-xs-12 col-sm-12 widget-container-col ui-sortable">
         <a href="{{route('sale.board.create')}}" class="{{ $classes }}" >
-            <i class="ace-icon fa fa-shopping-cart bigger-160"></i> <p class="total_label" > <b>&nbsp;</b></p>
+            <i class="ace-icon fa fa-shopping-cart bigger-160"></i> <p class="total_label" > <b id="pos_count" >&nbsp;</b></p>
             <p class="total_label"><b>POS</b></p>
         </a>
         <a  @can('product.read') href="{{ route('product.list') }}"  @endcan  class="{{ $classes }}" >
-            <i class="ace-icon fa fa-gift bigger-160"></i> <p class="total_label" > <b>&nbsp;</b></p>
+            <i class="ace-icon fa fa-gift bigger-160"></i> <p class="total_label" > <b id="product_count" >&nbsp;</b></p>
             <p class="total_label"><b>Products</b></p>
         </a>
         <a href="{{route('stock_exchange.list')}}" class="{{ $classes }}" >
-            <i class="ace-icon fa fa-exchange bigger-160"></i> <p class="total_label" > <b>&nbsp;</b></p>
+            <i class="ace-icon fa fa-exchange bigger-160"></i> <p class="total_label" > <b id="stock_exchange_count" >&nbsp;</b></p>
             <p class="total_label"><b>Stock Exchange</b></p>
         </a>
 
         <a href="{{route('stock_adjustment.list')}}" class="{{ $classes }}  " >
-            <i class="ace-icon fa fa-balance-scale bigger-160"></i> <p class="total_label" > <b>&nbsp;</b></p>
+            <i class="ace-icon fa fa-balance-scale bigger-160"></i> <p class="total_label" > <b id="stock_adjustment_count" >&nbsp;</b></p>
             <p class="total_label"><b>Stock Adjustment</b></p>
         </a>
 
         <a @can('stock_delivery.create')  href="{{ route('stocks.delivery.list') }}" @endcan class="{{ $classes }}  " >
-            <i class="ace-icon fa fa-cart-arrow-down bigger-160"></i> <p class="total_label" > <b>150</b></p>
+            <i class="ace-icon fa fa-cart-arrow-down bigger-160"></i> <p class="total_label" > <b id="purchases_count" >&nbsp;</b></p>
             <p class="total_label"><b>Purchases</b></p>
+        </a>
+
+        
+
+        <a @can('stock_delivery.create')  href="{{ route('stocks.delivery.list') }}" @endcan class="{{ $classes }}  " >
+            <i class="ace-icon fa fa-user bigger-160"></i> <p class="total_label" > <b id="customer_count" >&nbsp;</b></p>
+            <p class="total_label"><b>Customers</b></p>
         </a>
 
     </div>
 </div>
 
 <!------------------------------------------------------------------------------------------------------------------------------------------------------------------->
-
-
-
-                    <div class="row"  >
+                        <div class="space-6"></div>                    
+                        <div class="row"  >
                         <div class="col-xs-12">
                             <!-- PAGE CONTENT BEGINS -->
                             <!-- <div class="alert alert-block alert-success">
@@ -138,34 +143,14 @@
                                 <i class="ace-icon fa fa-check green"></i>
                                 Welcome to <strong class="green">IMS</strong>
                             </div> -->
-
-
-
-
-
-
-
-
-
-
-
-
-
-                            
-
                             <div class="row">
-
-
-
                             <div class="col-xs-12 col-sm-12 widget-container-col ui-sortable" id="widget-container-col-2">
 											<div class="widget-box widget-color-green2" id="widget-box-2">
 												<div class="widget-header">
 													<h5 class="widget-title bigger lighter">
 														<i class="ace-icon fa fa-table"></i>
 														Stats
-													</h5>
-
-												
+													</h5>												
 												</div>
 
 												<div class="widget-body">
@@ -173,32 +158,11 @@
 														<table class="table table-striped table-bordered table-hover">
 															<thead class="thin-border-bottom">
 																<tr>
-																	<th><i class="ace-icon fa fa-user"></i>
-																		Days
-																	</th>
-
-																	<th>
-																		<i>@</i>
-																		Sale Count
-																	</th>
-
-                                                                    <th>
-																		<i>@</i>
-																		Sale Amount
-																	</th>
-
-                                                                    <th>
-																		<i>@</i>
-																		Purchase Count
-																	</th>
-
-
-                                                                    <th>
-																		<i>@</i>
-																		Purchase Amount
-																	</th>
-
-
+																	<th><i class="ace-icon fa fa-user"></i> Days </th>
+																	<th> <i>@</i> Sale Count </th>
+                                                                    <th><i>@</i>Sale Amount</th>
+                                                                    <th><i>@</i>Purchase Count </th>
+                                                                    <th><i>@</i> Purchase Amount </th>
 																	<th class="hidden-480">Customer Create</th>
 																</tr>
 															</thead>
@@ -208,168 +172,8 @@
 												</div>
 											</div>
 										</div>
-
-
-
                                 <div class="space-6"></div>
-
-                                <div class="col-sm-6">
-                                    <div class="widget-box">
-                                        <div class="widget-header widget-header-flat widget-header-small">
-                                            <h5 class="widget-title">
-                                                <i class="ace-icon fa fa-signal"></i>
-                                                Physical Asset Count
-                                            </h5>
-<!-- 
-                                            <div class="widget-toolbar no-border">
-                                                <div class="inline dropdown-hover">
-                                                    <button class="btn btn-minier btn-primary">
-                                                        This Week
-                                                        <i class="ace-icon fa fa-angle-down icon-on-right bigger-110"></i>
-                                                    </button>
-
-                                                    <ul class="dropdown-menu dropdown-menu-right dropdown-125 dropdown-lighter dropdown-close dropdown-caret">
-                                                        <li class="active">
-                                                            <a href="#" class="blue">
-                                                                <i class="ace-icon fa fa-caret-right bigger-110">&nbsp;</i>
-                                                                This Week
-                                                            </a>
-                                                        </li>
-
-                                                        <li>
-                                                            <a href="#">
-                                                                <i class="ace-icon fa fa-caret-right bigger-110 invisible">&nbsp;</i>
-                                                                Last Week
-                                                            </a>
-                                                        </li>
-
-                                                        <li>
-                                                            <a href="#">
-                                                                <i class="ace-icon fa fa-caret-right bigger-110 invisible">&nbsp;</i>
-                                                                This Month
-                                                            </a>
-                                                        </li>
-
-                                                        <li>
-                                                            <a href="#">
-                                                                <i class="ace-icon fa fa-caret-right bigger-110 invisible">&nbsp;</i>
-                                                                Last Month
-                                                            </a>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                            </div>
- -->
-
-                                        </div>
-
-                                        <div class="widget-body">
-                                            <div class="widget-main">
-                                                <div id="piechart-placeholder"></div>
-
-                                                <!-- <div class="hr hr8 hr-double"></div> -->
-
-                                                <div class="clearfix">
-                                                    <div class="col-lg-3" style="border-right: solid 1px lightgray;" >
-                                                        <span class="grey">
-                                                            <i class="ace-icon fa fa-database fa-2x blue"></i>
-                                                            &nbsp; Total
-                                                        </span>
-                                                        <h4 class="bigger pull-right" id="physical_total_item" ></h4>
-                                                    </div>
-
-                                                    <div class="col-lg-3" style="border-right: solid 1px lightgray;">
-                                                        <span class="grey">
-                                                            <i class="ace-icon fa fa-download fa-2x purple"></i>
-                                                            &nbsp; In Hand
-                                                        </span>
-                                                        <h4 class="bigger pull-right" id="physical_in_hand"></h4>
-                                                    </div>
-
-                                                    <div class="col-lg-3" style="border-right: solid 1px lightgray;">
-                                                        <span class="grey">
-                                                            <i class="ace-icon fa fa-upload fa-2x red"></i>
-                                                            &nbsp; Issue
-                                                        </span>
-                                                        <h4 class="bigger pull-right" id="physical_issue" ></h4>
-                                                    </div>
-                                                </div>
-
-                                                
-
-                                                
-
-
-                                            </div><!-- /.widget-main -->
-                                        </div><!-- /.widget-body -->
-                                    </div><!-- /.widget-box -->
-                                </div><!-- /.col -->
-
-
-
                                 <!------------------------------------------------------------------------------------------->
-
-
-                                <div class="col-sm-6">
-                                    <div class="widget-box">
-                                        <div class="widget-header widget-header-flat widget-header-small">
-                                            <h5 class="widget-title">
-                                                <i class="ace-icon fa fa-signal"></i>
-                                                Condition wise Count
-                                            </h5>
-
-                                        </div>
-
-                                        <div class="widget-body">
-                                            <div class="widget-main">
-                                                <div id="piechart-placeholder"></div>
-
-                                                <!-- <div class="hr hr8 hr-double"></div> -->
-
-                                                <div class="clearfix">
-                                                    <div class="col-lg-3" style="border-right: solid 1px lightgray;" >
-                                                        <span class="grey">
-                                                            <i class="ace-icon fa fa-database fa-2x blue"></i>
-                                                            &nbsp; {{ App\Traits\Definitions::$CONDITION_WORKING_STR }}
-                                                        </span>
-                                                        <h4 class="bigger pull-right" id="condition_1" >----</h4>
-                                                    </div>
-
-                                                    <div class="col-lg-3" style="border-right: solid 1px lightgray;">
-                                                        <span class="grey">
-                                                            <i class="ace-icon fa fa-download fa-2x purple"></i>
-                                                            &nbsp; {{ App\Traits\Definitions::$CONDITION_FAULTY_STR }}
-                                                        </span>
-                                                        <h4 class="bigger pull-right" id="condition_4">----</h4>
-                                                    </div>
-
-                                                    <div class="col-lg-3" style="border-right: solid 1px lightgray;">
-                                                        <span class="grey">
-                                                            <i class="ace-icon fa fa-upload fa-2x red"></i>
-                                                            &nbsp; {{ App\Traits\Definitions::$CONDITION_DAMAGED_STR }}
-                                                        </span>
-                                                        <h4 class="bigger pull-right" id="condition_3" >----</h4>
-                                                    </div>
-
-                                                    <div class="col-lg-3" style="border-right: solid 1px lightgray;">
-                                                        <span class="grey">
-                                                            <i class="ace-icon fa fa-upload fa-2x red"></i>
-                                                            &nbsp; {{ App\Traits\Definitions::$CONDITION_DEAD_STR }}
-                                                        </span>
-                                                        <h4 class="bigger pull-right" id="condition_2" >----</h4>
-                                                    </div>
-
-                                                </div>
-
-                                                
-
-                                                
-
-
-                                            </div><!-- /.widget-main -->
-                                        </div><!-- /.widget-body -->
-                                    </div><!-- /.widget-box -->
-                                </div><!-- /.col -->
 
 
 
@@ -1424,16 +1228,23 @@ function getDashboardStats() {
 				$('#physical_total_item').html(res.physical.item_total);
                 $('#physical_in_hand').html(res.physical.item_available);
                 $('#physical_issue').html(res.physical.item_issued);
-
                 // stats_body
-
                 var statsBody = '';
-
                 $(res.dayWiseReport).each(function(index, row){
                     console.log(index, row);
                     statsBody += '<tr><td>'+row.labels.days+'</td><td>'+row.reports.sale_order_count+'</td><td>'+row.reports.sale_amount+'</td><td>'+row.reports.purchase_count+'</td><td>'+row.reports.purchase_amount+'</td><td>'+row.reports.customer_create+'</td></tr>';
                 });
                 $('#stats_body').html(statsBody);
+
+                var property = res.property_count;
+
+                $('#pos_count').html(property.item_total);
+                $('#product_count').html(property.products);
+                $('#stock_exchange_count').html(property.stock_exchange);
+                $('#stock_adjustment_count').html(property.stock_adjustment);
+                $('#purchases_count').html(property.purchases);
+                $('#customer_count').html(property.customer);
+
 
 			}
 		});

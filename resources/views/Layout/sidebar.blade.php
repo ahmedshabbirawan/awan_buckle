@@ -49,37 +49,7 @@
             </li>
             <!---------------Sale Board End-------------------->
 
-
-            <!--------------- Orders -------------------->
-            
-
-
-            <li class="{{request()->is('sale/order/*') || request()->is('sale/sale-return/*') ? 'active open' : '' }}">
-                <a href="#" class="dropdown-toggle ">
-                    <i class="menu-icon ace-icon glyphicon glyphicon-qrcode "></i>
-                    <span class="menu-text">
-                        Sale
-                    </span>
-                    <b class="arrow fa fa-angle-down"></b>
-                </a>
-                <b class="arrow"></b>
-                <ul class="submenu">
-                    
-                    <li class="{{request()->is('sale/order/*') ? 'active' : '' }}">
-                        <a href="{{route('sale.order.list')}}"><i class="menu-icon fa fa-caret-right"></i>Sale</a>
-                        <b class="arrow"></b>
-                    </li>
-
-                    <li class="{{request()->is('sale/sale-return/*') ? 'active' : '' }}">
-                        <a href="{{route('sale.sale_return.list')}}"><i class="menu-icon fa fa-caret-right"></i>Sale Return</a>
-                        <b class="arrow"></b>
-                    </li>
-                </ul>
-            </li>
-
-            <!---------------Sale Board End-------------------->
-            
-            <!--------------- Products -------------------->
+             <!--------------- Products -------------------->
              <li class="{{request()->is('product*') ? 'active open' : '' }}">
                 <a href="#" class="dropdown-toggle ">
                     <i class="menu-icon ace-icon glyphicon glyphicon-qrcode "></i>
@@ -106,6 +76,197 @@
                 </ul>
             </li>
             <!--------------- End Products-------------------->
+
+        
+            <!--------------- Sale Start -------------------->
+            <li class="{{request()->is('sale/order/*') || request()->is('sale/sale-return/*') ? 'active open' : '' }}">
+                <a href="#" class="dropdown-toggle ">
+                    <i class="menu-icon ace-icon glyphicon glyphicon-qrcode "></i>
+                    <span class="menu-text">
+                        Sale
+                    </span>
+                    <b class="arrow fa fa-angle-down"></b>
+                </a>
+                <b class="arrow"></b>
+                <ul class="submenu">
+                    
+                    <li class="{{request()->is('sale/order/*') ? 'active' : '' }}">
+                        <a href="{{route('sale.order.list')}}"><i class="menu-icon fa fa-caret-right"></i>Sale</a>
+                        <b class="arrow"></b>
+                    </li>
+
+                    <li class="{{request()->is('sale/sale-return/*') ? 'active' : '' }}">
+                        <a href="{{route('sale.sale_return.list')}}"><i class="menu-icon fa fa-caret-right"></i>Sale Return</a>
+                        <b class="arrow"></b>
+                    </li>
+                </ul>
+            </li> <!---------------Sale End-------------------->
+
+
+             <!--------------- Stock Deliveries -------------------->
+             <li class="{{request()->is('Stocks*') ? 'active open' : '' }}">
+                <a href="{{ route('stocks.delivery.list') }}" class="dropdown-toggle ">
+                    <i class="menu-icon ace-icon glyphicon glyphicon-barcode"></i>
+                    <span class="menu-text">
+                        Purchase
+                    </span>
+                    <b class="arrow fa fa-angle-down"></b>
+                </a>
+
+                <b class="arrow"></b>
+
+                <ul class="submenu">
+                
+                    <li class="{{request()->is('Stocks/list*') ? 'active' : '' }}">
+                        <a href="{{ route('stocks.delivery.list') }}"><i class="menu-icon fa fa-caret-right"></i>List</a><b class="arrow"></b>
+                    </li>
+                
+
+                
+                <li class="{{request()->is('Stocks/list*') ? 'active' : '' }}">
+                        <a href="{{route('stocks.purchase_return_list')}}"><i class="menu-icon fa fa-caret-right"></i>Purchase Return</a>
+                        <b class="arrow"></b>
+                    </li>
+
+
+                
+                    <li class="{{request()->is('Stocks/create*') ? 'active' : '' }}"><a href="{{ route('stocks.simple.delivery.create') }}"><i class="menu-icon fa fa-caret-right"></i> Simple Add New</a><b class="arrow"></b></li>
+                
+                
+                </ul>
+            </li>
+            <!--------------- End Stock Deliveries-------------------->
+            
+           
+
+            
+
+            <!--------------- Suppliers -------------------->
+            <li class="{{request()->is('supplier*') ? 'active open' : '' }}">
+                <a href="#" class="dropdown-toggle ">
+                    <i class="menu-icon fa fa-truck"></i>
+                    <span class="menu-text">
+                        Suppliers
+                    </span>
+                    <b class="arrow fa fa-angle-down"></b>
+                </a>
+
+                <b class="arrow"></b>
+
+                <ul class="submenu">
+                    @can('supplier.read')
+                    <li class="{{request()->is('supplier/list*') ? 'active' : '' }}">
+                        <a href="{{ route('supplier.list') }}"><i class="menu-icon fa fa-caret-right"></i>List</a><b class="arrow"></b>
+                    </li>
+                    @endcan
+                    @can('supplier.create')
+                    <li class="{{request()->is('supplier/create*') ? 'active' : '' }}">
+                        <a href="{{ route('supplier.create') }}"><i class="menu-icon fa fa-caret-right"></i>Add New</a><b class="arrow"></b>
+                    </li>
+                    @endcan
+                </ul>
+            </li>
+            <!--------------- End Suppliers-------------------->
+
+            <!--------------- Customer -------------------->
+            <li class="{{request()->is('customer*') ? 'active open' : '' }}">
+                <a href="#" class="dropdown-toggle ">
+                    <i class="menu-icon fa fa-user"></i>
+                    <span class="menu-text">
+                        Customers
+                    </span>
+                    <b class="arrow fa fa-angle-down"></b>
+                </a>
+
+                <b class="arrow"></b>
+
+                <ul class="submenu">
+                    <li class="{{request()->is('customer/list*') ? 'active' : '' }}">
+                        <a href="{{ route('customer.list') }}"><i class="menu-icon fa fa-caret-right"></i>List</a><b class="arrow"></b>
+                    </li>
+                    <li class="{{request()->is('customer/create*') ? 'active' : '' }}">
+                        <a href="{{ route('customer.create') }}"><i class="menu-icon fa fa-caret-right"></i>Add New</a><b class="arrow"></b>
+                    </li>
+                    @can('customer.read')
+                    
+                    @endcan
+                    @can('customer.create')
+                    
+                    @endcan
+                </ul>
+            </li>
+            <!--------------- End Customer -------------------->
+
+
+            <!--------------- Shops -------------------->
+            <li class="{{request()->is('shop*') ? 'active open' : '' }}">
+                <a href="#" class="dropdown-toggle ">
+                    <i class="menu-icon fa fa-building"></i>
+                    <span class="menu-text">
+                        Shops / Branches
+                    </span>
+                    <b class="arrow fa fa-angle-down"></b>
+                </a>
+
+                <b class="arrow"></b>
+
+                <ul class="submenu">
+                    <li class="{{request()->is('shop/list*') ? 'active' : '' }}">
+                        <a href="{{ route('shop.list') }}"><i class="menu-icon fa fa-caret-right"></i>List</a><b class="arrow"></b>
+                    </li>
+                    <li class="{{request()->is('shop/create*') ? 'active' : '' }}">
+                        <a href="{{ route('shop.create') }}"><i class="menu-icon fa fa-caret-right"></i>Add New</a><b class="arrow"></b>
+                    </li>
+                    @can('shop.read')
+                    
+                    @endcan
+                    @can('shop.create')
+                    
+                    @endcan
+                </ul>
+            </li>
+            <!--------------- End Customer -------------------->
+
+
+
+
+            <!--------------- Category -------------------->
+            <li class="{{request()->is('Category*') ? 'active open' : '' }}">
+                <a href="#" class="dropdown-toggle ">
+                    <i class="menu-icon fa fa-tags "></i>
+                    <span class="menu-text">
+                        Categories
+                    </span>
+
+                    <b class="arrow fa fa-angle-down"></b>
+                </a>
+
+                <b class="arrow"></b>
+
+                <ul class="submenu">
+
+                    @can('parent_category.read')
+                    <li class="{{request()->is('Category/Parent*') ? 'active' : '' }}">
+                        <a href="{{route('category.parent.list')}}"><i class="menu-icon fa fa-caret-right"></i>Parent Category</a><b class="arrow"></b>
+                    </li>
+                    @endcan
+                    @can('sub_category.read')
+                    <li class="{{request()->is('Category/Sub*') ? 'active' : '' }}">
+                        <a href="{{route('category.sub.list')}}"><i class="menu-icon fa fa-caret-right"></i>Sub Category</a><b class="arrow"></b>
+                    </li>
+                    @endcan
+                    @can('product_category.read')
+                    <li class="{{request()->is('Category/Product*') ? 'active' : '' }}">
+                        <a href="{{route('category.product.list')}}"><i class="menu-icon fa fa-caret-right"></i>Product Category</a>
+                        <b class="arrow"></b>
+                    </li>
+                    @endcan
+                </ul>
+            </li>
+            <!--------------- End Category -------------------->
+
+            
+
 
             <!--------------- User Management-------------------->
             <li class="{{request()->is('usermanagement*') ? 'active open' : '' }}">
@@ -213,199 +374,9 @@
                 </ul>
             </li>
             <!--------------- End Attribute-------------------->
+           
 
-            <!--------------- Suppliers -------------------->
-            <li class="{{request()->is('supplier*') ? 'active open' : '' }}">
-                <a href="#" class="dropdown-toggle ">
-                    <i class="menu-icon fa fa-truck"></i>
-                    <span class="menu-text">
-                        Suppliers
-                    </span>
-                    <b class="arrow fa fa-angle-down"></b>
-                </a>
-
-                <b class="arrow"></b>
-
-                <ul class="submenu">
-                    @can('supplier.read')
-                    <li class="{{request()->is('supplier/list*') ? 'active' : '' }}">
-                        <a href="{{ route('supplier.list') }}"><i class="menu-icon fa fa-caret-right"></i>List</a><b class="arrow"></b>
-                    </li>
-                    @endcan
-                    @can('supplier.create')
-                    <li class="{{request()->is('supplier/create*') ? 'active' : '' }}">
-                        <a href="{{ route('supplier.create') }}"><i class="menu-icon fa fa-caret-right"></i>Add New</a><b class="arrow"></b>
-                    </li>
-                    @endcan
-                </ul>
-            </li>
-            <!--------------- End Suppliers-------------------->
-
-            <!--------------- Customer -------------------->
-            <li class="{{request()->is('customer*') ? 'active open' : '' }}">
-                <a href="#" class="dropdown-toggle ">
-                    <i class="menu-icon fa fa-user"></i>
-                    <span class="menu-text">
-                        Customers
-                    </span>
-                    <b class="arrow fa fa-angle-down"></b>
-                </a>
-
-                <b class="arrow"></b>
-
-                <ul class="submenu">
-                    <li class="{{request()->is('customer/list*') ? 'active' : '' }}">
-                        <a href="{{ route('customer.list') }}"><i class="menu-icon fa fa-caret-right"></i>List</a><b class="arrow"></b>
-                    </li>
-                    <li class="{{request()->is('customer/create*') ? 'active' : '' }}">
-                        <a href="{{ route('customer.create') }}"><i class="menu-icon fa fa-caret-right"></i>Add New</a><b class="arrow"></b>
-                    </li>
-                    @can('customer.read')
-                    
-                    @endcan
-                    @can('customer.create')
-                    
-                    @endcan
-                </ul>
-            </li>
-            <!--------------- End Customer -------------------->
-
-
-            <!--------------- Shops -------------------->
-            <li class="{{request()->is('shop*') ? 'active open' : '' }}">
-                <a href="#" class="dropdown-toggle ">
-                    <i class="menu-icon fa fa-building"></i>
-                    <span class="menu-text">
-                        Shops / Branches
-                    </span>
-                    <b class="arrow fa fa-angle-down"></b>
-                </a>
-
-                <b class="arrow"></b>
-
-                <ul class="submenu">
-                    <li class="{{request()->is('shop/list*') ? 'active' : '' }}">
-                        <a href="{{ route('shop.list') }}"><i class="menu-icon fa fa-caret-right"></i>List</a><b class="arrow"></b>
-                    </li>
-                    <li class="{{request()->is('shop/create*') ? 'active' : '' }}">
-                        <a href="{{ route('shop.create') }}"><i class="menu-icon fa fa-caret-right"></i>Add New</a><b class="arrow"></b>
-                    </li>
-                    @can('shop.read')
-                    
-                    @endcan
-                    @can('shop.create')
-                    
-                    @endcan
-                </ul>
-            </li>
-            <!--------------- End Customer -------------------->
-
-            <!--------------- Category -------------------->
-            <li class="{{request()->is('Category*') ? 'active open' : '' }}">
-                <a href="#" class="dropdown-toggle ">
-                    <i class="menu-icon fa fa-tags "></i>
-                    <span class="menu-text">
-                        Categories
-                    </span>
-
-                    <b class="arrow fa fa-angle-down"></b>
-                </a>
-
-                <b class="arrow"></b>
-
-                <ul class="submenu">
-
-                    @can('parent_category.read')
-                    <li class="{{request()->is('Category/Parent*') ? 'active' : '' }}">
-                        <a href="{{route('category.parent.list')}}"><i class="menu-icon fa fa-caret-right"></i>Parent Category</a><b class="arrow"></b>
-                    </li>
-                    @endcan
-                    @can('sub_category.read')
-                    <li class="{{request()->is('Category/Sub*') ? 'active' : '' }}">
-                        <a href="{{route('category.sub.list')}}"><i class="menu-icon fa fa-caret-right"></i>Sub Category</a><b class="arrow"></b>
-                    </li>
-                    @endcan
-                    @can('product_category.read')
-                    <li class="{{request()->is('Category/Product*') ? 'active' : '' }}">
-                        <a href="{{route('category.product.list')}}"><i class="menu-icon fa fa-caret-right"></i>Product Category</a>
-                        <b class="arrow"></b>
-                    </li>
-                    @endcan
-                </ul>
-            </li>
-            <!--------------- End Category -------------------->
-
-            
-
-            <!--------------- Stock Deliveries -------------------->
-               <li class="{{request()->is('Stocks*') ? 'active open' : '' }}">
-                <a href="{{ route('stocks.delivery.list') }}" class="dropdown-toggle ">
-                    <i class="menu-icon ace-icon glyphicon glyphicon-barcode"></i>
-                    <span class="menu-text">
-                        Purchase
-                    </span>
-                    <b class="arrow fa fa-angle-down"></b>
-                </a>
-
-                <b class="arrow"></b>
-
-                <ul class="submenu">
-                @can('stock_delivery.create')
-                    <li class="{{request()->is('Stocks/list*') ? 'active' : '' }}">
-                        <a href="{{ route('stocks.delivery.list') }}"><i class="menu-icon fa fa-caret-right"></i>List</a><b class="arrow"></b>
-                    </li>
-                @endcan
-
-                
-                <li class="{{request()->is('Stocks/list*') ? 'active' : '' }}">
-                        <a href="{{route('stocks.purchase_return_list')}}"><i class="menu-icon fa fa-caret-right"></i>Purchase Return</a>
-                        <b class="arrow"></b>
-                    </li>
-
-
-                @can('stock_delivery.create')
-                    <li class="{{request()->is('Stocks/create*') ? 'active' : '' }}"><a href="{{ route('stocks.simple.delivery.create') }}"><i class="menu-icon fa fa-caret-right"></i> Simple Add New</a><b class="arrow"></b></li>
-                @endcan
-                
-                </ul>
-            </li>
-            <!--------------- End Stock Deliveries-------------------->
-
-            <!--------------- Issuance -------------------->
-            <li class="{{ ( request()->is('Issuance*') || request()->is('Return*') ) ? 'active open' : '' }} hidden">
-                <a href="#" class="dropdown-toggle ">
-                    <i class="menu-icon fa fa-link "></i>
-                    <span class="menu-text">
-                        Sale
-                    </span>
-                    <b class="arrow fa fa-angle-down"></b>
-                </a>
-
-                <b class="arrow"></b>
-
-                <ul class="submenu">
-
-                    @can('stock_issuance.create')
-                    <li class="{{request()->is('Issuance/create*') ? 'active' : '' }}">
-                        <a href="{{ route('issuance.create') }}"><i class="menu-icon fa fa-caret-right"></i>New Issuance</a><b class="arrow"></b>
-                    </li>
-                    @endcan
-
-                    @can('stock_issuance.read')
-                    <li class="{{request()->is('Issuance/list*') ? 'active' : '' }}">
-                        <a href="{{ route('issuance.list') }}"><i class="menu-icon fa fa-caret-right"></i>Issuance List</a><b class="arrow"></b>
-                    </li>
-                    @endcan
-                    
-                    @can('item_return.read')
-                    <li class="{{request()->is('Return/list*') ? 'active' : '' }}">
-                        <a href="{{ route('return.list') }}"><i class="menu-icon fa fa-caret-right"></i>Returns List</a><b class="arrow"></b>    
-                    </li>
-                    @endcan
-                    
-                </ul>
-            </li>
-            <!--------------- End Issuance-------------------->
+           
 
            
 

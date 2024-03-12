@@ -145,6 +145,12 @@ Route::middleware(['web','auth'])->group(function () {
             Route::get('delete/{id}',[UserController::class,'destroy'])->name('delete')->middleware('permission:user.delete');
             Route::get('change_password_modal_view/{id}',[UserController::class,'changePasswordModalView'])->name('change_password_modal')->middleware('permission:user.update');
             Route::post('save_password',[UserController::class,'savePassword'])->name('save_password')->middleware('permission:user.update');
+
+
+
+            Route::get('assign_role_view_modal/{id}',[UserController::class,'assignRoleView']); 
+
+
         });
     });
     
@@ -179,7 +185,7 @@ Route::middleware(['web','auth'])->group(function () {
         Route::post('/update/{id}',[SimpleProductController::class,'update'])->name('update')->middleware('permission:product.update');
         Route::get('/ajax/products',[SimpleProductController::class,'getProducts'])->name('ajax_products');
         Route::get('/import_products_modal',[SimpleProductController::class,'importProductsModal'])->name('import_products_modal');
-        Route::post('/save_import_products',[SimpleProductController::class,'importProductsSave'])->name('save_import_products');
+        Route::post('/save_import_products',[SimpleProductController::class,'friday_work'])->name('save_import_products');
     });
 
 
@@ -263,19 +269,19 @@ Route::middleware(['web','auth'])->group(function () {
 
 
     Route::group(['prefix'=>'customer','as' => 'customer.'],function(){
-        Route::get('/list', [CustomerController::class, 'index'] )->name('list')->middleware('permission:supplier.read');
-        Route::get('/create', [CustomerController::class, 'create'] )->name('create')->middleware('permission:supplier.create');
-        Route::post('/store', [CustomerController::class, 'store'] )->name('store')->middleware('permission:supplier.create');
-        Route::get('/edit/{id}',[CustomerController::class,'edit'])->name('edit')->middleware('permission:supplier.update');
-        Route::post('/update/{id}',[CustomerController::class,'update'])->name('update')->middleware('permission:supplier.update');
-        Route::get('/status/{id}',[CustomerController::class,'status'])->name('status')->middleware('permission:supplier.status');
-        Route::get('/delete/{id}',[CustomerController::class,'destroy'])->name('delete')->middleware('permission:supplier.delete');
-        Route::get('/view/{id}',[CustomerController::class,'show'])->name('view')->middleware('permission:supplier.read');
+        Route::get('/list', [CustomerController::class, 'index'] )->name('list'); //->middleware('permission:supplier.read');
+        Route::get('/create', [CustomerController::class, 'create'] )->name('create'); //->middleware('permission:supplier.create');
+        Route::post('/store', [CustomerController::class, 'store'] )->name('store'); //->middleware('permission:supplier.create');
+        Route::get('/edit/{id}',[CustomerController::class,'edit'])->name('edit'); //->middleware('permission:supplier.update');
+        Route::post('/update/{id}',[CustomerController::class,'update'])->name('update'); //->middleware('permission:supplier.update');
+        Route::get('/status/{id}',[CustomerController::class,'status'])->name('status'); //->middleware('permission:supplier.status');
+        Route::get('/delete/{id}',[CustomerController::class,'destroy'])->name('delete'); //->middleware('permission:supplier.delete');
+        Route::get('/view/{id}',[CustomerController::class,'show'])->name('view'); //->middleware('permission:supplier.read');
         Route::get('/search',[CustomerController::class,'search'])->name('search');
 
         Route::get('/search_select2',[CustomerController::class,'searchSelectTwo'])->name('search_select2');
 
-        Route::get('/create_view_modal', [CustomerController::class, 'createViewModal'] )->name('create_view_modal')->middleware('permission:supplier.create');
+        Route::get('/create_view_modal', [CustomerController::class, 'createViewModal'] )->name('create_view_modal'); //->middleware('permission:supplier.create');
     });
 
 
@@ -468,8 +474,10 @@ Route::middleware(['web','auth'])->group(function () {
 
     Route::group(['prefix'=>'sale/','as' => 'sale.'],function(){
 
+        
         Route::group(['prefix'=>'cart/','as' => 'cart.'],function(){
             Route::get('get-cart-item',[SaleCartController::class,'index'])->name('index');
+            Route::get('get-bill-total-amount',[SaleCartController::class,'getBillTotalAmounts'])->name('get_bill_total_amounts');
             Route::post('add-to-cart',[SaleCartController::class,'addToCart'])->name('add');
             Route::post('delete-cart-item',[SaleCartController::class,'deleteCartItem'])->name('delete_cart_item');
             Route::get('preview/{sale_key}',[SaleCartController::class,'cartPreview'])->name('preview');

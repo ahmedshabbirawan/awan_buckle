@@ -16,13 +16,13 @@ class DatabaseSeeder extends Seeder
         // \App\Models\User::factory(10)->create();
         $this->call([
             UserSeeder::class,
-            AttributeTypeSeeder::class,
-            MeasureUnitsSeeder::class,
-            LocationsSeeder::class,
-            OrganizationsSeeder::class,
-            WarehousesSeeder::class,
-            AttributeValueSeeder::class,
-            CategorySeeder::class
+            // AttributeTypeSeeder::class,
+            // MeasureUnitsSeeder::class,
+            // LocationsSeeder::class,
+            // OrganizationsSeeder::class,
+            // WarehousesSeeder::class,
+            // AttributeValueSeeder::class,
+            // CategorySeeder::class
         ]);
     }
 }

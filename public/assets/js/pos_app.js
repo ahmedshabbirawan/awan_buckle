@@ -125,9 +125,8 @@ pos_app = {
                 }
             }
         });
-   },
-
-   showCreateCustomerModal : function(){
+},
+showCreateCustomerModal : function(){
     $.ajax({
         dataType: 'json',
         type:'get',
@@ -406,7 +405,64 @@ saveImportProductsForm : function(){
              }
          }
      });
-}
+},
+//////===========================
+showRoleAssignFormModal : function(id){
+    $.ajax({
+        dataType: 'json',
+        type:'get',
+        url : baseURL + 'usermanagement/user/assign_role_view_modal/'+id,
+        success:function(res){
+            $('#assign_role_modal_con').html(res.view);
+            $('#assign_role_modal').modal('show'); 
+        }
+    });
+},
+saveRoleAssignForm : function(){
+ let myform = document.getElementById("create_customer_form");
+ let fdata = new FormData(myform);
+ let actionURL = $('#create_customer_form').attr('action');
+
+     $.ajax({
+         data: fdata,
+         cache: false,
+         processData: false,
+         contentType: false,
+         type: 'POST',
+         dataType: "JSON",
+         headers: {
+             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+         },
+         url: actionURL,
+         success: function(res, textStatus, jqXHR) {
+             if (jqXHR.status == 200) {
+                 $.confirm({
+                     title: 'Success',
+                     content: res.message,
+                     buttons: {
+                         yes: {
+                             text: 'OK',
+                             action: function() {
+                                 $('#create_customer_modal').modal('hide');
+                             }
+                         }
+                     }
+                 });
+             }
+         },
+         error: function(jqXHR, textStatus, errorThrown) {
+             // console.log(textStatus,jqXHR, errorThrown);
+             if (jqXHR.status != 200) {
+                 if (typeof jqXHR.responseJSON !== 'undefined') {
+                     $.confirm({
+                         title: 'Error',
+                         content: jqXHR.responseJSON.message
+                     });
+                 }
+             }
+         }
+     });
+},
 
 
 } // pos_app end

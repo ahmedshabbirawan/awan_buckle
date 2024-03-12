@@ -200,8 +200,8 @@ tag-basic-style.css -->
 <script>
 	var baseURL = "{{ url('/') }}/";	
 </script>
-<script src="{{ asset('assets/js/pos_main.js') }}"></script>
-<script src="{{ asset('assets/js/pos_app.js') }}"></script>
+<script src="{{ asset('assets/js/pos_main.js') }}?version={{ time() }}"></script>
+<script src="{{ asset('assets/js/pos_app.js') }}?version={{ time() }}"></script>
 
 <!-- <script src="{{ asset('assets/plugin/tags/tagsinput.js') }}"></script> -->
 

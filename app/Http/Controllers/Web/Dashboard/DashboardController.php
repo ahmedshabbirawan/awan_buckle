@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Web\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\Product;
+use App\Models\SaleCart;
 use App\Models\SaleOrder;
 use App\Models\SaleReturn;
+use App\Models\StockAdjustment;
 use App\Models\StockDelivery;
+use App\Models\StockExchange;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -33,6 +36,12 @@ class DashboardController extends Controller
 
     function dashboardStats(){
         $dayWiseReport      = array();
+        
+        $dayWiseReport[]    =   [    
+            'labels' => ['days' => 1],
+            'reports' => $this->getDaysWiseReportByDay(1)
+        ];
+
         $dayWiseReport[]    =   [    
             'labels' => ['days' => 7],
             'reports' => $this->getDaysWiseReportByDay(7)
@@ -113,18 +122,18 @@ class DashboardController extends Controller
             'dead_items' => ''
         ];
         $data['dayWiseReport'] = $dayWiseReport;
+        $data['property_count'] = $this->getPropertiesCounts();
          
 
         return $data;
     }
 
     function getDaysWiseReportByDay($day){
-        $currentDateTime = date('d-m-Y h:s');
+        $currentDateTime = date('Y-m-d').' 23:59:00';
 
-        $lastDay           = Carbon::parse()->subDays($day)->format('d-m-Y');
-        $lastDayDateTime   = $lastDay.'00:00:01';
+        $lastDay           = Carbon::parse()->subDays($day)->format('Y-m-d');
+        $lastDayDateTime   = $lastDay.' 00:00:01';
         $betweenDates      = [$lastDayDateTime,$currentDateTime];
-
 
         $statsData['sale_order_count']      = SaleOrder::whereBetween('created_at',$betweenDates)->count();
         $statsData['sale_amount']           = SaleOrder::whereBetween('created_at',$betweenDates)->sum('total_price'); //->get();
@@ -133,6 +142,17 @@ class DashboardController extends Controller
         $statsData['purchase_count']        = StockDelivery::whereBetween('created_at',$betweenDates)->count();
         $statsData['purchase_amount']       = StockDelivery::whereBetween('created_at',$betweenDates)->sum('delivery_amount');
         $statsData['customer_create']       = Customer::whereBetween('created_at',$betweenDates)->count();
+        return $statsData;
+    }
+
+
+    function getPropertiesCounts(){
+        $statsData['products']           = Product::count();
+        $statsData['sale_amount']        = SaleCart::count();
+        $statsData['stock_exchange']     = StockExchange::count();
+        $statsData['stock_adjustment']   = StockAdjustment::count();
+        $statsData['customer']           = Customer::count();
+        $statsData['purchases']          = StockDelivery::count();
         return $statsData;
     }
 

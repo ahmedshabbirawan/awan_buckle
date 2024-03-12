@@ -177,7 +177,57 @@ class RoleController extends Controller
     public function permissions($id){
         $roleId = $id;
         $role = Role::where('id',$id)->first();
-        $permissions = Permission::all();
+        // $permissions = Permission::all();
+
+        // $collect = collect(Permission::get()->toArray());
+        // $grouped = $collect->mapToGroups(function (array $item, int $key) {
+        //     return [$item['name'] => $item];
+        // });
+        // dd($grouped);
+
+        $permissionsArr = [];
+
+        foreach(Permission::all() as $per){
+            if(strtolower(substr($per->name ,0,5))  == 'user.'){
+                $permissionsArr['user'][] = $per;
+            }elseif(strtolower(substr($per->name ,0,5))  == 'role.'){
+                $permissionsArr['role'][] = $per;
+            }elseif(strtolower(substr($per->name ,0,5))  == 'shop.'){
+                $permissionsArr['shop'][] = $per;
+            }elseif(strtolower(substr($per->name ,0,8))  == 'product.'){
+                $permissionsArr['product'][] = $per;
+            }elseif(strtolower(substr($per->name ,0,4))  == 'pos.'){
+                $permissionsArr['pos'][] = $per;
+            }elseif(strtolower(substr($per->name ,0,5))  == 'sale.'){
+                $permissionsArr['sale'][] = $per;
+            }elseif(strtolower(substr($per->name ,0,9))  == 'purchase.'){
+                $permissionsArr['purchase'][] = $per;
+            }elseif(strtolower(substr($per->name ,0,15))  == 'stock_exchange.'){
+                $permissionsArr['stock_exchange'][] = $per;
+            }elseif(strtolower(substr($per->name ,0,16))  == 'stock_adjustment.'){
+                $permissionsArr['stock_adjustment'][] = $per;
+            }elseif(strtolower(substr($per->name ,0,9))  == 'customer.'){
+                $permissionsArr['customer'][] = $per;
+            }elseif(strtolower(substr($per->name ,0,9))  == 'supplier.'){
+                $permissionsArr['supplier'][] = $per;
+            }
+
+            // supplier
+            // stock_adjustment
+            // stock_exchange
+           // elseif(){
+
+            // }
+            else{
+                $permissionsArr['z-other'][] = $per;
+            }
+        }
+
+        $permissions = collect($permissionsArr)->sortKeys()->all();
+
+
+      //   dd($permissionsArr);
+
         $rolePermissions = DB::table('role_has_permissions')->where('role_id',$id)->pluck('permission_id')->toArray();
         return view('user_management.role.permission',compact('permissions','rolePermissions','roleId','role'));
     }

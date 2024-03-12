@@ -88,6 +88,57 @@ class SaleCartController extends Controller{
         
     }
 
+
+    function getBillTotalAmounts(Request $request){
+        $saleKey = $request->get('sale_key');
+
+        $items = SaleCart::where('sale_key', $saleKey)->where(function($query) use ($request) {
+            //     $empID      = $request->get('emp_id');
+            //     if( $empID != '' ){
+            //         $query->where('emp_id',$empID);
+            //     }
+        })->orderBy('id','ASC');
+        
+        $items = $items->get();
+
+        $totalBill = 0; 
+        $totalDiscount = 0;
+        $subTotal = 0;
+        $billAmount = 0;
+
+        foreach($items as $res ){
+            $subTotal       += $res->offer_price * $res->qty;
+            $grandTotal     =  ( ($res->offer_price - $res->discount) * $res->qty);
+            $totalDiscount  += $res->discount * $res->qty;
+
+        }
+        $billAmount = $subTotal - $totalDiscount;
+
+
+        /*
+        
+        ->with('totalPrice', function() use ($totalBill) {
+                    return $totalBill;
+                })->with('billAmount', function() use ($billAmount) {
+                    return $billAmount;
+                })->with('subTotal', function() use ($subTotal) {
+                    return $subTotal;
+                })->with('totalDiscount', function() use ($totalDiscount) {
+                    return $totalDiscount;
+                })
+        
+        */
+
+        return response()->json([
+            'totalPrice' => $totalBill,
+            'billAmount' => $billAmount,
+            'subTotal' => $subTotal,
+            'totalDiscount' => $totalDiscount
+
+        ]);
+
+
+    }
     
     
     public function addToCart(Request $request){

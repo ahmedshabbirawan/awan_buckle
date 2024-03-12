@@ -224,10 +224,48 @@ Issuance Items
             },
             error:ajaxFailBlock,
             success: function(res) {
-                console.log(res);
-                cartDataTable.ajax.reload();
+                if(action == 'update'){
+                    calculateSingleProduct(productID);
+                }else{
+                    cartDataTable.ajax.reload();
+                }
+                
             }
         });
+    }
+
+    function calculateSingleProduct(productID){
+        var qty = $('#'+productID+'_qty').val();
+                    var price = $('#'+productID+'_price').val();
+                    var discount = $('#'+productID+'_discount').val();
+                    console.log('Hello');
+                    $('#'+productID+'_sub_price').html( (qty * price) - (qty * discount) );
+
+
+                    
+
+
+                    var saleKey = $('#sale_key').val();   
+        $.ajax({
+            //  dataType: 'json',
+            type: 'get',
+            data:{'sale_key' :  saleKey},
+            url: "{{ route('sale.cart.get_bill_total_amounts') }}",
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            error:ajaxFailBlock,
+            success: function(res) {
+                var data = res; // ['responseJSON'];
+                    $('#total_item').html(data.recordsTotal);
+                    
+                    $('#sub_total').html(data.subTotal);
+                    $('#total_discount').html(data.totalDiscount);
+                    $('#billAmount').html(data.billAmount);
+            }
+        });
+
+
     }
 
 
@@ -244,7 +282,8 @@ Issuance Items
             error:ajaxFailBlock,
             success: function(res) {
                 console.log(res);
-                cartDataTable.ajax.reload();
+                // cartDataTable.ajax.reload();
+                calculateSingleProduct(productID);
             }
         });
     }
@@ -262,7 +301,8 @@ Issuance Items
             error:ajaxFailBlock,
             success: function(res) {
                 console.log(res);
-                cartDataTable.ajax.reload();
+               //  cartDataTable.ajax.reload();
+               calculateSingleProduct(productID);
             }
         });
     }
@@ -445,7 +485,7 @@ Issuance Items
                     title: 'Qty',
                     width:'15%',
                     render: function(data, type, row, meta) {
-                        return '<input type="text" id="'+row.item_id+'_qty"  onblur="updateToCart('+row.product_id+',this)" class="input-sm col-xs-12"  value="'+data+'" >';
+                        return '<input type="text" id="'+row.product_id+'_qty"  onblur="updateToCart('+row.product_id+',this)" autocomplete="off" class="input-sm col-xs-12" tabindex="1" value="'+data+'" >';
                     }
                 },{
                     data: 'offer_price',
@@ -453,7 +493,7 @@ Issuance Items
                     title: 'Offer Price',
                     width:'15%',
                     render: function(data, type, row, meta) {
-                        return '<input type="text" id="'+row.item_id+'_price" onblur="updateCartProductPrice('+row.product_id+',this)" value="'+data+'" class="input-sm col-xs-12" >';
+                        return '<input type="text" id="'+row.product_id+'_price" onblur="updateCartProductPrice('+row.product_id+',this)" autocomplete="off" value="'+data+'" tabindex="2" class="input-sm col-xs-12" >';
                     }
                 },
                 {
@@ -462,13 +502,16 @@ Issuance Items
                     title: 'Discount',
                     width:'10%',
                     render: function(data, type, row, meta) {
-                        return '<input type="text" id="'+row.item_id+'_discount" onblur="applyDiscountOnSingleProduct('+row.product_id+',this)" value="'+data+'" class="input-sm col-xs-12" >';
+                        return '<input type="text" id="'+row.product_id+'_discount" onblur="applyDiscountOnSingleProduct('+row.product_id+',this)" autocomplete="off" value="'+data+'" tabindex="3" class="input-sm col-xs-12" >';
                     }
                 },
                 {
                     data: 'product_total_price',
                     name: 'product_total_price',
-                    title: 'Final'
+                    // title: 'Final'
+                    render: function(data, type, row, meta) {
+                        return '<b id="'+row.product_id+'_sub_price" >'+data+'</b>';
+                    }
                 },
                 { data: 'action',name: 'action',title: 'Action' },
             ]

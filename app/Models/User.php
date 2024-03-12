@@ -13,6 +13,7 @@ use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Shop;
+use Spatie\Permission\Models\Role;
 
 class User extends Authenticatable
 {
@@ -57,5 +58,39 @@ class User extends Authenticatable
     function shop(){
         return $this->belongsTo(Shop::class,'shop_id');
     }
+
+    /*
+    public function can_manage($shop_id) : bool
+    {
+
+        #Backdoor for the system admin
+        // if ($this->hasRole(['System Admin'])) {
+        //     return true;
+        // }
+
+
+        #now we check if the user has the role for that page
+        $role = Role::select('name')
+                        ->join("shops_admin", 'shops_admin.role_id', '=', 'roles.id')
+                        ->where("shop_id", $shop_id)
+                        ->where("user_id",   $this->id)
+                        ->first();
+
+
+        #return true if roles was found
+        if (!empty($role)) {
+            return true;
+        }
+
+
+        #else false
+        return false;
+
+
+    }
+
+    */
+
+
 
 }

@@ -21,6 +21,7 @@
             <!-- PAGE CONTENT BEGINS -->
             <div class="row">
                 <div class="col-xs-12">
+                    <div class="table-responsive">
                     <table id="simple-table" class="table table-bordered table-hover datatable">
                         <thead>
                             <tr>
@@ -28,8 +29,8 @@
                                 <th class="center">User Name</th>
                                 <th class="center">Login Username</th>
                                 <th class="center">Role Name</th>
-                                <th class="center" class="hidden-480">Status</th>
-                                <th class="center" class="hidden-480">Action</th>
+                                <th class="center">Status</th>
+                                <th class="center">Action</th>
                             </tr>
                         </thead>
 
@@ -38,6 +39,7 @@
                             </tr>
                         </tbody>
                     </table>
+                    </div>
                 </div><!-- /.span -->
             </div><!-- /.row -->
 
@@ -47,10 +49,13 @@
     <!-- /.row -->
 </div><!-- /.page-content -->
 <div id="update_password_modal_con"></div>
+<div id="assign_role_modal_con"></div>
 @stop
 
 @section('script')
     <script>
+        
+
         $(document).ready(function() {
             var table = $('.datatable').DataTable({
                 processing: true,
@@ -62,7 +67,7 @@
                     {data: 'userName', name: 'userName', "className": "dt-center" },
                     {data: 'roleName', name: 'roleName', "className": "dt-center" },
                     {data: 'status', name: 'status',"className": "dt-center"},
-                    {data: 'action', name: 'action',"className": "dt-center"},
+                    {data: 'action', name: 'action'},
                 ]
             });
         });
