@@ -165,6 +165,11 @@ Sale
                     title: 'Total Discount',
                  
                 },{
+                    data: 'shop_name',
+                    name: 'shop_name',
+                    title: 'Shop',
+                 
+                },{
                     data: 'order_time',
                     name: 'order_time',
                     title: 'Date N Time',

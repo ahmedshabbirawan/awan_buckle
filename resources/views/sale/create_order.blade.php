@@ -508,7 +508,7 @@ Issuance Items
                 {
                     data: 'product_total_price',
                     name: 'product_total_price',
-                    // title: 'Final'
+                    title: 'Bill Price',
                     render: function(data, type, row, meta) {
                         return '<b id="'+row.product_id+'_sub_price" >'+data+'</b>';
                     }

@@ -47,7 +47,7 @@ class CustomerController extends Controller{
         $productID = $request->get('product_id');
 
         if($request->ajax()){
-                $results = Customer::select()->orderBy('id','ASC');
+                $results = Customer::select(); //->orderBy('id','ASC');
 // ->whereRelation('deliveries.deliveryProduct', 'product_id',3)
             //    if($productID != ''){
             //        $results =  $results->whereRelation('deliveries.deliveryProduct', 'product_id',$productID);    

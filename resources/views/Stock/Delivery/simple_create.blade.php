@@ -567,20 +567,21 @@ $qty = '';
 
         // console.log('=======>>>>> ',res);
         if (jqXHR.status == 200) {
+          getProductList();
           // if(typeof res.data.product !== 'undefined'){
-          $.confirm({
-            title: 'Success',
-            content: res.message,
-            buttons: {
-              yes: {
-                text: 'OK',
-                action: function() {
-                  getProductList();
-                  $('#CreateProduct').modal('hide');
-                }
-              }
-            }
-          });
+          // $.confirm({
+          //   title: 'Success',
+          //   content: res.message,
+          //   buttons: {
+          //     yes: {
+          //       text: 'OK',
+          //       action: function() {
+          //         getProductList();
+          //         $('#CreateProduct').modal('hide');
+          //       }
+          //     }
+          //   }
+          // });
           // }
         }
       },

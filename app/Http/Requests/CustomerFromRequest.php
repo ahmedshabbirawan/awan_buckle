@@ -36,11 +36,11 @@ class CustomerFromRequest extends FormRequest
       //  $email      = $this->request->get('email');
         $rules  = [];
         $rules['name']  =  'required';
-        // if($id != ''){
-        //     $rules['mobile']  =  [ 'required', Rule::unique('customer')->ignore($id)];
-        // }else{
-        //     $rules['mobile']  =  'required|unique:shops';
-        // }
+        if($id != ''){
+            $rules['mobile']  =  [ 'required', Rule::unique('customers')->ignore($id)];
+        }else{
+            $rules['mobile']  =  'required|unique:customers';
+        }
         // $rules['address']  =  'required';
         // $rules['phone']  =  'required';
         // $rules['city_id']  =  'required';

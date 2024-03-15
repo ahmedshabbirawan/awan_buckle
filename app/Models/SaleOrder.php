@@ -13,4 +13,8 @@ class SaleOrder extends Model
     
 
 
+    function shop(){
+        return $this->belongsTo('App\Models\Shop','shop_id');
+    }
+
 }

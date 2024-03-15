@@ -213,7 +213,7 @@ Stock Deliveries
                     title: 'Action'
                 }
             ],
-            // order: [[1, 'asc']]
+            order: [[0, 'desc']]
         });
 
     },500);

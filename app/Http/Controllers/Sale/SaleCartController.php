@@ -20,6 +20,7 @@ use App\Models\SaleOrderItem;
 use App\Models\Shop;
 use App\Models\StockItem;
 use Illuminate\Support\Facades\DB;
+use Exception;
 
 use Illuminate\Support\Facades\Validator;
 
@@ -438,12 +439,7 @@ class SaleCartController extends Controller{
 
 
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
+    
     public function finalPlaceOrder(Request $request){
 
         $validator = Validator::make($request->all(), [
@@ -466,28 +462,29 @@ class SaleCartController extends Controller{
         $notFound           = 0;
         $itemWillDelete     = [];
 
+        DB::beginTransaction();
         try{
-            DB::beginTransaction();
+            
             $totalOfferPrice    = 0;
             $totalPrice = 0;
             $billAmount = 0;
             $totalDiscount      = 0;
             foreach($cartItems as $tItem):
-                //   echo $tItem->product_id; exit;
-                //  $stockItem = StockItem::findOrFail($tItem->item_id);
-                $shopID = auth()->user()->shop_id;
-                $proAvail = ProductAvailable::where('product_id',$tItem->product_id)->where('shop_id',$shopID)->first();
-                $product = Product::find($tItem->product_id);
 
-              //   print_r($proAvail); exit;
+                $shopID     = auth()->user()->shop_id;
+                $proAvail   = ProductAvailable::where('product_id',$tItem->product_id)->where('shop_id',$shopID)->first();
+                $product    = Product::find($tItem->product_id);
+
                 if( !($proAvail) ){
-                    $notFound++;
-                    continue;
+                    // $notFound++;
+                    // continue;
+                    throw new Exception("Product not available!");
                 }
 
                 if( ($tItem->qty < 1) || ($proAvail->qty < 1) || ($proAvail->qty <  $tItem->qty) ){
-                    $notFound++;
-                    continue;
+                    // $notFound++;
+                    // continue;
+                    throw new Exception("Product Quantity not available!");
                 }
                 // sale cart ==> ['product_id', 'product_name', 'item_id', 'sale_key', 'qty', 'offer_price', 'price', 'status', 'created_by','updated_by','deleted_by' ];
                 // sale orer item ==>  ['product_id', 'item_id', 'sale_key', 'order_id', 'customer_id', 'qty', 'offer_price', 'discount', 'price', 'status']; 
@@ -501,7 +498,6 @@ class SaleCartController extends Controller{
                 $itemData['offer_price']    =    $tItem->offer_price;
                 $itemData['discount']       =    $tItem->discount;
                 $itemData['price']          =    $tItem->final_price;
-                
                 $itemData['cost_price']     =    $product->cost_price;
 
 
@@ -528,26 +524,17 @@ class SaleCartController extends Controller{
             $saleOrder->total_discount      = $totalDiscount;
             $saleOrder->total_price         = $totalPrice;
             $saleOrder->save();
-
+            
+            SaleCart::whereIn('id',$itemWillDelete)->delete();
+            
             DB::commit();
-         //    dd('testing');
-
-         //   SaleCart::whereIn('id',$itemWillDelete)->delete();
-
-            if( $notFound > 0 ){
-                DB::rollBack();
-            }else{
-                DB::commit();
-            }
-
-            if( $notFound > 0 ){
-                return response(['status' => false, 'message' => $notFound.' items not available in quantity']);
-            }else{
-                return response(['status' => true, 'message' => 'Order created successfully!', 'data' => $saleOrder]);
-            }            
+            return response(['status' => true, 'message' => 'Order created successfully!', 'data' => $saleOrder]);
         }catch(\Exception $e){
-            return response()->json(['status' => false, 'message' => 'Error.Please Contact   Support'. $e->getMessage()], 500);
+            DB::rollBack();
+            return response()->json(['status' => false, 'message' => 'Error: '.$e->getMessage().' Please contact support'], 500);
         }
+
+        
 
 
     }

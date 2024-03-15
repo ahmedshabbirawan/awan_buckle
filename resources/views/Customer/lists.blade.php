@@ -146,8 +146,6 @@ Customers
 
     $(document).ready(function() {
 
-
-
         console.log('i am db');
         table = $('#yajra-table').DataTable({
             // lengthMenu: [
@@ -162,14 +160,14 @@ Customers
             serverSide: true,
             ajax: "{{ route('customer.list') }}",
             columns: [
-                //   {data: 'id', name: 'id', title : 'ID'},
-                {
-                    "data": "id",
-                    title: 'Sr.',
-                    render: function(data, type, row, meta) {
-                        return meta.row + meta.settings._iDisplayStart + 1;
-                    }
-                },
+                   {data: 'id', name: 'id', title : 'ID'},
+                // {
+                //     "data": "id",
+                //     title: 'Sr.',
+                //     // render: function(data, type, row, meta) {
+                //     //     return meta.row + meta.settings._iDisplayStart + 1;
+                //     // }
+                // },
                 {
                     data: 'name',
                  
@@ -226,7 +224,7 @@ Customers
                     title: 'Action'
                 }
             ],
-            // order: [[1, 'asc']]
+            order: [[0, 'desc']]
         });
     });
 </script>

@@ -116,14 +116,14 @@
             <p class="total_label"><b>Stock Adjustment</b></p>
         </a>
 
-        <a @can('stock_delivery.create')  href="{{ route('stocks.delivery.list') }}" @endcan class="{{ $classes }}  " >
+        <a @can('stock_delivery.read')  href="{{ route('stocks.delivery.list') }}" @endcan class="{{ $classes }}  " >
             <i class="ace-icon fa fa-cart-arrow-down bigger-160"></i> <p class="total_label" > <b id="purchases_count" >&nbsp;</b></p>
             <p class="total_label"><b>Purchases</b></p>
         </a>
 
         
 
-        <a @can('stock_delivery.create')  href="{{ route('stocks.delivery.list') }}" @endcan class="{{ $classes }}  " >
+        <a   href="{{ route('customer.list') }}"  class="{{ $classes }}  " >
             <i class="ace-icon fa fa-user bigger-160"></i> <p class="total_label" > <b id="customer_count" >&nbsp;</b></p>
             <p class="total_label"><b>Customers</b></p>
         </a>

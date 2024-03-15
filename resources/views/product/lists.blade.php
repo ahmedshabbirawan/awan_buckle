@@ -229,11 +229,18 @@ var listTable;
                 }, width: '10%'
             },
             { data: 'product_name', name: 'product_name', title: 'Name',},
-            { data: 'cost_price', name: 'cost_price', title: 'Cost Price',},
+
+            @if(auth()->user()->hasRole('Super Admin'))
+        { data: 'cost_price', name: 'cost_price', title: 'Cost Price',},
+@endif
+
             { data: 'price', name: 'price', title: 'Sale Price',},
             { data: 'code', name: 'code', title: 'UOM', width: '10%'  },
             { data: 'stock_available', name: 'stock_available', title: 'Total Stock', width: '10%'  }
         ];
+
+      
+
         <?php 
         foreach($shops as $shop):
         ?>
@@ -267,7 +274,7 @@ var listTable;
                 }
             },
             columns: dataColumns,
-            order: [[ 2 , 'asc']]
+            order: [[ 0 , 'desc']]
         });
         }, 500);
     });

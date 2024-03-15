@@ -13,15 +13,15 @@
                 <div class="row" style="margin:0px 50px;">
                    
 
-                <div class="form-group">
-                <label class="col-sm-3 control-label no-padding-right" for="form-field-1"> Customer Name </label>
+                <div class="form-group required">
+                <label class="col-sm-3 control-label no-padding-right" for="form-field-1"> Customer Name *</label>
                 <div class="col-sm-9">
                     <input type="text" class="col-xs-10 col-sm-5 form-control @error('name') is-invalid @enderror" value="{{old('name', (isset($customer))? $customer->name : '' )}}" name="name" id="name" placeholder="Name">
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="col-sm-3 control-label no-padding-right" for="form-field-1"> Mobile </label>
+                <label class="col-sm-3 control-label no-padding-right" for="form-field-1"> Mobile *</label>
                 <div class="col-sm-9">
                     <input type="text" class="col-xs-10 col-sm-5 form-control @error('mobile') is-invalid @enderror" value="{{old('mobile',(isset($customer))? $customer->mobile : '' )}}" name="mobile" id="mobile" placeholder="mobile">
                 </div>

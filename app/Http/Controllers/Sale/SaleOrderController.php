@@ -31,11 +31,12 @@ class SaleOrderController extends Controller{
         function index(Request $request){
             if($request->ajax()){
                 $groupBy    = $request->get('group_by');
-                $items      = SaleOrder::where(function($query) use ($request) {
-                    //     $empID      = $request->get('emp_id');
-                    //     if( $empID != '' ){
-                    //         $query->where('emp_id',$empID);
-                    //     }
+                $items      = SaleOrder::with('shop')->where(function($query) use ($request) {
+                    if(auth()->user()->hasRole('Super Admin')){
+                        
+                    }else{
+                        $query->where('shop_id',auth()->user()->shop_id);
+                    }
                 });
                 
                 $items = $items->get();
@@ -47,6 +48,8 @@ class SaleOrderController extends Controller{
                     return $row->item_count;
                 })->addColumn('order_time', function ($row) {
                     return $row->created_at->format('h:i / d-m-Y');
+                })->addColumn('shop_name', function ($row) {
+                    return $row->shop->name;
                 })->addColumn('customer_name', function ($row) {
                     if($row->customer_id == 0){
                         return 'Walking Customer';
