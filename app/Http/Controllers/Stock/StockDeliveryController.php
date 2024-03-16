@@ -68,7 +68,7 @@ class StockDeliveryController extends Controller{
                 if($row->status == 1){
                     $statusIcon = 'fa fa-check-circle-o';
                 }
-                $action = '<div class="hidden-sm hidden-xs btn-group">';
+                $action = '<div class="btn-group">';
                 $action .= '<a href="'.route('stocks.delivery.detail',$row->id).'" class="btn btn-xs btn-success" data-toggle="tooltip" title="Detail" ><i class="ace-icon fa fa-eye bigger-120"></i></a>';
                 $action .= '<a href="'.route('stocks.purchase_return_view',$row->id).'" class="btn btn-xs btn-primary" data-toggle="tooltip" title="Sale Return" ><i class="ace-icon fa fa-undo bigger-120"></i></a>';
                 $action .= '</div>';

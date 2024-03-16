@@ -135,12 +135,18 @@ class DashboardController extends Controller
         $lastDayDateTime   = $lastDay.' 00:00:01';
         $betweenDates      = [$lastDayDateTime,$currentDateTime];
 
-        $statsData['sale_order_count']      = SaleOrder::whereBetween('created_at',$betweenDates)->count();
-        $statsData['sale_amount']           = SaleOrder::whereBetween('created_at',$betweenDates)->sum('total_price'); //->get();
+        $whereArr = [];
+
+        if(auth()->user()->hasRole('Shop Manager')){
+            $whereArr['shop_id'] = auth()->user()->shop_id;
+        }
+
+        $statsData['sale_order_count']      = SaleOrder::whereBetween('created_at',$betweenDates)->where($whereArr)->count();
+        $statsData['sale_amount']           = SaleOrder::whereBetween('created_at',$betweenDates)->where($whereArr)->sum('total_price'); //->get();
        //  $statsData['sale_return_amount']    = SaleReturn::where()->count();
       //  $statsData['profit_amount']         = SaleReturn::where()->count();
-        $statsData['purchase_count']        = StockDelivery::whereBetween('created_at',$betweenDates)->count();
-        $statsData['purchase_amount']       = StockDelivery::whereBetween('created_at',$betweenDates)->sum('delivery_amount');
+        $statsData['purchase_count']        = StockDelivery::whereBetween('created_at',$betweenDates)->where([])->count();
+        $statsData['purchase_amount']       = StockDelivery::whereBetween('created_at',$betweenDates)->where([])->sum('delivery_amount');
         $statsData['customer_create']       = Customer::whereBetween('created_at',$betweenDates)->count();
         return $statsData;
     }

@@ -234,20 +234,22 @@ Issuance Items
         });
     }
 
+    function isFloat(n){
+        return Number(n) === n && n % 1 !== 0;
+    }
+
     function calculateSingleProduct(productID){
-        var qty = $('#'+productID+'_qty').val();
-                    var price = $('#'+productID+'_price').val();
-                    var discount = $('#'+productID+'_discount').val();
-                    console.log('Hello');
-                    $('#'+productID+'_sub_price').html( (qty * price) - (qty * discount) );
+        var qty         = $('#'+productID+'_qty').val();
+        var price       = $('#'+productID+'_price').val();
+        var discount    = $('#'+productID+'_discount').val();
+        var displayPrice = (qty * price) - (qty * discount);
+        if(isFloat(displayPrice)){
+            displayPrice = parseFloat(displayPrice).toFixed(2);
+        }
+        $('#'+productID+'_sub_price').html( displayPrice );
 
-
-                    
-
-
-                    var saleKey = $('#sale_key').val();   
+        var saleKey = $('#sale_key').val();   
         $.ajax({
-            //  dataType: 'json',
             type: 'get',
             data:{'sale_key' :  saleKey},
             url: "{{ route('sale.cart.get_bill_total_amounts') }}",
@@ -485,7 +487,7 @@ Issuance Items
                     title: 'Qty',
                     width:'15%',
                     render: function(data, type, row, meta) {
-                        return '<input type="text" id="'+row.product_id+'_qty"  onblur="updateToCart('+row.product_id+',this)" autocomplete="off" class="input-sm col-xs-12" tabindex="1" value="'+data+'" >';
+                        return '<input type="text" id="'+row.product_id+'_qty"  onblur="updateToCart('+row.product_id+',this)" autocomplete="off" class="input-sm col-xs-12" tabindex="'+(row.id+0.1)+'" value="'+data+'" >';
                     }
                 },{
                     data: 'offer_price',
@@ -493,7 +495,7 @@ Issuance Items
                     title: 'Offer Price',
                     width:'15%',
                     render: function(data, type, row, meta) {
-                        return '<input type="text" id="'+row.product_id+'_price" onblur="updateCartProductPrice('+row.product_id+',this)" autocomplete="off" value="'+data+'" tabindex="2" class="input-sm col-xs-12" >';
+                        return '<input type="text" id="'+row.product_id+'_price" onblur="updateCartProductPrice('+row.product_id+',this)" autocomplete="off" value="'+data+'" tabindex="'+(row.id+0.2)+'" class="input-sm col-xs-12" >';
                     }
                 },
                 {
@@ -502,7 +504,7 @@ Issuance Items
                     title: 'Discount',
                     width:'10%',
                     render: function(data, type, row, meta) {
-                        return '<input type="text" id="'+row.product_id+'_discount" onblur="applyDiscountOnSingleProduct('+row.product_id+',this)" autocomplete="off" value="'+data+'" tabindex="3" class="input-sm col-xs-12" >';
+                        return '<input type="text" id="'+row.product_id+'_discount" onblur="applyDiscountOnSingleProduct('+row.product_id+',this)" autocomplete="off" value="'+data+'" tabindex="'+(row.id+0.3)+'" class="input-sm col-xs-12" >';
                     }
                 },
                 {

@@ -51,7 +51,7 @@ class SaleBoardController extends Controller
             // return count($row->returnItem); // (isset($row->issuanceItem))?$row->item_count:'';
         })
         ->addColumn('action', function ($row) {
-            $action = '<div class="hidden-sm hidden-xs btn-group">';
+            $action = '<div class="btn-group">';
             $action .= '<a href="'.route('sale.board.create',$row->sale_key).'" class="btn btn-xs btn-success" data-toggle="tooltip" title="Detail" ><i class="ace-icon fa fa-eye bigger-120"></i></a>';
             $action .= '<a href="javascript:void(0);" onclick="pos_app.deleteOnHoldItem('.$row->sale_key.');" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Delete" ><i class="ace-icon fa fa-trash-o bigger-120"></i></a>';
             $action .= '</div>';

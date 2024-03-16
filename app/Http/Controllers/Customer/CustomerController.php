@@ -66,7 +66,7 @@ class CustomerController extends Controller{
                         if($row->status == 1){
                             $statusIcon = 'fa fa-check-circle-o';
                         }
-                        $action = '<div class="hidden-sm hidden-xs btn-group">';
+                        $action = '<div class="btn-group">';
                       //  if(auth()->user()->can('customer.read')){
                             $action .= '<a href="'.route('customer.view', $row->id).'" class="btn btn-xs btn-success" data-toggle="tooltip" title="Detail" ><i class="ace-icon fa fa-eye bigger-120"></i></a>';
                      //   }

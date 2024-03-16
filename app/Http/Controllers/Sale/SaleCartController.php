@@ -68,20 +68,20 @@ class SaleCartController extends Controller{
                 })->addColumn('offer_price', function ($row) {
                     return $row->offer_price;
                 })->addColumn('product_total_price', function ($row) {
-                    return ( ($row->offer_price - $row->discount) * $row->qty);    
+                    return  round( ($row->offer_price - $row->discount) * $row->qty);    
                 })->addColumn('action', function ($row) {
                     $dd =  '<a href="javascript:void(0);" onclick="deleteCartItem('.$row->id.');" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Delete" ><i class="ace-icon fa fa-trash-o bigger-120"></i></a>';
                     return $dd;
                 })
                 ->rawColumns(['item_count','action'])
                 ->with('totalPrice', function() use ($totalBill) {
-                    return $totalBill;
+                    return round($totalBill);
                 })->with('billAmount', function() use ($billAmount) {
-                    return $billAmount;
+                    return round($billAmount);
                 })->with('subTotal', function() use ($subTotal) {
-                    return $subTotal;
+                    return round($subTotal);
                 })->with('totalDiscount', function() use ($totalDiscount) {
-                    return $totalDiscount;
+                    return round($totalDiscount);
                 })
                 ->make(true);
             }
@@ -458,11 +458,10 @@ class SaleCartController extends Controller{
             return response(['message' => 'No items available'],422);
         }
 
+        DB::beginTransaction();
         $saleOrder          = SaleOrder::create(['sale_key' => $saleKey, 'item_count' => count($cartItems), 'customer_id' => $customerID, 'shop_id' => auth()->user()->shop_id , 'created_by' => auth()->user()->id]);
         $notFound           = 0;
         $itemWillDelete     = [];
-
-        DB::beginTransaction();
         try{
             
             $totalOfferPrice    = 0;
@@ -484,7 +483,7 @@ class SaleCartController extends Controller{
                 if( ($tItem->qty < 1) || ($proAvail->qty < 1) || ($proAvail->qty <  $tItem->qty) ){
                     // $notFound++;
                     // continue;
-                    throw new Exception("Product Quantity not available!");
+                    throw new Exception("Product (".$product->name.") Quantity not available!");
                 }
                 // sale cart ==> ['product_id', 'product_name', 'item_id', 'sale_key', 'qty', 'offer_price', 'price', 'status', 'created_by','updated_by','deleted_by' ];
                 // sale orer item ==>  ['product_id', 'item_id', 'sale_key', 'order_id', 'customer_id', 'qty', 'offer_price', 'discount', 'price', 'status']; 

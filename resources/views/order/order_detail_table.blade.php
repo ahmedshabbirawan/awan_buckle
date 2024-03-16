@@ -184,7 +184,7 @@ body{ margin : 0px;}
                         <td>{{ $item->price }}</td>
                         <td>{{ $item->discount }}</td>
                         <td>{{ $item->qty }}</td>
-                        <td>{{ ($item->offer_price - $item->discount) * $item->qty }}</td>
+                        <td>{{ round( ($item->offer_price - $item->discount) * $item->qty ) }}</td>
                     </tr>
                     <?php endforeach; ?>
 
@@ -193,7 +193,7 @@ body{ margin : 0px;}
                         <td></td>
 						
                         <td></td>
-                        <td style="text-align: right;"> <b>{{ $order->total_offer_price }} </b> </td>
+                        <td style="text-align: right;"> <b>{{ round( $order->total_offer_price ) }} </b> </td>
                     </tr>
 
 					<tr class="total">
@@ -209,7 +209,7 @@ body{ margin : 0px;}
                         <td></td>
                         <td></td>
                         <td></td>
-                        <td> <b> {{ $order->total_price }} </b> </td>
+                        <td> <b> {{ round($order->total_price) }} </b> </td>
                     </tr>
 
 					
