@@ -53,6 +53,7 @@ use App\Http\Controllers\Customer\CustomerController;
 use App\Http\Controllers\Shop\ShopController;
 use App\Http\Controllers\Sale\SaleCartController;
 use App\Http\Controllers\Sale\SaleReturnController;
+use App\Http\Controllers\User\UserRoleController;
 
 
 use App\Http\Controllers\StockAdjustment\StockAdjustmentController;
@@ -145,13 +146,19 @@ Route::middleware(['web','auth'])->group(function () {
             Route::get('delete/{id}',[UserController::class,'destroy'])->name('delete')->middleware('permission:user.delete');
             Route::get('change_password_modal_view/{id}',[UserController::class,'changePasswordModalView'])->name('change_password_modal')->middleware('permission:user.update');
             Route::post('save_password',[UserController::class,'savePassword'])->name('save_password')->middleware('permission:user.update');
-
-
-
-            Route::get('assign_role_view_modal/{id}',[UserController::class,'assignRoleView']); 
-
-
         });
+        
+        Route::group(['prefix'=>'user-role/','as' => 'user_role.'],function(){
+            Route::get('modal-view-user-shop-role/{id}',[UserRoleController::class,'assignRoleView']);
+            Route::post('save_user_shop_role',[UserRoleController::class,'assignRolesave'])->name('save_user_shop_role');
+            // 
+            Route::get('change-user-current-shop',[UserRoleController::class,'changeUserCurrentShopView']);
+            Route::post('change-user-current-shop-save',[UserRoleController::class,'changeUserCurrentShopSave'])->name('change_user_current_shop_save');
+        });
+
+
+         
+
     });
     
 

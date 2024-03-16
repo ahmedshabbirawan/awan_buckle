@@ -23,7 +23,7 @@
             <ul class="nav ace-nav">
 
             <li class="grey dropdown-modal">
-                    <a data-toggle="dropdown" class="dropdown-toggle" href="#">
+                    <a  onclick="pos_app.changeCurrentShopModal();" href="javascript:void(0);">
                         Shop : {{ optional(auth()->user()->shop)->name }} 
                     </a>
             </li>

@@ -267,5 +267,6 @@ $(document).ready(function(){
 
 	</script>
 <div id="add_product_modal_con"></div>
+<div id="change_user_current_shop_modal_con"></div>
 	</body>
 </html>

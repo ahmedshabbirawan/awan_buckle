@@ -265,15 +265,7 @@ class UserController extends Controller{
         }
     }
 
-    function assignRoleView(){
-        $data['shops'] = Shop::all();
-        return response()->json([
-            'view' => View('user_management.user.assign_role_modal',$data)->render(),
-            'data' =>   [],
-            'status' => true,
-            'message' => 'OK'
-        ]);
-    }
+    
 
 }
 

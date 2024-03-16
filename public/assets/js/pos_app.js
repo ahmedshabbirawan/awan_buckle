@@ -411,17 +411,17 @@ showRoleAssignFormModal : function(id){
     $.ajax({
         dataType: 'json',
         type:'get',
-        url : baseURL + 'usermanagement/user/assign_role_view_modal/'+id,
+        url : baseURL + 'usermanagement/user-role/modal-view-user-shop-role/'+id,
         success:function(res){
             $('#assign_role_modal_con').html(res.view);
             $('#assign_role_modal').modal('show'); 
         }
     });
 },
-saveRoleAssignForm : function(){
- let myform = document.getElementById("create_customer_form");
+saveUserRoleAssignForm : function(){
+ let myform = document.getElementById("assign_users_roles_form");
  let fdata = new FormData(myform);
- let actionURL = $('#create_customer_form').attr('action');
+ let actionURL = $('#assign_users_roles_form').attr('action');
 
      $.ajax({
          data: fdata,
@@ -443,7 +443,7 @@ saveRoleAssignForm : function(){
                          yes: {
                              text: 'OK',
                              action: function() {
-                                 $('#create_customer_modal').modal('hide');
+                                 $('#assign_role_modal').modal('hide');
                              }
                          }
                      }
@@ -463,6 +463,53 @@ saveRoleAssignForm : function(){
          }
      });
 },
+
+// changeCurrentShop
+changeCurrentShopModal : function(){
+    $.ajax({
+        dataType: 'json',
+        type:'get',
+        url : baseURL + 'usermanagement/user-role/change-user-current-shop',
+        success:function(res){
+            $('#change_user_current_shop_modal_con').html(res.view);
+            $('#change_user_current_shop_modal').modal('show'); 
+        }
+    });
+},
+saveChangeShopForm : function(){
+    let myform = document.getElementById("change_shop_form");
+    let fdata = new FormData(myform);
+    let actionURL = $('#change_shop_form').attr('action');
+   
+        $.ajax({
+            data: fdata,
+            cache: false,
+            processData: false,
+            contentType: false,
+            type: 'POST',
+            dataType: "JSON",
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            url: actionURL,
+            success: function(res, textStatus, jqXHR) {
+                if (jqXHR.status == 200) {
+                    window.location.reload();
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                // console.log(textStatus,jqXHR, errorThrown);
+                if (jqXHR.status != 200) {
+                    if (typeof jqXHR.responseJSON !== 'undefined') {
+                        $.confirm({
+                            title: 'Error',
+                            content: jqXHR.responseJSON.message
+                        });
+                    }
+                }
+            }
+        });
+   },
 
 
 } // pos_app end
