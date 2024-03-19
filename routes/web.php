@@ -31,9 +31,9 @@ use App\Http\Controllers\Web\Categories\ParentCategoryController;
 use App\Http\Controllers\Web\Categories\ProductCategoryController;
 use App\Http\Controllers\Web\Categories\SubCategoryController;
 
-use App\Http\Controllers\Attribute\AttributeController;
-use App\Http\Controllers\Attribute\HardDiskController;
-use App\Http\Controllers\Attribute\RamController;
+// use App\Http\Controllers\Attribute\AttributeController;
+// use App\Http\Controllers\Attribute\HardDiskController;
+// use App\Http\Controllers\Attribute\RamController;
 
 use App\Http\Controllers\Web\Auth\RoleController;
 use App\Http\Controllers\Web\Auth\PermissionController;
@@ -107,7 +107,7 @@ Route::middleware(['web','auth'])->group(function () {
     Route::get('/dashboard_stats',[DashboardController::class,'dashboardStats'])->name('dashboard_stats');
     Route::get('/update-product-name', [SimpleProductController::class, 'updateProductName'] );
     Route::get('/create_first_purchase', [SimpleProductController::class, 'create_first_purchase'] );
-
+    
     Route::group(['prefix'=>'usermanagement','as' => 'usermanagement.'],function(){
         //Role
         Route::group(['prefix'=>'role/','as' => 'role.'],function(){
