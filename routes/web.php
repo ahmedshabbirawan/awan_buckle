@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
-// SupplierController;
 use App\Http\Controllers\Organization\OrganizationController;
 use App\Http\Controllers\Supplier\SupplierController;
 use App\Http\Controllers\Brand\BrandController;
@@ -31,16 +30,9 @@ use App\Http\Controllers\Web\Categories\ParentCategoryController;
 use App\Http\Controllers\Web\Categories\ProductCategoryController;
 use App\Http\Controllers\Web\Categories\SubCategoryController;
 
-// use App\Http\Controllers\Attribute\AttributeController;
-// use App\Http\Controllers\Attribute\HardDiskController;
-// use App\Http\Controllers\Attribute\RamController;
-
 use App\Http\Controllers\Web\Auth\RoleController;
 use App\Http\Controllers\Web\Auth\PermissionController;
 use App\Http\Controllers\Web\Auth\UserController;
-
-use App\Http\Controllers\Attribute\AttributeTypeController;
-use App\Http\Controllers\Attribute\AttributeValueController;
 
 use App\Http\Controllers\Stock\StockDeliveryController;
 use App\Http\Controllers\Stock\SimpleStockDeliveryController;
@@ -61,6 +53,7 @@ use App\Http\Controllers\StockAdjustment\StockAdjustmentController;
 use App\Http\Controllers\StockExchange\StockExchangeController;
 
 use App\Http\Controllers\Report\ProductStockController;
+use App\Http\Controllers\Sale\Report\SaleReportController;
 use App\Http\Controllers\Web\Product\SimpleProductController;
 use App\Models\StockItem;
 
@@ -304,17 +297,17 @@ Route::middleware(['web','auth'])->group(function () {
     });
 
 
-    Route::group(['prefix'=>'attribute','as' => 'attribute.'],function(){
-      //  Route::group(['prefix'=>'{slug}','as' => '{slug}.'],function(){
-            Route::get('{slug}/list', [AttributeValueController::class, 'index'] )->name('attribute-list-index')->middleware('permission:attribute.read');
-            Route::get('{slug}/create', [AttributeValueController::class, 'create'] )->name('create')->middleware('permission:attribute.read');
-            Route::post('{slug}/store', [AttributeValueController::class, 'store'] )->name('store')->middleware('permission:attribute.read');
-            Route::get('{slug}/edit/{id}',[AttributeValueController::class,'edit'])->name('edit')->middleware('permission:attribute.update');
-            Route::post('{slug}/update/{id}',[AttributeValueController::class,'update'])->name('update')->middleware('permission:attribute.update');
-            Route::get('{slug}/status/{id}',[AttributeValueController::class,'status'])->name('status')->middleware('permission:attribute.status');
-      //  });
-        Route::get('/list', [AttributeController::class, 'index'] )->name('list')->middleware('permission:attribute.read');
-    });
+    // Route::group(['prefix'=>'attribute','as' => 'attribute.'],function(){
+    //   //  Route::group(['prefix'=>'{slug}','as' => '{slug}.'],function(){
+    //         Route::get('{slug}/list', [AttributeValueController::class, 'index'] )->name('attribute-list-index')->middleware('permission:attribute.read');
+    //         Route::get('{slug}/create', [AttributeValueController::class, 'create'] )->name('create')->middleware('permission:attribute.read');
+    //         Route::post('{slug}/store', [AttributeValueController::class, 'store'] )->name('store')->middleware('permission:attribute.read');
+    //         Route::get('{slug}/edit/{id}',[AttributeValueController::class,'edit'])->name('edit')->middleware('permission:attribute.update');
+    //         Route::post('{slug}/update/{id}',[AttributeValueController::class,'update'])->name('update')->middleware('permission:attribute.update');
+    //         Route::get('{slug}/status/{id}',[AttributeValueController::class,'status'])->name('status')->middleware('permission:attribute.status');
+    //   //  });
+    //     Route::get('/list', [AttributeController::class, 'index'] )->name('list')->middleware('permission:attribute.read');
+    // });
 
 
     Route::prefix('suppliers')->group(function () {
@@ -569,9 +562,27 @@ Route::middleware(['web','auth'])->group(function () {
         Route::get('list',[StockAdjustmentController::class,'index'])->name('list');
     });
 
-    Route::group(['prefix'=>'Report/','as' => 'report.'],function(){ 
+    Route::group(['prefix'=>'report/','as' => 'report.'],function(){ 
+
+        Route::group(['prefix'=>'sale/','as' => 'sale.'],function(){
+            Route::get('all',[SaleReportController::class,'all'])->name('all');
+        });
+
+
+        
+        
+        // OLD
         Route::get('stock_available',[ProductStockController::class,'productStock'])->name('stock.available');
     });
+
+
+
+    Route::group(['prefix'=>'report/','as' => 'report.'],function(){ 
+        Route::group(['prefix'=>'sale/','as' => 'sale.'],function(){
+            Route::get('all',[SaleReportController::class,'all'])->name('all');
+        });
+    });
+
 
 }); // main auth end
 

@@ -136,7 +136,7 @@ Stock Adjustment
                     title: 'Sr.',
                     width:'5%',
                     render: function(data, type, row, meta) {
-                        return meta.row + meta.settings._iDisplayStart + 1;
+                        return data; // meta.row + meta.settings._iDisplayStart + 1;
                     }
                 },{
                     data: 'product.name',
@@ -182,7 +182,7 @@ Stock Adjustment
                     title: 'Sr.',
                     width:'5%',
                     render: function(data, type, row, meta) {
-                        return meta.row + meta.settings._iDisplayStart + 1;
+                        return data; //meta.row + meta.settings._iDisplayStart + 1;
                     }
                 },{
                     data: 'exchange_key',

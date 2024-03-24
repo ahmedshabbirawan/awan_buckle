@@ -361,7 +361,7 @@
                 <ul class="submenu">
 
 
-                <?php foreach(App\Util\Util::getAttributeList() as $attr){ ?>
+                <?php if(1 == 0){ foreach(App\Util\Util::getAttributeList() as $attr){ ?>
                     <li class="{{ (  (request('slug') != '') && ( request('slug')  == $attr->slug )  ) ? 'active ' : '' }}">
                         <a href="{{ route('attribute.attribute-list-index', [ 'slug' => $attr->slug ?? 'noooo' ]) }}">
                             <i class="menu-icon fa fa-caret-right"></i>
@@ -370,7 +370,7 @@
 
                         <b class="arrow"></b>
                     </li>
-                    <?php } ?>
+                    <?php } }?>
                 </ul>
             </li>
             <!--------------- End Attribute-------------------->
@@ -380,8 +380,8 @@
 
            
 
-             <!--------------- Issuance -------------------->
-             <li class="{{request()->is('Reports*') ? 'active open' : '' }} ">
+             <!--------------- Reports -------------------->
+             <li class="{{request()->is('reports*') ? 'active open' : '' }} ">
                 <a href="#" class="dropdown-toggle ">
                     <i class="menu-icon fa fa-bar-chart-o "></i>
                     <span class="menu-text">
@@ -389,21 +389,19 @@
                     </span>
                     <b class="arrow fa fa-angle-down"></b>
                 </a>
-
                 <b class="arrow"></b>
-
-
                 <ul class="submenu">
+                    
+                    <li class="{{request()->is('report*') ? 'active' : '' }}">
+                        <a href="{{ route('report.sale.all') }}"><i class="menu-icon fa fa-caret-right"></i>Sales</a><b class="arrow"></b>
+                    </li>    
 
-                    <li class="{{request()->is('Report*') ? 'active' : '' }}">
+                    <li class="{{request()->is('report*') ? 'active' : '' }}">
                         <a href="{{ route('report.stock.available') }}"><i class="menu-icon fa fa-caret-right"></i>Product Stock</a><b class="arrow"></b>
                     </li>
-
                 </ul>
-
-              
             </li>
-            <!--------------- End Issuance-------------------->
+            <!--------------- End Reports-------------------->
 
             
         </ul><!-- /.nav-list -->
