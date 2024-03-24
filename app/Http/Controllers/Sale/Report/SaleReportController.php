@@ -52,7 +52,12 @@ class SaleReportController extends Controller{
         // dd($startDate, $endDate);
 
                 $items      = SaleOrder::with('shop')->where(function($query) use ($shopIds, $startDate, $endDate) {
-                    $query->WhereIn('shop_id',$shopIds)->whereDate('created_at','>=',$startDate)->whereDate('created_at','<=',$endDate);
+                    if($shopIds){
+                        $query->WhereIn('shop_id',$shopIds);
+                    }
+                    if($startDate && $endDate){
+                        $query->whereDate('created_at','>=',$startDate)->whereDate('created_at','<=',$endDate);
+                    }
                 });
                 
                 $items = $items->get();
