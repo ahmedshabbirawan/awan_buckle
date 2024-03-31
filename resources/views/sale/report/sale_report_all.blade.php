@@ -62,22 +62,51 @@
                 </div>
                 <!----------------->
                 <div class="widget-toolbox padding-8 clearfix">
+                <button class="btn btn-xs btn-info pull-left" onclick="print_report();">
+                        <span class="bigger-110">Print</span>
+                        <i class="ace-icon fa fa-print icon-on-right"></i>
+                    </button>
+
                     <button class="btn btn-xs btn-success pull-right" onclick="reloadTable();">
                         <span class="bigger-110">Search</span>
-                        <i class="ace-icon fa fa-check icon-on-right"></i>
+                        <i class="ace-icon fa fa-search icon-on-right"></i>
                     </button>
                 </div>
             </div>
         </div></div></div>
 
 
-
+<style>
+    .td_divider{
+        background-color: lightslategray;
+        width: 5px;
+    }
+    .td_label{
+        width: 150px;
+    }
+</style>
 <div class="row ">
     <div class="col-12 col-lg-12" style="margin-top:20px;">
         <div class="card radius-10 border-top border-0 border-4 border-danger">
             <div class="card-body">
                 @include('Layout.alerts')
-                <div class="table-responsive">
+                <div class="table-responsive" id="report_con" >
+                    <table class="table table-striped table-bordered yajratable"  style="width:100%">
+                    <tr>
+                        <td class="td_label">Shops</td> <td id="shops_val" ></td> 
+                        <td class="td_divider" ></td>
+                        <td class="td_label" >Dates  </td> <td id="date_val" ></td> 
+                        <td class="td_divider" ></td>
+                        <td class="td_label"> </td> <td></td> 
+                    </tr>
+                    <tr>
+                        <td class="td_label"> Total Sale:</td> <td id="total_sales" ></td> 
+                        <td class="td_divider"></td> 
+                        <td class="td_label"> Records  </td> <td id="total_record" ></td>
+                        <td class="td_divider"></td> 
+                        <td class="td_label"> Product Items</td> <td id="total_item" ></td> 
+                    </tr>
+                    </table>
                     <table class="table table-striped table-bordered yajratable" id="yajra-table" style="width:100%"></table>
                 </div>
             </div>
@@ -129,8 +158,10 @@
                     [1, 2, 3, 'All'],
                 ],
             "aLengthMenu": [[1,5,10, 25, 50, 100, -1], [1,5,10, 25, 50, 100, "All"]],
-            "iDisplayLength": 25,
+            "iDisplayLength": -1,
+            paging: false,
             dom: 'Bfrtip',
+            searching: false,  info: false,
             buttons: [{
                 extend: 'csv',
                 text: 'Export to Excel',
@@ -146,6 +177,14 @@
                 data: function (d) {
                     d.shop_ids = $('#shop_ids').val(),  
                     d.date_range    = $('#date_range').val()
+                },
+                complete:function(res){
+                    var data = res['responseJSON'];
+                    $('#total_sales').html(data.totalPrice);
+                    $('#date_val').html($('#date_range').val());
+                    $('#total_record').html(data.recordsTotal);
+                    $('#shops_val').html(data.shopsName);
+                    $('#total_item').html(data.itemCount);
                 }
             },
             columns: [
@@ -207,7 +246,12 @@
 
 
  
+    function print_report(){
+        // report_con
 
+        $("#report_con").printThis();
+
+    }
 
 
 
