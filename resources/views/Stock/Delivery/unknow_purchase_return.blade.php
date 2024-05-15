@@ -51,8 +51,6 @@ var shopHTML = '<?php foreach($shops as $shop){
 	<tr>
 		<td>
 			Supplier : <select name="supplier_id">
-
-				<option value="0">Local Supplier</option>
 				@foreach($suppliers as $sup)
 					<option value="{{ $sup->id }}">{{ $sup->name }}</option>
 				@endforeach
@@ -77,6 +75,7 @@ var shopHTML = '<?php foreach($shops as $shop){
 					  <th>Shop</th>
                       <th style="width: 10%;">Current Quantity</th>
                       <th style="width: 30%;">Return Quantity</th>
+					  <th style="width: 30%;">Return Description</th>
                     </tr>
                   </table>							
 </div>
@@ -168,6 +167,7 @@ var indexCount = 1;
    // html += '<div class="form-check"><input class="form-check-input" type="radio" name="stock" value="out" id="stock_out">';
    // html += '<label class="form-check-label" for="stock_out">Out</label></div></td>';
     html += '<td><input type="text" required class="input-sm col-sm-12" name="return_qty[]" id="adjust_qty_'+index+'" placeholder="Qty"></td>';
+	html += '<td><textarea name="return_single_desc[]" id="return_single_desc'+index+'" class="form-control " placeholder="Description"></textarea></td>';
     html += '</tr>';
     indexCount++;
     return html;

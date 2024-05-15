@@ -39,9 +39,23 @@ class ProductStockController extends Controller{
                 })->rawColumns(['action','product_category_name','product_name','product_attribute','sn_tags'])
                     //  ->orderColumn('id', 'DESC')
                 ->make(true);
-        }
+        } 
         $data['sub_category']   = ParentCategory::with(['subCategories'])->orderBy('name','DESC')->get();
         return view('reports.product_stock_report',$data);
+    }
+
+
+    function product(){
+        $data['sub_category']   = ParentCategory::with(['subCategories'])->orderBy('name','DESC')->get();
+        $data['products'] = Product::all();// ->pluck('name','id');
+        // $data['shops'] = Shop::all()->pluck('name','id');
+        return view('reports.product_report',$data);        
+    }
+
+
+    function productWise(){
+        $data['sub_category']   = ParentCategory::with(['subCategories'])->orderBy('name','DESC')->get();
+        return view('reports.product_wise_stock_report',$data);
     }
 
 

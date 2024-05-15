@@ -152,6 +152,18 @@ $qty = '';
             <div class="widget-main padding-10">
               <div>
                 <div class="row">
+
+                <div class="form-group">
+    <label for="exampleFormControlTextarea1">Example textarea</label>
+    <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
+  </div>
+
+  <div class="form-group">
+    <label for="exampleFormControlTextarea1">Example textarea</label>
+    <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
+  </div>
+
+
                   <div class="col-lg-3">
                     <label>Supplier</label>
 
@@ -164,7 +176,7 @@ $qty = '';
                   </div>
                   
 
-                  <div class="col-lg-3">
+                  <div class="col-lg-3 col-sm-12">
                     <label>Purchase Date</label>
 
                     <div class="input-group">

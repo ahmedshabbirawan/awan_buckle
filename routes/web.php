@@ -568,11 +568,10 @@ Route::middleware(['web','auth'])->group(function () {
             Route::get('all',[SaleReportController::class,'all'])->name('all');
         });
 
-
-        
-        
         // OLD
-        Route::get('stock_available',[ProductStockController::class,'productStock'])->name('stock.available');
+        Route::get('product',[ProductStockController::class,'product'])->name('product');
+
+        Route::get('product_wise',[ProductStockController::class,'productWise'])->name('product_wise');
     });
 
 

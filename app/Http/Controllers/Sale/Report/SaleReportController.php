@@ -33,7 +33,7 @@ class SaleReportController extends Controller{
 
         $data['products'] = Product::all();
         $data['shops'] = Shop::all()->pluck('name','id');
-        $data['shops'] = Shop::all()->pluck('name','id');
+      //  $data['shops'] = Shop::all()->pluck('name','id');
         if($request->ajax()){
             $groupBy    = $request->get('group_by');
             $shopIds    = $request->get('shop_ids');

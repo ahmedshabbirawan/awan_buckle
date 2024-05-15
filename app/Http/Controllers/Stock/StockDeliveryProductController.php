@@ -333,6 +333,7 @@ class StockDeliveryProductController extends Controller{
         $shopIDs        = $request->get('shop_ids');
         $productIDs     = $request->get('product_ids');
         $supplierID     = $request->get('supplier_id');
+        $itemDescArr     = $request->get('return_single_desc');
 
         $purchaseReturn = PurchaseReturn::create([
             'supplier_id' => $supplierID, 
@@ -354,6 +355,7 @@ class StockDeliveryProductController extends Controller{
 
             $shopID =     $shopIDs[$index];
             $productID = $productIDs[$index];
+            $itemDesc = $itemDescArr[$index];
             
             // $saleOrder = StockDeliveryProduct::find($item);
             // $saleOrder->quantity = $saleOrder->quantity - $returnQty;
@@ -370,7 +372,8 @@ class StockDeliveryProductController extends Controller{
                 'purchase_return_id' => $purchaseReturn->id , 
                 'product_id' => $productID, 
                 'unit_price' => $product->price, 
-                'qty' => $returnQty
+                'qty' => $returnQty,
+                'item_description' => $itemDesc
             ]);
 
 

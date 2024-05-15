@@ -393,12 +393,17 @@
                 <ul class="submenu">
                     
                     <li class="{{request()->is('report*') ? 'active' : '' }}">
-                        <a href="{{ route('report.sale.all') }}"><i class="menu-icon fa fa-caret-right"></i>Sales</a><b class="arrow"></b>
+                        <a href="{{ route('report.sale.all') }}"><i class="menu-icon fa fa-caret-right"></i>Sale</a><b class="arrow"></b>
                     </li>    
 
                     <li class="{{request()->is('report*') ? 'active' : '' }}">
-                        <a href="{{ route('report.stock.available') }}"><i class="menu-icon fa fa-caret-right"></i>Product Stock</a><b class="arrow"></b>
+                        <a href="{{ route('report.product') }}"><i class="menu-icon fa fa-caret-right"></i>Product</a><b class="arrow"></b>
                     </li>
+
+                    <li class="{{request()->is('report*') ? 'active' : '' }}">
+                        <a href="{{ route('report.product_wise') }}"><i class="menu-icon fa fa-caret-right"></i>Product Report</a><b class="arrow"></b>
+                    </li>
+
                 </ul>
             </li>
             <!--------------- End Reports-------------------->
