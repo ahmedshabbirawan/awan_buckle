@@ -2,7 +2,7 @@
 
 <?php
 
-$title = 'Stock Report';
+$title = 'Product Report';
 
 ?>
 
@@ -13,6 +13,11 @@ $title = 'Stock Report';
 @section('content')
 
 <style>
+    /*
+    #navbar, #sidebar{
+        display: none;
+    }
+    */
     .widget-body .table{
         margin: 0px;
     }
@@ -86,7 +91,7 @@ $title = 'Stock Report';
                         <div class="row">
                             <div class="col-lg-3 col-sm-3">
                                 <label>Product</label>
-                                <select name="product_ids" id="product_ids" data-placeholder="Select Product" class="col-lg-12 select_chosen chosen-multi-select" >
+                                <select name="product_ids" id="product_ids" data-placeholder="Select Product" onchange="getResultsByProductId();" class="col-lg-12 select_chosen chosen-multi-select" >
                                 <option value=""></option>
                                     @foreach($products as $product)
                                         <option value="{{ $product->id }}">{{ $product->name }}</option>
@@ -136,17 +141,62 @@ $title = 'Stock Report';
                 
                 <div class="widget-main">
                     <table class="table table-striped table-bordered no-footer">
-                        <tr class="odd" ><td class="even">Name : </td> <td class="odd" > Dollar Pen </td> <td>Name : </td> <td> Dollar Pen </td></tr>
+                        <tr class="odd" ><td class="even">Name : <b id="pro_name"></b> </td>  <td>Description : <b id="pro_desc"></b> </td></tr>
                     </table>
                     <table class="table table-striped table-bordered no-footer">
-                        <tr class="odd" ><td class="even">Name : </td> <td class="odd" > Dollar Pen </td> <td>Name : </td> <td> Dollar Pen </td></tr>
+                        <tr class="odd" >
+                            <td class="even">Cost Price (Rs) : <b id="pro_cost_price" > -- </b> </td> 
+                            <td>Sale Price (Rs) : <b id="pro_sale_price" > -- </b> </td>
+                        </tr>
                     </table>
+                    <table class="table table-striped table-bordered no-footer">
+                        <tr class="odd" >
+                            <td>Total Purchase (Pair) : <b id="pro_total_purchase_qty"> --  </b> </td> <td> Total Purchase (Rs) : <b id="pro_total_purchase_price" > -- </b> </td> 
+                        </tr>
+                        <tr class="odd" >
+                            <td>Total Sale (Pair) : <b id="pro_total_sale_qty" > --  </b> </td> <td> Total Sale (Rs) : <b id="pro_total_sale_price" > -- </b> </td> 
+                        </tr>
+                    </table>
+
+                    <table class="table table-striped table-bordered no-footer">
+                        <tr class="odd" >
+                            <td colspan="3" ><b>Available in Shop</b></td> 
+                        </tr>
+                        <tr class="odd" > 
+                            <td>Total Available (Pair) : <b id="pro_total_available_qty" > --  </b> </td> <td> Total Available (Rs) : <b id="pro_total_available_price" > -- </b> </td> 
+                        </tr>
+                    </table>
+
                 </div>
 
                 <!----------------->
                 <div class="widget-toolbox padding-8 clearfix">
-                    C
+                    Shops
                 </div>
+
+
+
+                <div class="widget-main">
+                    <table class="table table-striped table-bordered table-hover no-margin-bottom no-border-top no-footer">
+                        <thead>
+                            <tr>
+                                <td>Shop</td> 
+                                <td>Total Purchase (Pair) : </td> 
+                                <td>Total Purchase (Rs) :</td> 
+                                <td>Total Sale (Pair) : </td>
+                                <td> Total Sale (Rs) :</td>
+                            </tr>
+                        </thead>
+                        <tbody id="shop_table_body">
+                            <tr>
+                                <td colspan="5" >---</td> 
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+
+
             </div>
         </div>
     </div>
@@ -198,6 +248,44 @@ $title = 'Stock Report';
             console.log('i am un checked');
         }
     }
+
+
+    function getResultsByProductId(){
+        var productId = $('#product_ids').val();
+        $.ajax({
+            dataType: 'json',
+            type: 'get',
+            url: "{{ route('report.product') }}?product_id="+productId,
+            success: function(res) {
+                console.log(res);
+
+                var productDetail = res.product_detail;
+                var productStat = res.product_stats;
+
+                $('#pro_name').html(productDetail.name);
+                $('#pro_cost_price').html(productDetail.cost_price);
+                $('#pro_sale_price').html(productDetail.price);
+                
+                $('#pro_total_sale_qty').html(productStat.sale_count);
+               // $('#pro_total_sale_price').html(productStat);
+
+                $('#pro_total_purchase_qty').html(productStat.purchase_count);
+               // $('#pro_total_purchase_qty').html(productStat);
+
+                $('#pro_total_available_qty').html(productStat.available_count);
+               // $('#pro_total_available_price').html(productStat);
+
+                var html = '';
+                $(res.product_stats_shops_wise).each(function(index, row){
+                    html += '<tr><td>'+row.name+'</td><td>'+row.name+'</td><td>5800</td><td>15600</td><td>265878</td></tr>'; 
+                });
+                $('#shop_table_body').html(html);
+                // <tr><td>ABC Store</td><td>458</td><td>5800</td><td>15600</td><td>265878</td></tr>
+            }
+        });
+    }
+
+
     $(document).ready(function() {
 
         $('.select21').chosen({
@@ -278,7 +366,7 @@ $title = 'Stock Report';
                 ]
             });
         }
-        initDataTableRecord();
+       //  initDataTableRecord();
         $('.select_chosen').chosen();
 
 

@@ -4,9 +4,14 @@ namespace App\Http\Controllers\Report;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\Shop;
 use App\Models\ParentCategory;
+use App\Models\ProductAvailable;
+use App\Models\SaleOrderItem;
+use App\Models\StockDeliveryItem;
+use App\Models\StockDeliveryProduct;
 use Illuminate\Http\Request;
-
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\DataTables;
 
@@ -45,18 +50,58 @@ class ProductStockController extends Controller{
     }
 
 
-    function product(){
+    function product(Request $request){
         $data['sub_category']   = ParentCategory::with(['subCategories'])->orderBy('name','DESC')->get();
         $data['products'] = Product::all();// ->pluck('name','id');
-        // $data['shops'] = Shop::all()->pluck('name','id');
-        return view('reports.product_report',$data);        
+        if($request->ajax()){
+            $productId      = $request->get('product_id');
+            $productDetail  = Product::findoRFail($productId); // Product::where('id',$productId)->first();
+            $dateRange  = ($request->has('date_range')) ? $request->get('date_range'): optional($productDetail)->created_at->format('d/m/Y').'-'.date('d/m/Y');
+            $dateString = explode('-',$dateRange);
+            $startDate  = Carbon::createFromFormat('d/m/Y H:i:s',trim($dateString[0]).' 00:00:01' );
+            $endDate    = Carbon::createFromFormat('d/m/Y H:i:s',trim($dateString[1]).' 23:59:59' );
+
+
+            $dates = function($query)use($startDate,$endDate){
+                if($startDate && $endDate){
+                    $query->whereDate('created_at','>=',$startDate)->whereDate('created_at','<=',$endDate);
+                }
+            };
+
+
+            $response['product_detail'] = $productDetail;
+
+            $productStat['sale_count']      = SaleOrderItem::where('product_id',$productId)->where($dates)->sum('qty');
+            $productStat['purchase_count']  = StockDeliveryProduct::where('product_id',$productId)->where($dates)->sum('quantity');
+            $productStat['available_count'] = ProductAvailable::where('product_id',$productId)->sum('qty');
+            $shops          = Shop::all();
+
+
+            $shops->map(function($shop, $val)use($productId, $dates){
+                $shop->available_qty = ProductAvailable::where('product_id',$productId)->where('shop_id', $shop->id)->sum('qty');
+                // $shop->available_qty = ProductAvailable::where('product_id',$productId)->where('shop_id', $shop->id)->sum('qty');
+                $shop->sale_count      = SaleOrderItem::where('product_id',$productId)->where($dates)->sum('qty');
+                $shop->purchase_count  = StockDeliveryProduct::where('product_id',$productId)->where($dates)->sum('quantity');
+            });
+            $response['product_stats_shops_wise'] = $shops;
+            $response['product_stats'] = $productStat;
+            return response()->json($response);
+        }else{
+           //  $data['shops'] = Shop::all()->pluck('name','id');
+            return view('reports.product_report',$data);
+        }
     }
+
+
+
 
 
     function productWise(){
         $data['sub_category']   = ParentCategory::with(['subCategories'])->orderBy('name','DESC')->get();
         return view('reports.product_wise_stock_report',$data);
     }
+
+
 
 
 
