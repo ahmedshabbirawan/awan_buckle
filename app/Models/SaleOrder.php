@@ -17,4 +17,8 @@ class SaleOrder extends Model
         return $this->belongsTo('App\Models\Shop','shop_id');
     }
 
+    function saleOrderItem(){
+        return $this->hasMany('App\Models\SaleOrderItem','order_id');
+    }
+
 }

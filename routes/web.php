@@ -572,6 +572,16 @@ Route::middleware(['web','auth'])->group(function () {
         Route::get('product',[ProductStockController::class,'product'])->name('product');
 
         Route::get('product_wise',[ProductStockController::class,'productWise'])->name('product_wise');
+
+        Route::get('product_order_table',[ProductStockController::class,'saleOrder'])->name('product_order_table');
+
+        // purchase
+
+        Route::get('product_purchase_table',[ProductStockController::class,'purchase'])->name('product_purchase_table');
+
+        // 
+
+
     });
 
 

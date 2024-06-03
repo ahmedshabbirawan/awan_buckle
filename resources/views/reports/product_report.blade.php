@@ -195,6 +195,29 @@ $title = 'Product Report';
                     </table>
                 </div>
 
+<!----------------------------      Purchase       --------------------------->
+<div class="widget-toolbox padding-8 clearfix">
+    Purchase
+</div>
+<div class="widget-main">
+    <table id="product_purchase_table" class="table table-striped table-bordered table-hover no-margin-bottom no-border-top no-footer">
+        
+    </table>
+</div>
+
+
+                <!----------------------------      Orders       --------------------------->
+<div class="widget-toolbox padding-8 clearfix">
+    Orders
+</div>
+<div class="widget-main">
+    <table id="order_table" class="table table-striped table-bordered table-hover no-margin-bottom no-border-top no-footer">
+        
+    </table>
+</div>
+
+
+
 
 
             </div>
@@ -238,7 +261,8 @@ $title = 'Product Report';
 
 
 <script>
-    var table;
+    var saleTable;
+    var purchaseTable;
 
     function date_range_cb_check() {
         if ($('#date_range_cb').is(':checked')) {
@@ -252,6 +276,9 @@ $title = 'Product Report';
 
     function getResultsByProductId(){
         var productId = $('#product_ids').val();
+        saleTable.ajax.reload();
+        purchase_table.ajax.reload();
+
         $.ajax({
             dataType: 'json',
             type: 'get',
@@ -296,77 +323,160 @@ $title = 'Product Report';
 
 
 
-        function initDataTableRecord() {
-            table = $('#yajra-table').DataTable({
-                lengthMenu: [
-                    [1, 2, 3, -1],
-                    [1, 2, 3, 'All'],
-                ],
-                "aLengthMenu": [
-                    [1, 5, 10, 25, 50, 100, -1],
-                    [1, 5, 10, 25, 50, 100, "All"]
-                ],
-                "iDisplayLength": 25,
-                dom: 'Bfrtip',
-                buttons: [{
-                    extend: 'csv',
-                    text: 'Export to Excel',
-                    className: 'btn btn-primary text-light',
-                    //  split: [ 'pdf', 'excel'],
-                    //     action: newExportAction
-                }],
-                processing: true,
-                serverSide: true,
-                ajax: {
-                    url: "{{ route('report.product') }}",
-                    type: 'GET',
-                    data: function(d) {
-                        d.sub_cat_id = $('#sub_category_id_bluk').val(),
-                            d.pro_cat_id = $('#product_category_id_bluk').val(),
-                            d.prod_id = $('#product_id_bluk').val(),
-                            d.proj_id = $('#project_id').val(),
-                            d.date_range = $('#date_range').val(),
-                            d.date_to = $('#date_from').val(),
-                            d.dg_id = $('#dg_id').val(),
-                            d.apply_date = ($('#date_range_cb').is(':checked')) ? '1' : '';
-                    }
-                },
-                columns: [{
-                        "data": "id",
-                        title: 'Sr.',
-                        render: function(data, type, row, meta) {
-                            return meta.row + meta.settings._iDisplayStart + 1;
+        // order_table
+        function orderTable() {
+
+
+
+    saleTable = $('#order_table').DataTable({
+                    processing: true,
+                    serverSide: true,
+                  //   ajax: "{{ route('report.product_order_table') }}?group_by=issue_key",
+                  ajax: {
+                url: "{{ route('report.product_order_table') }}",
+                type: 'GET',
+                data: function (d) {
+                    d.product_id = $('#product_ids').val()
+                }
+            },
+                    columns: [
+                        {
+                            data: 'id',
+                            name: 'id',
+                            title: 'ID.',
+                            width:'5%'
                         },
-                        'width': '5px'
-                    },
-                    {
-                        data: 'name',
-                        name: 'name',
-                        title: 'Product',
-                        'width': '50%'
-                    },
-                    {
-                        data: 'product_available_sum_qty',
-                        name: 'product_available_sum_qty',
-                        title: 'Available',
-                        'width': '20px'
-                    },
-                    {
-                        data: 'stock_delivery_product_sum_quantity',
-                        name: 'stock_delivery_product_sum_quantity',
-                        title: 'Available',
-                        'width': '20px'
-                    }
-                ],
-                // rowGroup: {
-                //     dataSrc: 'project_name'
-                // },
-                order: [
-                    [0, 'asc']
-                ]
-            });
+                        // {
+                        //     data: 'title',
+                        //     name: 'title',
+                        //     title: 'Sale Key',
+                        
+                        // },
+                        {
+                            data: 'customer_name',
+                            name: 'customer_name',
+                            title: 'Customer',
+                        
+                        },{
+                            data: 'item_count',
+                            name: 'item_count',
+                            title: 'Items',
+                        
+                        },{
+                            data: 'total_offer_price',
+                            name: 'total_offer_price',
+                            title: 'Offer Amount',
+                        
+                        },{
+                            data: 'total_price',
+                            name: 'total_price',
+                            title: 'Bill Price',
+                        },{
+                            data: 'total_discount',
+                            name: 'total_discount',
+                            title: 'Total Discount',
+                        
+                        },{
+                            data: 'shop_name',
+                            name: 'shop_name',
+                            title: 'Shop',
+                        
+                        },{
+                            data: 'order_time',
+                            name: 'order_time',
+                            title: 'Date N Time',
+                        
+                        },
+                        {
+                            data: 'action',
+                            name: 'action',
+                            title: 'Action'
+                        }
+                    ],
+                    order: [[0, 'desc']]
+                });
+           
         }
+
+
+        function purchaseTable(){
+            // product_purchase_table
+
+    purchase_table = $('#product_purchase_table').DataTable({
+            // lengthMenu: [
+            //         [1, 2, 3, -1],
+            //         [1, 2, 3, 'All'],
+            //     ],
+            // "aLengthMenu": [[1,5,10, 25, 50, 100, -1], [1,5,10, 25, 50, 100, "All"]],
+            // 					"iDisplayLength": -1,
+            // dom: 'Bfrtip',
+            // buttons: ['excel'],
+            processing: true,
+            serverSide: true,
+          //   ajax: "{{ route('report.product_purchase_table') }}",
+          ajax: {
+                url: "{{ route('report.product_purchase_table') }}",
+                type: 'GET',
+                data: function (d) {
+                    d.product_id = $('#product_ids').val()
+                }
+            },
+            columns: [
+                  {data: 'id', name: 'id', title : 'ID'},
+                // {
+                //     "data": "id",
+                //     title: 'Sr.',
+                //     render: function(data, type, row, meta) {
+                //         return meta.row + meta.settings._iDisplayStart + 1;
+                //     }
+                // },
+                {
+                    data: 'info_no',
+                    name: 'info_no',
+                    title: 'Invoice & Challan & POI',
+                    width: '20%'
+                },
+                {
+                    data:'supplier',
+                    name:'supplier',
+                    title:'Supplier'
+                },
+          
+                {
+                    data:'delivery_amount',
+                    name:'delivery_amount',
+                    title:'Total Amount'
+                },
+                {
+                    data: 'items_count',
+                    name: 'items_count',
+                    title: 'Product Count',
+                    width: '10%'
+                },
+                {
+                    data:'purchased_date_new',
+                    name:'purchased_date_new',
+                    title:'Purchase Date'
+                },
+                {
+                    data:'create',
+                    name:'create',
+                    title:'Created at'
+                },
+                {
+                    data: 'action',
+                    name: 'action',
+                    title: 'Action'
+                }
+            ],
+            order: [[0, 'desc']]
+        });
+        }
+
+
        //  initDataTableRecord();
+        orderTable();
+        purchaseTable();
         $('.select_chosen').chosen();
 
 
