@@ -56,7 +56,7 @@ class StockExchangeController extends Controller{
                 return (isset($row->total_items))?$row->total_items:'';
             })->addColumn('action', function ($row) use ($listFor) {
                 
-                $action = '<div class="hidden-sm hidden-xs btn-group">';   
+                $action = '<div class="btn-group">';   
                 
                 if($listFor == 'send'){
                     if($row->status == 'darft'){
@@ -507,7 +507,7 @@ class StockExchangeController extends Controller{
                      // if($row->status == 1){
                      // $statusIcon = 'fa fa-check-circle-o';
                      // }
-                     $action = '<div class="hidden-sm hidden-xs btn-group">';
+                     $action = '<div class="btn-group">';
                     
                  //     $action .= '<a href="'.route('product.edit', $row->id).'" class="btn btn-xs btn-info"  data-toggle="tooltip" title="Edit" ><i class="ace-icon fa fa-pencil bigger-120"></i></a>';
                  
