@@ -126,8 +126,13 @@ class ProductStockController extends Controller{
         return Datatables::of($items)
         ->addColumn('title', function ($row) {
             return '<a href="'.route('sale.order.detail',$row->id).'" target="_blank" >'.$row->sale_key.'</a>';
-        })
-        ->addColumn('item_count', function ($row) {
+        })->addColumn('this_product_unit_price', function ($row) use ($productId) {
+            return $row->saleOrderItem->where('product_id',$productId)->first()->price;
+        })->addColumn('this_product_item_count', function ($row) use ($productId) {
+            return $row->saleOrderItem->where('product_id',$productId)->first()->qty;
+        })->addColumn('this_product_total_bill', function ($row) use ($productId) {
+            return $row->saleOrderItem->where('product_id',$productId)->first()->price * $row->saleOrderItem->where('product_id',$productId)->first()->qty;
+        })->addColumn('item_count', function ($row) {
             return $row->item_count;
         })->addColumn('order_time', function ($row) {
             return $row->created_at->format('h:i / d-m-Y');
@@ -145,9 +150,6 @@ class ProductStockController extends Controller{
             $action .= '<a href="'.route('sale.order.detail',$row->id).'" class="btn btn-xs btn-success" data-toggle="tooltip" title="Detail" ><i class="ace-icon fa fa-eye bigger-120"></i></a>';
             $action .= '<a href="'.route('sale.order.sale_return_view',$row->id).'" class="btn btn-xs btn-primary" data-toggle="tooltip" title="Sale Return" ><i class="ace-icon fa fa-undo bigger-120"></i></a>';
             $action .= '<a href="javascript:void(0);" onclick="deleteConfirmation('.$row->sale_key.');" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Delete" ><i class="ace-icon fa fa-trash-o bigger-120"></i></a>';
-            
-            // 
-            
             $action .= '</div>';
             return $action;
         })->rawColumns(['title','product_attribute','status_label','action'])

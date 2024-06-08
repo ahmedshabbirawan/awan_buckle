@@ -339,28 +339,35 @@ $title = 'Product Report';
                     d.product_id = $('#product_ids').val()
                 }
             },
-                    columns: [
-                        {
+                    columns: [{
                             data: 'id',
                             name: 'id',
                             title: 'ID.',
                             width:'5%'
-                        },
-                        // {
-                        //     data: 'title',
-                        //     name: 'title',
-                        //     title: 'Sale Key',
-                        
-                        // },
-                        {
+                        },{
                             data: 'customer_name',
                             name: 'customer_name',
                             title: 'Customer',
-                        
-                        },{
+                        },
+                        {
+                            data: 'this_product_unit_price',
+                            name: 'this_product_unit_price',
+                            title: 'Product Sale Price',
+                        },
+                        {
+                            data: 'this_product_item_count',
+                            name: 'this_product_item_count',
+                            title: 'Product Count',
+                        },
+                        {
+                            data: 'this_product_total_bill',
+                            name: 'this_product_total_bill',
+                            title: 'Product Bill',
+                        },
+                        {
                             data: 'item_count',
                             name: 'item_count',
-                            title: 'Items',
+                            title: 'Order Items',
                         
                         },{
                             data: 'total_offer_price',
