@@ -4,28 +4,13 @@ namespace App\Http\Controllers\Sale\Report;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-
-use App\Models\ReturnDetail;
 use Yajra\DataTables\DataTables;
 
-use App\Models\Products;
-use App\Models\Employee;
 use App\Models\Product;
-use App\Models\ProductAvailable;
-use App\Models\SaleCart;
 use App\Models\Customer;
-use App\Models\User;
 use App\Models\SaleOrder;
-use App\Models\SaleOrderItem;
-use App\Models\SaleReturn;
-use App\Models\SaleReturnItem;
 use App\Models\Shop;
-use App\Models\StockItem;
-use App\Models\StockAdjustment;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
-
-use Illuminate\Support\Facades\Validator;
 
 class SaleReportController extends Controller{
 

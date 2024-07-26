@@ -204,13 +204,29 @@ body{ margin : 0px;}
                         <td> - {{ $order->total_discount }}</td>
                     </tr>
 
-					<tr class="total">
-                        <td> Payable :</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+					<tr class="heading item" >
+                        <td colspan="4"> Payable :</td>
+                        
+                       
                         <td> <b> {{ round($order->total_price) }} </b> </td>
                     </tr>
+					<tr class=""> <td colspan="5"> &nbsp; </td></tr>
+
+					<tr class="">
+                        <td> Cash Receive :</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td> {{ round($order->cash_received) }}  </td>
+                    </tr>
+					<tr class="total">
+                        <td> Cash Return :</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td> {{ round($order->cash_returned) }}  </td>
+                    </tr>
+
 
 					
 

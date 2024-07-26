@@ -11,6 +11,7 @@ use App\Models\StockAdjustment;
 use App\Models\Product;
 use App\Models\ProductAvailable;
 use Illuminate\Support\Facades\Validator;
+use App\Models\StockAudit;
 
 class StockAdjustmentController extends Controller{
 
@@ -97,6 +98,19 @@ if($request->ajax()){
                     'description'       => $desc,
                     'shop_id'       => $loginShopID
                 ]);
+
+                $action = '';
+
+                if($stock == 'in'){
+                    $action = StockAudit::STOCK_ACTION_ADD;
+                }elseif($stock == 'out'){
+                    $action = StockAudit::STOCK_ACTION_MINUS;
+                }
+
+
+                ProductAvailable::manageStockByShopAndProductId($qty, $action,$productID, $loginShopID,StockAudit::STOCK_OBJECT_TYPE_ADJUSTMENT, $sa->id);
+
+                /*
                 $product = ProductAvailable::where([
                     'shop_id'       => $loginShopID,
                     'product_id'    => $productID
@@ -116,6 +130,9 @@ if($request->ajax()){
                         'qty' => $qty
                     ]);
                 }
+                */
+
+
             }
 
         DB::commit();

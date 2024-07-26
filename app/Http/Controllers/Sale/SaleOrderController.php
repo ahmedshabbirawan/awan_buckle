@@ -22,6 +22,7 @@ use App\Models\SaleReturnItem;
 use App\Models\Shop;
 use App\Models\StockItem;
 use App\Models\StockAdjustment;
+use App\Models\StockAudit;
 use Illuminate\Support\Facades\DB;
 
 use Illuminate\Support\Facades\Validator;
@@ -176,7 +177,9 @@ class SaleOrderController extends Controller{
                     'shop_id' => $loginShopID
                 ]);
 
-                ProductAvailable::where(['shop_id' => $shopID, 'product_id' => $saleOrder->product_id])->increment('qty', $returnQty);
+                ProductAvailable::manageStockByShopAndProductId($returnQty, StockAudit::STOCK_ACTION_ADD,$saleOrder->product_id, $shopID, StockAudit::STOCK_OBJECT_TYPE_SALE_RETURN,$saleReturn->id);
+
+               // ProductAvailable::where(['shop_id' => $shopID, 'product_id' => $saleOrder->product_id])->increment('qty', $returnQty);
                
             }
 
@@ -260,6 +263,11 @@ class SaleOrderController extends Controller{
                     'shop_id' => $loginShopID
                 ]);
 
+                ProductAvailable::manageStockByShopAndProductId($qty,StockAudit::STOCK_ACTION_ADD, $productID,
+                $loginShopID, StockAudit::STOCK_OBJECT_TYPE_SALE_RETURN, $saleReturn->id);
+            
+
+                /*
                 $product = ProductAvailable::where([
                     'shop_id'       => $loginShopID,
                     'product_id'    => $productID
@@ -275,6 +283,7 @@ class SaleOrderController extends Controller{
                         'qty' => $qty
                     ]);
                 }
+                */
             }
             DB::commit();
             return response()->json(['status' => true, 'message' => 'Successful']);

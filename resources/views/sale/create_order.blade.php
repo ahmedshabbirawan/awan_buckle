@@ -105,6 +105,8 @@ Issuance Items
     <div class="widget-box widget-color-blue ui-sortable-handle" >
     <div class="widget-header"><h4 class="widget-title">Cart</h4></div>
     <div class="card radius-10 border-top border-0 border-4 border-danger">
+    <form id="order_form" action="javascript:void(0);" >
+    <input type="hidden" name="sale_key" value="{{ $salekey }}" >
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-striped table-bordered yajratable" id="cart_table" style="width:100%"></table>
@@ -116,12 +118,15 @@ Issuance Items
                 <tr><td class="total-label" >Sub Total</td><td id="sub_total" class="total-label" > -- </td></tr>
                 <tr><td class="total-label" >Total Discount</td><td id="total_discount" class="total-label" > -- </td></tr>
                 <tr><td class="total-label" >Grand Total / BillAmount </td><td   id="billAmount" class="total-label" > -- </td></tr>
+                <tr><td class="total-label" > Cash Received </td><td   id="" class="total-label" > <input type="text" id="cash_received" onkeyup="calculateCash();" onblur="calculateCash();" name="cash_received" class="form-control" > </td></tr>
+                <tr><td class="total-label" > Cash Return </td><td   id="" class="total-label" > <input type="text" id="cash_returned" name="cash_returned" class="form-control disabledInput" readonly > </td></tr>
             </table>
 
             <a href="javascript:void(0);" onclick="placeOrderConfirm();"  class="btn btn-primary btn-block" >Place Order</a>
             <a href="javascript:void(0);" onclick="openPreviewPopUp();" class="btn btn-primary btn-block hidden" >Preview</a>
 
         </div>
+        </form>
     </div>
     </div>
 </div>
@@ -178,6 +183,7 @@ Issuance Items
     var selectID;
     var cart = [];
     var cartDataTable;
+    var billAmount = 0;
 
     var ajaxFailBlock = function(jqXHR, textStatus, errorThrown) {
         // console.log(textStatus,jqXHR, errorThrown);
@@ -264,10 +270,20 @@ Issuance Items
                     $('#sub_total').html(data.subTotal);
                     $('#total_discount').html(data.totalDiscount);
                     $('#billAmount').html(data.billAmount);
+                    billAmount = data.billAmount;
+
+
             }
         });
 
 
+    }
+
+
+    function calculateCash(){
+        var cashAmount = parseFloat($('#cash_received').val()).toFixed(2);
+        var cashReturn = cashAmount - billAmount;
+        $('#cash_returned').val(cashReturn);
     }
 
 
@@ -360,7 +376,9 @@ Issuance Items
 
 
     function placeOrder(){
-        var formData = new FormData($('#customer_form')[0]);
+        var formData = new FormData($('#order_form')[0]);
+        var customer_id = $('#customer_select2').val();
+        formData.append('customer_id',customer_id)
         $.ajax({
             dataType: 'json',
             type: 'POST',
@@ -466,6 +484,7 @@ Issuance Items
                     $('#sub_total').html(data.subTotal);
                     $('#total_discount').html(data.totalDiscount);
                     $('#billAmount').html(data.billAmount);
+                    billAmount = data.billAmount;
                 }
             },
             columns: [

@@ -18,6 +18,7 @@ use App\Models\SaleItem;
 use App\Models\SaleOrder;
 use App\Models\SaleOrderItem;
 use App\Models\Shop;
+use App\Models\StockAudit;
 use App\Models\StockItem;
 use Illuminate\Support\Facades\DB;
 use Exception;
@@ -441,7 +442,6 @@ class SaleCartController extends Controller{
 
     
     public function finalPlaceOrder(Request $request){
-
         $validator = Validator::make($request->all(), [
             'sale_key'   => 'required'
         ]);
@@ -459,7 +459,16 @@ class SaleCartController extends Controller{
         }
 
         DB::beginTransaction();
-        $saleOrder          = SaleOrder::create(['sale_key' => $saleKey, 'item_count' => count($cartItems), 'customer_id' => $customerID, 'shop_id' => auth()->user()->shop_id , 'created_by' => auth()->user()->id]);
+        $cashReceived = (int) $request->get('cash_received');
+        $cashReturned = (int) $request->get('cash_returned');
+
+        $saleOrder          = SaleOrder::create([
+            'sale_key' => $saleKey, 'item_count' => count($cartItems), 
+            'customer_id' => $customerID, 'shop_id' => auth()->user()->shop_id , 
+            'created_by' => auth()->user()->id,
+            'cash_received' => $cashReceived,
+            'cash_returned' => $cashReturned
+        ]);
         $notFound           = 0;
         $itemWillDelete     = [];
         try{
@@ -507,8 +516,12 @@ class SaleCartController extends Controller{
 
                 SaleOrderItem::create($itemData);
 
-                $proAvail->qty = $proAvail->qty - $tItem->qty;
-                $proAvail->save();
+                // $proAvail->qty = $proAvail->qty - $tItem->qty;
+                // $proAvail->save();
+                
+                // ProductAvailable::manageStockByShopAndProductId()
+                ProductAvailable::manageStockByShopAndProductId($tItem->qty,StockAudit::STOCK_ACTION_MINUS, $tItem->product_id,
+                $shopID, StockAudit::STOCK_OBJECT_TYPE_SALE, $saleOrder->id);
 
 
                 /*

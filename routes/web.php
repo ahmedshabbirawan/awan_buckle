@@ -91,6 +91,12 @@ Route::post('/loginpost', [AuthController::class, 'login'])->name('do-login');
 
 
 
+Route::get('/check-test', [ProductStockController::class, 'checkModelAudit']);
+
+
+
+
+
 Route::middleware(['web', 'auth'])->group(function () {
 
     Route::get('/', [DashboardController::class, 'view']);

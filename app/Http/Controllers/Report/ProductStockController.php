@@ -207,6 +207,4 @@ class ProductStockController extends Controller{
             ->make(true);
     }
 
-
-
 }

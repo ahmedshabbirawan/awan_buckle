@@ -29,6 +29,7 @@ use Yajra\DataTables\DataTables;
 use App\Http\Requests\StockDeliveryProductFormRequest;
 use App\Models\PurchaseReturn;
 use App\Models\PurchaseReturnItem;
+use App\Models\StockAudit;
 use App\Models\StockItem;
 use App\Models\SubCategory;
 use Hamcrest\Arrays\IsArray;
@@ -268,10 +269,8 @@ class StockDeliveryProductController extends Controller{
             $saleOrder->quantity = $saleOrder->quantity - $returnQty;
             $saleOrder->save();
             $shopID = $saleOrder->shop_id;
-            ProductAvailable::where(['shop_id' => $shopID, 'product_id' => $saleOrder->product_id])->decrement('qty', $returnQty);
-
-
-
+            // ProductAvailable::where(['shop_id' => $shopID, 'product_id' => $saleOrder->product_id])->decrement('qty', $returnQty);
+            ProductAvailable::manageStockByShopAndProductId($returnQty, StockAudit::STOCK_ACTION_MINUS,$saleOrder->product_id,$shopID, StockAudit::STOCK_OBJECT_TYPE_PURCHASE_RETURN, $purchaseReturn->id);
             PurchaseReturnItem::create([
                 'purchase_return_id' => $purchaseReturn->id , 
                 'product_id' => $saleOrder->product_id, 
@@ -360,14 +359,9 @@ class StockDeliveryProductController extends Controller{
             // $saleOrder = StockDeliveryProduct::find($item);
             // $saleOrder->quantity = $saleOrder->quantity - $returnQty;
             // $saleOrder->save();
-
-
-
-            ProductAvailable::where(['shop_id' => $shopID, 'product_id' => $productID])->decrement('qty', $returnQty);
+           // ProductAvailable::where(['shop_id' => $shopID, 'product_id' => $productID])->decrement('qty', $returnQty);
+            ProductAvailable::manageStockByShopAndProductId($returnQty, StockAudit::STOCK_ACTION_ADD,$productID, $shopID,StockAudit::STOCK_OBJECT_TYPE_PURCHASE_RETURN, $purchaseReturn->id);
             $product = Product::find($productID);
-
-
-
             PurchaseReturnItem::create([
                 'purchase_return_id' => $purchaseReturn->id , 
                 'product_id' => $productID, 

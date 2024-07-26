@@ -21,7 +21,9 @@ use App\Models\StockItem;
 use App\Http\Requests\StockDeliveryFormRequest;
 use App\Models\ProductAvailable;
 use App\Models\ProductCategory;
+use App\Models\Stock;
 use App\Models\StockAdjustment;
+use App\Models\StockAudit;
 use Illuminate\Support\Str;
 
 use App\Traits\Definitions;
@@ -148,10 +150,13 @@ class SimpleStockDeliveryController extends Controller{
                 $proAvail['shop_id'] = $shopID;
                 $proAvail['product_id'] = $productID;
 
-                
+               //  dd($qty);
 
                 Product::where(['id' => $productID])->update(['cost_price' => $deliverProduct->unit_price]);
 
+                ProductAvailable::manageStockByShopAndProductId($qty, StockAudit::STOCK_ACTION_ADD, $productID, $shopID, StockAudit::STOCK_OBJECT_TYPE_PURCHASE, $stockDeliveryID );
+
+                /*
                 $productAvailable = ProductAvailable::where($proAvail)->first();
                 $qtyWhenAdjust = 0;
                 $newQty = 0; 
@@ -164,10 +169,7 @@ class SimpleStockDeliveryController extends Controller{
                     $proAvail['qty'] = $qty;
                     ProductAvailable::create($proAvail);
                 }
-                // $proAvail['qty_when_adjust'] = $qtyWhenAdjust;
-                // $proAvail['qty'] = $qty;
-                // $proAvail['description'] = '';
-                // StockAdjustment::create($proAvail);
+                */
             }
             DB::commit();
             if($request->ajax()){
@@ -177,7 +179,7 @@ class SimpleStockDeliveryController extends Controller{
             }
         }catch(\Exception $e){
             DB::rollBack();
-            return response()->json(['message' => 'Error : '. $e->getMessage(). '. Please Contact to Developer'], 500);
+            return response()->json(['message' => $e->getLine().' Error : '. $e->getMessage(). '. Please Contact to Developer'], 500);
         }
     }
 
