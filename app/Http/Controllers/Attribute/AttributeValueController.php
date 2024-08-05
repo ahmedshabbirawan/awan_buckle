@@ -58,11 +58,7 @@ class AttributeValueController extends Controller{
         return view('DynamicAttribute.lists',['typeID' => $typeID, 'name' => $name, 'slug' => $slug]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+    
     public function create(Request $request){
 
         $slug       = strtolower($request->route('slug'));
@@ -141,23 +137,13 @@ public function index()
 
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\AttributeValues  $attributeValues
-     * @return \Illuminate\Http\Response
-     */
-    public function show(AttributeValue $attributeValues)
-    {
-        //
+    
+    public function show($id){
+        $attributeValue = AttributeValue::where('type_id',$id)->get();
+        return response()->json($attributeValue);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\AttributeValues  $attributeValues
-     * @return \Illuminate\Http\Response
-     */
+
     public function edit($slug, $id, Request $request){
 
 

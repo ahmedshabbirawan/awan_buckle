@@ -186,6 +186,7 @@ $qty = '';
                     <div class="col-lg-3 col-sm-3">
                       <label class="" for="form-field-1"> UOM : </label>
                       <div>
+                      <input type="hidden" required class="form-control stock_item_input" value=""  name="temp_variant_id" id="temp_variant_id" >
                         <input type="hidden" required class="form-control stock_item_input" value="" readonly="on" name="uom_id" id="uom_id" placeholder="UOM">
                         <input type="text" required class="form-control stock_item_input" value="" readonly="on" name="uom_code" id="uom_code" placeholder="UOM">
                       </div>
@@ -434,9 +435,12 @@ $qty = '';
   function saveProduct() {
     var serial_number = $('input[name="sn[]"]').length;
     var qty = $('#qty').val();
+    var variant_id = $('#product_id').val(); 
+
     var productID = $('#product_id').val();
     var shop_id = $('#shop_id').val();
     var unit_price = $('#unit_price').val();
+
     if ((serial_number > 0) && qty != serial_number) {
       $.confirm({
         title: 'Warning',
@@ -450,8 +454,6 @@ $qty = '';
       return false;
     }
 
-    // let myform = document.getElementById("stock_item_form");
-    // let fdata = new FormData(myform);
     $("#add-item-purchase").LoadingOverlay("show");
     let fdata = new FormData();
     fdata.append('product_id', productID);
@@ -476,27 +478,8 @@ $qty = '';
         $("#add-item-purchase").LoadingOverlay("hide");
         $('.stock_item_input').val('');
         $('#input_zone').tagging("removeAll");
-
-
-
-        // console.log('=======>>>>> ',res);
         if (jqXHR.status == 200) {
           getProductList();
-          // if(typeof res.data.product !== 'undefined'){
-          // $.confirm({
-          //   title: 'Success',
-          //   content: res.message,
-          //   buttons: {
-          //     yes: {
-          //       text: 'OK',
-          //       action: function() {
-          //         getProductList();
-          //         $('#CreateProduct').modal('hide');
-          //       }
-          //     }
-          //   }
-          // });
-          // }
         }
       },
       error: ajaxFailBlock
@@ -561,6 +544,7 @@ $qty = '';
     var uom_id = $('#product_id  option[value="' + id + '"]').attr("data-uom-id");
     var uom_code = $('#product_id  option[value="' + id + '"]').attr("data-uom-code");
     var unit_price = $('#product_id  option[value="' + id + '"]').attr("data-cost-price");
+    $('#temp_variant_id').val();
     $('#uom_id').val(uom_id);
     $('#uom_code').val(uom_code);
     $('#unit_price').val(unit_price);
@@ -638,30 +622,7 @@ $qty = '';
       onchange: null,
       thumbnail: false //| true | large
     });
-
     return false;
-
-
-
-
-    // $.ajax({
-    //   // dataType: 'json',
-    //   type: 'get',
-    //   url: "{{ route('stocks.dp.create') }}",
-    //   success: function(res) {
-    //      $('#input_zone').tagging();
-    //      $('#is_expiry_date').change(function(){
-    //         if($(this).is(':checked')){
-    //             $('#warranty_date').removeAttr('disabled');
-    //         }else{
-    //           $('#warranty_date').val('');
-    //           $('#warranty_date').attr('disabled','on');
-    //         }
-    //     });
-    //   }
-    // });
-
-
   }
 
 
@@ -691,26 +652,17 @@ $qty = '';
 
 
   function getProductCategories() {
-    // $('.select2').select2({allowClear:true});
     var subCategory = $('#sub_category_id').val();
     if (subCategory == '') {
-      // $('#sub_country_id').html('<option value=""> -- Select -- </option>');
       return false;
     }
     $.ajax({
-      // dataType: 'json',
       type: 'get',
       url: "{{ route('product.ajax_product_cat') }}?sub_cat_id=" + subCategory + '&selected_id=<?= $productCategoryID ?>',
       success: function(res) {
-
-        // console.log('hello');
-
         $('#product_category_id').val('');
         $('#product_category_id').html(res);
-        //        $('.select2').select2({allowClear:true});
-        // var province_id = $('#province_id').val();
-        $(".select21").trigger("chosen:updated");
-        //  $('.select21').chosen({allow_single_deselect:true}); 
+        $(".select21").trigger("chosen:updated"); 
         getProductAttribute();
       }
     });
@@ -730,8 +682,6 @@ $qty = '';
         $('#product_id').chosen({
           allow_single_deselect: true
         });
-        // var province_id = $('#province_id').val();
-        // validator.reload();
       }
     });
 
@@ -758,13 +708,8 @@ $qty = '';
 
 
   jQuery(function($) {
-
     getProductAttribute();
-
     getProductList();
-
-
-
     $(document).on('change', '#sub_category_id', function() {
       $('#product_category_id').val('');
       $('#product_id').val('');
@@ -786,8 +731,6 @@ $qty = '';
     $(document).on('change', '#serial_number_file', function() {
       readSNFile();
     });
-
-    // project_change($('#project_id'));
 
     $('#is_invoice_delivery').change(function() {
       if ($(this).is(':checked')) {

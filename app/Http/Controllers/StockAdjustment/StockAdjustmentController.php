@@ -41,7 +41,7 @@ if($request->ajax()){
 
 
     function form(){
-        $data['products'] = Product::with('productQtyShopWise')->get();
+        $data['products'] = Product::where('type','variant')->with('productQtyShopWise')->get();
         return view('stock_adjustment.form',$data);
     }
 

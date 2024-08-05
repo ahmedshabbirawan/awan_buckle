@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateSalesTable extends Migration
+class CreateSaleOrdersTable extends Migration
 {
     /**
      * Run the migrations.
@@ -23,8 +23,8 @@ class CreateSalesTable extends Migration
             $table->integer("total_offer_price")->nullable();
             $table->integer("total_discount")->nullable();
             $table->integer("total_price")->nullable();
-
             
+            $table->integer("cash_received")->nullable();
             $table->integer("status")->default(1);
             $table->integer('created_by')->nullable();
             $table->integer('updated_by')->nullable();

@@ -20,13 +20,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\StockItem;
 use App\Http\Requests\StockDeliveryFormRequest;
 use App\Models\ProductAvailable;
-use App\Models\ProductCategory;
-use App\Models\Stock;
-use App\Models\StockAdjustment;
 use App\Models\StockAudit;
-use Illuminate\Support\Str;
-
-use App\Traits\Definitions;
 use Carbon\Carbon;
 
 class SimpleStockDeliveryController extends Controller{
@@ -105,7 +99,6 @@ class SimpleStockDeliveryController extends Controller{
         'stock_ledger_reference'
         ]);
 
-       //  dd($data);
 
        $data['purchased_date'] = Carbon::parse($data['purchased_date'])->format('Y-m-d');
 
@@ -119,10 +112,6 @@ class SimpleStockDeliveryController extends Controller{
             return response(['message' => 'No record found!'],422);
         }
 
-        //$filesData          = $this->uploadDeliveryDocuments($request);
-        //$data               = array_merge($data,$filesData);
-
-// dd($data);
 
         try{
             DB::beginTransaction();

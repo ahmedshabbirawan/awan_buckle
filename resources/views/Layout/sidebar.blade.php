@@ -327,7 +327,14 @@
                         <a href="{{ route('Settings.warehouse.index') }}"><i class="menu-icon fa fa-caret-right"></i>Warehouses</a><b class="arrow"></b>
                     </li>
                     @endcan
-                    @can('locagtion.read')
+
+
+                    <li class="{{request()->is('attribute-type*') ? 'active' : '' }}">
+                        <a href="{{ route('attribute_type.list') }}"><i class="menu-icon fa fa-caret-right"></i>Product Attribute</a><b class="arrow"></b>
+                    </li>
+
+
+                    @can('location.read')
                     <li class="{{request()->is('Settings/location*') ? 'active' : '' }}">
                         <a href="{{ route('Settings.location.index') }}"><i class="menu-icon fa fa-caret-right"></i>Locations</a><b class="arrow"></b>
                     </li>

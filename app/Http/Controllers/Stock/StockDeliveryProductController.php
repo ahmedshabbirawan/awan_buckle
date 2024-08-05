@@ -6,24 +6,14 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
 use App\Models\ParentCategory;
-use App\Models\Project;
 use App\Models\StockDelivery;
 use App\Models\StockDeliveryProduct;
 use App\Models\Supplier;
-use App\Models\Warehouse;
 use App\Models\Uom;
 use App\Models\Product;
 use App\Models\Shop;
-use App\Models\Category;
-use App\Models\Stock;
-use App\Models\StockDeliveryItem;
 use App\Models\ProductAvailable;
-
 use Illuminate\Support\Facades\Validator;
-
-use App\Util\Util;
-use Illuminate\Support\Facades\DB;
-
 use Yajra\DataTables\DataTables;
 
 use App\Http\Requests\StockDeliveryProductFormRequest;
@@ -32,7 +22,6 @@ use App\Models\PurchaseReturnItem;
 use App\Models\StockAudit;
 use App\Models\StockItem;
 use App\Models\SubCategory;
-use Hamcrest\Arrays\IsArray;
 use League\Csv\Reader;
 
 
@@ -112,6 +101,7 @@ class StockDeliveryProductController extends Controller{
  
     /* SAVE TEMP PRODUCT */
      function save(StockDeliveryProductFormRequest $request){
+        /*
         $serialNumbers = $request->get('sn');
         if( !empty($serialNumbers) &&  count($serialNumbers) > 0){
             $results = DB::table('stock_items')->whereIn('serial_number',$serialNumbers)->get();
@@ -120,6 +110,7 @@ class StockDeliveryProductController extends Controller{
             }
             $data['serial_numbers'] = implode(",",$serialNumbers);
         }
+        */
 
         //stock_items
          $subCatID      = $request->get('sub_cat_id');
@@ -310,7 +301,7 @@ class StockDeliveryProductController extends Controller{
     function unknowPurchaseReturnView(Request $request){
         $data['suppliers']      = Supplier::all();
         $data['shops']          = Shop::all();
-        $data['products']       = Product::with('productQtyShopWise')->get();
+        $data['products']       = Product::where('type','variant')->with('productQtyShopWise')->get();
         return view('Stock.Delivery.unknow_purchase_return',$data);
     }
 

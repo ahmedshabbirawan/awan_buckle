@@ -19,6 +19,11 @@ use App\Http\Controllers\Web\Product\ProductController;
 use App\Http\Controllers\Stock\StockDeliveryProductController;
 use App\Http\Controllers\Stock\StockController;
 use App\Http\Controllers\Stock\ShopWiseProductStockController;
+use App\Http\Controllers\Attribute\AttributeController;
+use App\Http\Controllers\Attribute\AttributeValueController;
+use App\Http\Controllers\Attribute\AttributeTypeController;
+
+// use App\Http\Controllers\ProductVariant\AttributeController;
 
 
 
@@ -285,18 +290,58 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::get('/view/{id}', [ShopController::class, 'show'])->name('view')->middleware('permission:supplier.read');
     });
 
+    Route::group(['prefix'=>'attribute','as' => 'attribute.'],function(){
+            Route::get('{slug}/list', [AttributeValueController::class, 'index'] )->name('attribute-list-index')->middleware('permission:attribute.read');
+            Route::get('{slug}/create', [AttributeValueController::class, 'create'] )->name('create')->middleware('permission:attribute.read');
+            Route::post('{slug}/store', [AttributeValueController::class, 'store'] )->name('store')->middleware('permission:attribute.read');
+            Route::get('{slug}/edit/{id}',[AttributeValueController::class,'edit'])->name('edit')->middleware('permission:attribute.update');
+            Route::post('{slug}/update/{id}',[AttributeValueController::class,'update'])->name('update')->middleware('permission:attribute.update');
+            Route::get('{slug}/status/{id}',[AttributeValueController::class,'status'])->name('status')->middleware('permission:attribute.status');
+    });
 
-    // Route::group(['prefix'=>'attribute','as' => 'attribute.'],function(){
-    //   //  Route::group(['prefix'=>'{slug}','as' => '{slug}.'],function(){
-    //         Route::get('{slug}/list', [AttributeValueController::class, 'index'] )->name('attribute-list-index')->middleware('permission:attribute.read');
-    //         Route::get('{slug}/create', [AttributeValueController::class, 'create'] )->name('create')->middleware('permission:attribute.read');
-    //         Route::post('{slug}/store', [AttributeValueController::class, 'store'] )->name('store')->middleware('permission:attribute.read');
-    //         Route::get('{slug}/edit/{id}',[AttributeValueController::class,'edit'])->name('edit')->middleware('permission:attribute.update');
-    //         Route::post('{slug}/update/{id}',[AttributeValueController::class,'update'])->name('update')->middleware('permission:attribute.update');
-    //         Route::get('{slug}/status/{id}',[AttributeValueController::class,'status'])->name('status')->middleware('permission:attribute.status');
-    //   //  });
-    //     Route::get('/list', [AttributeController::class, 'index'] )->name('list')->middleware('permission:attribute.read');
-    // });
+    Route::group(['prefix'=>'attribute-value','as' => 'attribute_value.'],function(){
+        Route::get('/{id}', [AttributeValueController::class, 'show'])->name('show');
+    });
+
+    Route::group(['prefix' => 'attribute-type', 'as' => 'attribute_type.'], function () {
+        Route::get('/create', [AttributeTypeController::class, 'create'])->name('create');
+        Route::post('/store', [AttributeTypeController::class, 'store'])->name('store');
+        Route::get('/edit/{id}', [AttributeTypeController::class, 'edit'])->name('edit');
+        Route::post('/update/{id}', [AttributeTypeController::class, 'update'])->name('update');
+        Route::get('/list', [AttributeTypeController::class, 'index'])->name('list');
+        Route::get('/{id}', [AttributeTypeController::class, 'show'])->name('show');
+    });
+
+
+
+    /*
+    Route::group(['prefix' => 'attribute', 'as' => 'attribute.'], function () {
+
+        Route::group(['prefix' => 'type', 'as' => 'type.'], function () {
+            Route::get('/create', [AttributeController::class, 'create'])->name('create');
+            Route::post('/store', [AttributeController::class, 'store'])->name('store');
+            Route::get('/edit/{id}', [AttributeController::class, 'edit'])->name('edit');
+            Route::post('/update/{id}', [AttributeController::class, 'update'])->name('update');
+            Route::get('/list', [AttributeController::class, 'index'])->name('list');
+        });
+
+        Route::group(['prefix' => 'value', 'as' => 'value.'], function () {
+            Route::get('/create', [AttributeController::class, 'create'])->name('create');
+            Route::post('/store', [AttributeController::class, 'store'])->name('store');
+            Route::get('/edit/{id}', [AttributeController::class, 'edit'])->name('edit');
+            Route::post('/update/{id}', [AttributeController::class, 'update'])->name('update');
+            Route::get('/list', [AttributeController::class, 'index'])->name('list');
+        });
+        // Route::get('/', [AttributeController::class, 'create'])->name('create');
+    });
+*/
+
+
+
+
+
+
+
 
 
     Route::prefix('suppliers')->group(function () {

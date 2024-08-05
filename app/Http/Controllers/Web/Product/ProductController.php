@@ -25,6 +25,9 @@ use App\Models\StockItem;
 
 use App\Events\ProductCreate;
 use App\Events\ProductEvent;
+use App\Models\AttributeValue;
+use App\Models\ProductVariant;
+use App\Models\ProductVariantAttribute;
 use App\Models\Shop;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -40,9 +43,6 @@ class ProductController extends Controller
     public $table;
     public $view;
 
-
-
-
     public function __construct(){
         $this->resource     = new Product();
         $this->name         = $this->viewData['name']         =   'Product';
@@ -51,12 +51,6 @@ class ProductController extends Controller
         $this->view         = 'product.';
     }
 
-
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index(Request $request){
 
         $shops = Shop::where('status',1)->get();
@@ -66,30 +60,27 @@ class ProductController extends Controller
             $column     = explode('-',$order)[0];
             $sort       = explode('-',$order)[1];
 
-            $results = Product::with(['product_Category' => function($query) use ($request){}]
-            )->select()->where(function ($query) use ($request) {
 
-            })->orderByRaw($column.' '.$sort)->get();
+            
+
+
+            $results = Product::with([])->select()->where(function ($query) use ($request) {
+                $query->where('type','variant');
+            })
+             //->orderByRaw($column.' '.$sort)
+             ->get();
             
             
             $datatable =  Datatables::of($results)
             ->addColumn('product_name', function ($row) {
-                    $attributes = array();
-                    foreach($row->product_attribute_value as $attr):
-                        $attributes[] = $attr->attribute_type->name.' : '.$attr->value;
-                    endforeach;
-                    if( count($attributes) > 0 ){
-                        return '<b>'.$row->name.'</b> <br> <span class="label label-sm label-warning"> '. implode(' / ', $attributes).' </span>';
-                    }else{
-                        return '<b>'.$row->name.'</b>';
-                    }
-            
+                    return optional($row)->name;
             })->addColumn('stock_available', function ($row) {
                 $qty = ProductAvailable::select(DB::raw('SUM(qty) as total_qty'))->where('product_id', $row->id)->first()->total_qty;
                 return ($qty)?$qty:0;
             })->addColumn('product_category_name', function ($row) {
-                     $tree = $row->categories_tree();
-                    return  $tree['category']['name'].' / '.$tree['sub_category']['name'].' / '.$tree['product_category']['name']; 
+                    return '';
+                    // $tree = $row->categories_tree();
+                    // return  $tree['category']['name'].' / '.$tree['sub_category']['name'].' / '.$tree['product_category']['name']; 
             })->addColumn('attributes_tags', function ($row) {
                 return '';
             })->addColumn('action', function ($row) {
@@ -129,93 +120,141 @@ class ProductController extends Controller
         return view($this->view.'lists',$this->viewData);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+
     public function create(){
-        dd('stop');
-
-        // $product = Product::findOrFail(2);
         // ProductCreate::dispatch($product);
-
         $this->viewData['sub_category']     = ParentCategory::with('subCategories')->orderBy('name','DESC')->get();
         $this->viewData['uoms']             = Uom::orderBy('code','ASC')->get()->pluck('code','id');
+        $this->viewData['attribute_type']   = AttributeType::orderBy('name','ASC')->get()->pluck('name','id');
         return view($this->view.'create',$this->viewData);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(ProductFromRequest $request){
-        dd('stop');
+
+    public function store(Request $request){
         $name           = $request->get('name');
         $description    = $request->get('description');
         $uom_id         = $request->get('uom_id');
-        $status         = $request->get('status');
+        $uom = Uom::find($uom_id);
+        $status         = $request->get('status', 1);
         $price          = $request->get('price');
+        $productId = $request->get('product_category_id');
+        $productType = $request->get('product_type');
+        $attrTypes = $request->get('attribute_type');
+        $attrValues = $request->get('attribute_value');
+        $priceArr = $request->get('price_arr');
+
+
+
         $imageName      = null;
-        
-        if($request->hasFile('product_image')){ 
+        if ($request->hasFile('product_image')) {
             $imageObj = $this->uploadProductImage($request);
-            if(  !($imageObj[0]) ){
+            if (!($imageObj[0])) {
                 return response()->json(['message' => $imageObj[1]], 500);
-            }else{
+            } else {
                 $imageName = $imageObj[1];
             }
         }
-
         $array = array(
             'name'           => $name,
             'description'    => $description,
             'uom_id'         => $uom_id,
-            'code'           => Uom::find($uom_id)->code,
+            'code'           => $uom->code,
             'image'          => $imageName,
-            'price'          => $price,
-            'product_cat_id' => $request->get('product_category_id'),
+           //  'price'          => $price,
+            //   'product_cat_id' => $request->get('product_category_id'),
             'status'         => $status,
+            'type' => 'product',
+            'parent_id' => 0
         );
-
-
-        
-
-        try{
+        try {
             DB::beginTransaction();
-            $attributes = $request->get('attribute_value_ids');
             $product    = Product::create($array);
-            $insertArr = [];
+            $productId = $product->id;
 
-            if(!empty($attributes ) && (count($attributes) > 0) ){
-                foreach($attributes as $valueID):
-                    ProductAttribute::create(array('product_id' => $product->id, 'value_id' => $valueID));
+            if($productType == 'single'){
+                
+                Product::create([
+                    'name'           => $name,
+                    'description'    => $description,
+                    'uom_id'         => $uom_id,
+                    'code'           => $uom->code,
+                    'image'          => $imageName,
+                    'status'         => $status,
+                    'price' => $price,
+                    'type' => 'variant',
+                    'parent_id' => $product->id,
+                    'sku' => ''
+                ]);
+
+                
+                ProductVariant::create([
+                    'product_id' => $product->id,
+                    'price' => $price,
+                    'sku' => ''
+                ]);
+
+
+
+
+            }else{
+                
+                $index = 0;
+                foreach ($attrTypes as $typeId) :
+                    $valueId = (isset($attrValues[$index]))? $attrValues[$index] : 0;
+                    $price = (isset($priceArr[$index])) ? $priceArr[$index] : 0; 
+
+                    $typeObj = AttributeType::where('id',$typeId)->first();
+                    $valueObj = AttributeValue::where('id',$valueId)->first();
+
+                    $sku = optional($valueObj)->value;
+
+
+                    Product::create([
+                        'name'           => $name.' '.$sku,
+                        'description'    => $description,
+                        'uom_id'         => $uom_id,
+                        'code'           => $uom->code,
+                        'image'          => $imageName,
+                        'status'         => $status,
+                        'price' => $price,
+                        'type' => 'variant',
+                        'parent_id' => $product->id,
+                        'sku' => $sku
+                    ]);                    
+
+
+                    $productVariant = ProductVariant::create([
+                        'product_id' => $productId,
+                        'price' => $price,
+                        'sku' => $sku
+                    ]);
+                    $productVariantId = $productVariant->id;
+
+
+                    ProductVariantAttribute::create([
+                        'product_id' => $productId,
+                        'variant_id' => $productVariantId, 
+                        'type_id' => $typeId,
+                        'value_id' => $valueId
+                    ]);
+
+                $index++;
                 endforeach;
-            }   
 
-            
+                
+            }
 
             DB::commit();
-
-            if($request->ajax()){
-                return response(['status' => true, 'data' => ['product' => $product], 'message' => 'Product Add successfully.' ]);
-            }else{
-                return redirect(route('product.list'))->with('success',$this->name.' added successful!');
+            if ($request->ajax()) {
+                return response(['status' => true, 'data' => ['product' => $product], 'message' => 'Product Add successfully.']);
+                $request->session()->flash('success', 'Product Add successfully!');
+            } else {
+                return redirect(route('product.list'))->with('success', $this->name . ' added successful!');
             }
-            
-            
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Error.Please Contact   Support'. $e->getMessage()], 500);
-            // return redirect()->route('category.sub.list')->with('error','Error.Please Contact   Support');
+            return response()->json(['message' => 'Error.Please Contact Admin Support ' . $e->getLine().' -- '.$e->getMessage()], 500);
         }
-
-        
-
-
-       // return redirect(route('product.list'))->with('success',$this->name.' added successful!');
     }
 
     /**
@@ -372,7 +411,8 @@ class ProductController extends Controller
 
 
         $productCategoryAttributesArray     = ProductCategoryAttribute::with(['ProductCategoryAttributeName'])->where('productCategoryId',$productCatID)->pluck('attributeName')->toArray();
-        $data['attributes']                 = AttributeType::with(['attributeValue'])->whereIn('id',$productCategoryAttributesArray)->get(); //->toArray();
+        // $data['attributes']                 = AttributeType::with(['attributeValue'])->whereIn('id',$productCategoryAttributesArray)->get(); //->toArray();
+        $data['attributes']                 = AttributeType::with(['attributeValue'])->get();
         // dd($data['attributes']); exit;
         return view('product.ajax_view.product_cat_attribute',$data);
     }
@@ -384,7 +424,9 @@ class ProductController extends Controller
         }else{
             $where['product_cat_id']              = $productCatID;
         }
-        $data['products']   = Product::with(['product_Attribute_Value', 'product_Attribute_Value.attribute_type'])->where($where)->orderBy('name','ASC')->get();
+        $data['products']   = Product::with(['product_Attribute_Value', 'product_Attribute_Value.attribute_type'])->where('type','variant')->where($where)->orderBy('name','ASC')->get();
+        // $data['product_variant']   = ProductVariant::with(['product'])->where($where)->get();
+        //dd($data['products']);
         return view('product.ajax_view.product_with_attribute_select',$data);
     }
 
@@ -523,6 +565,75 @@ WHERE @runtot + q1.avail_qty < 130 ORDER BY rt DESC;
                 // if($productCat != ''){
                 //     $query->where('product_cat_id', '=', $request->product_category_id);
                 // }
+    */
+
+    /*
+    
+    public function index(Request $request){
+
+        $shops = Shop::where('status',1)->get();
+        if($request->ajax()){
+
+            $order      = $request->get('order_by','name-asc');
+            $column     = explode('-',$order)[0];
+            $sort       = explode('-',$order)[1];
+
+            $results = Product::with(['product_Category' => function($query) use ($request){}]
+            )->select()->where(function ($query) use ($request) {
+
+            })->orderByRaw($column.' '.$sort)->get();
+            
+            
+            $datatable =  Datatables::of($results)
+            ->addColumn('product_name', function ($row) {
+                    $attributes = array();
+                    foreach($row->product_attribute_value as $attr):
+                        $attributes[] = $attr->attribute_type->name.' : '.$attr->value;
+                    endforeach;
+                    if( count($attributes) > 0 ){
+                        return '<b>'.$row->name.'</b> <br> <span class="label label-sm label-warning"> '. implode(' / ', $attributes).' </span>';
+                    }else{
+                        return '<b>'.$row->name.'</b>';
+                    }
+            
+            })->addColumn('stock_available', function ($row) {
+                $qty = ProductAvailable::select(DB::raw('SUM(qty) as total_qty'))->where('product_id', $row->id)->first()->total_qty;
+                return ($qty)?$qty:0;
+            })->addColumn('product_category_name', function ($row) {
+                     $tree = $row->categories_tree();
+                    return  $tree['category']['name'].' / '.$tree['sub_category']['name'].' / '.$tree['product_category']['name']; 
+            })->addColumn('attributes_tags', function ($row) {
+                return '';
+            })->addColumn('action', function ($row) {
+               //  return $row;
+                    $statusIcon = 'fa fa-ban';
+                    if($row->status == 1){
+                    $statusIcon = 'fa fa-check-circle-o';
+                    }
+                     $action = '<div class="hidden-sm hidden-xs btn-group">';
+                     $action .= '<a href="'.route('product.view', $row->id).'" class="btn btn-xs btn-success" data-toggle="tooltip" title="Detail" ><i class="ace-icon fa fa-eye bigger-120"></i></a>';
+                     $action .= '<a href="'.route('simple_product.edit', $row->id).'" class="btn btn-xs btn-info"  data-toggle="tooltip" title="Edit" ><i class="ace-icon fa fa-pencil bigger-120"></i></a>';
+                     $action .= '<a href="javascript:void(0);" onclick="changeStatus('.$row->id.');" class="btn btn-xs btn-warning" data-toggle="tooltip" title="Change Status" ><i class="ace-icon '.$statusIcon.' bigger-120"></i></a>';
+                    //  $action .= '<a href="javascript:void(0);" onclick="deleteConfirmation('.$row->id.');" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Delete" ><i class="ace-icon fa fa-trash-o bigger-120"></i></a>';
+                     $action .= '</div>';
+                    return $action;
+            })->rawColumns(['status_label','action','product_category_name','product_name']);
+
+            foreach($shops as $shop):
+                $datatable->addColumn('shop_'.$shop->id, function($row) use ($shop) {
+                    $qty = ProductAvailable::select(DB::raw('SUM(qty) as total_qty'))
+                            ->where('product_id', $row->id)
+                            ->where('shop_id', $shop->id)
+                            ->first()->total_qty;
+                    return ($qty)?$qty:0;
+                });
+                // $dt->addColumn($request->field, 'content here');
+            endforeach;
+
+            //  ->orderColumn('id', 'DESC')
+            return $datatable->make(true);
+    }
+    
     */
 
 }
