@@ -15,7 +15,7 @@ use App\Models\StockDelivery;
 
 class Customer extends Model{
     use HasFactory, Definitions, CurdBy;
-    protected $fillable = ['name', 'mobile','email','cnic', 'address','info','status','created_by','updated_by','deleted_by','deleted_at','created_at','updated_at'];   
+    protected $fillable = ['name', 'mobile','email','cnic', 'address','city','bazaar','info','status','created_by','updated_by','deleted_by','deleted_at','created_at','updated_at'];   
     protected $appends = ['status_label'];
 
     protected static function booted() {

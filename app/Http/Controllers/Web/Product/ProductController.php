@@ -4,27 +4,24 @@ namespace App\Http\Controllers\Web\Product;
 
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ProductFromRequest;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use App\Models\ParentCategory;
 
+
 use App\Models\Uom;
 use App\Models\SubCategory;
 use Yajra\DataTables\DataTables;
-use App\Http\Requests\ProductFromRequest;
 use App\Models\ProductCategory;
 use App\Models\ProductCategoryAttribute;
 
 use App\Models\ProductAttribute;
 use App\Models\ProductAvailable;
 use Illuminate\Support\Str;
-
-use App\Models\Attribute;
 use App\Models\AttributeType;
 use App\Models\StockItem;
 
-use App\Events\ProductCreate;
-use App\Events\ProductEvent;
 use App\Models\AttributeValue;
 use App\Models\ProductVariant;
 use App\Models\ProductVariantAttribute;
@@ -128,15 +125,35 @@ class ProductController extends Controller
         $this->viewData['attribute_type']   = AttributeType::orderBy('name','ASC')->get()->pluck('name','id');
         return view($this->view.'create',$this->viewData);
     }
+    
+    public function createByModal()
+    {
+        $this->viewData['sub_category']     = ParentCategory::with('subCategories')->orderBy('name','DESC')->get();
+        $this->viewData['uoms']             = Uom::orderBy('code','ASC')->get()->pluck('code','id');
+        $this->viewData['attribute_type']   = AttributeType::orderBy('name','ASC')->get()->pluck('name','id');
+        
+        $this->viewData['productID']   = null;
+        
+        $this->viewData['subCategoryID']   = null;
+        $this->viewData['uomID']   = null;
+        
+        $this->viewData['attribute_type']   = AttributeType::orderBy('name','ASC')->get()->pluck('name','id');
+        return response()->json([
+            'view' => View('product.create_by_modal', $this->viewData)->render(),
+            'data' =>   [],
+            'status' => true,
+            'message' => 'OK'
+        ]);
+    }
 
 
-    public function store(Request $request){
+    public function store(ProductFromRequest $request){
         $name           = $request->get('name');
         $description    = $request->get('description');
         $uom_id         = $request->get('uom_id');
         $uom = Uom::find($uom_id);
         $status         = $request->get('status', 1);
-        $price          = $request->get('price');
+        $price = $request->get('price');
         $productId = $request->get('product_category_id');
         $productType = $request->get('product_type');
         $attrTypes = $request->get('attribute_type');
@@ -201,6 +218,10 @@ class ProductController extends Controller
                 $index = 0;
                 foreach ($attrTypes as $typeId) :
                     $valueId = (isset($attrValues[$index]))? $attrValues[$index] : 0;
+                    if(empty($valueId)){
+                        $index++;
+                        continue;
+                    }
                     $price = (isset($priceArr[$index])) ? $priceArr[$index] : 0; 
 
                     $typeObj = AttributeType::where('id',$typeId)->first();
@@ -490,150 +511,5 @@ class ProductController extends Controller
         return array('status' => true);
     }
 
-
-    /*
-    SET @runtot:=0;
-    SELECT 
-    q1.pro,
-    q1.avail_qty,
-    (@runtot := @runtot + q1.avail_qty) AS rt
- FROM 
-    (SELECT product_id AS pro,
-     available_qty AS avail_qty
-     FROM  stock_items 
-     WHERE available_qty > 0
-     ORDER  BY available_qty
-     ) AS q1
-WHERE @runtot + q1.avail_qty <= 200;
-    */
-
-    /*
-        SET @runtot:=0;
-    SELECT 
-    q1.pro,
-    q1.avail_qty,
-    (@runtot := @runtot + q1.avail_qty) AS rt
- FROM 
-    (SELECT product_id AS pro,
-     available_qty AS avail_qty
-     FROM  stock_items 
-     WHERE available_qty > 0
-     ORDER  BY available_qty
-     ) AS q1
-WHERE @runtot + q1.avail_qty < 130 ORDER BY rt DESC;
-    */
-
-
-    /*
-    
-     //->whereHas('product_Attribute_Value', function ($query) use ($request){
-                // $query->select(DB::raw("GROUP_CONCAT(value_id SEPARATOR ',') as attributes, product_id"))
-                // ->groupBy('product_id')->havingRaw(" 1= 1 AND attributes like '%16%' AND attributes like '%13%'");
-
-                /*
-                $attr = $request->get('attribute_idz');
-                $filterArr = [];
-                $str = ' 1 = 1 ';
-                if( is_array($attr) ){
-                //  $idFound = 0;
-                
-                    foreach($attr as $attrID){
-                        if($attrID == ''){ continue; }
-                        //  $filterArr['value_id'] = $attrID;
-                        //  $str .= ' AND value_id = '.$attrID;
-
-                        //  echo 'as'; exit;
-                        $filterArr[] = $attrID; 
-                    }
-
-                    if( count($filterArr) > 0 ){
-                        $query->whereIn('product_attributes.value_id',$filterArr);
-                        $query->groupBy('value_id3');
-                        $idz = implode(",",$filterArr);
-                    }
-                    
-                }
-                
-
-            // })
-    
-    */
-
-    /*
-     // productAvailable_sum_qty
-                // $productCat = $request->get('product_category_id');
-                // if($productCat != ''){
-                //     $query->where('product_cat_id', '=', $request->product_category_id);
-                // }
-    */
-
-    /*
-    
-    public function index(Request $request){
-
-        $shops = Shop::where('status',1)->get();
-        if($request->ajax()){
-
-            $order      = $request->get('order_by','name-asc');
-            $column     = explode('-',$order)[0];
-            $sort       = explode('-',$order)[1];
-
-            $results = Product::with(['product_Category' => function($query) use ($request){}]
-            )->select()->where(function ($query) use ($request) {
-
-            })->orderByRaw($column.' '.$sort)->get();
-            
-            
-            $datatable =  Datatables::of($results)
-            ->addColumn('product_name', function ($row) {
-                    $attributes = array();
-                    foreach($row->product_attribute_value as $attr):
-                        $attributes[] = $attr->attribute_type->name.' : '.$attr->value;
-                    endforeach;
-                    if( count($attributes) > 0 ){
-                        return '<b>'.$row->name.'</b> <br> <span class="label label-sm label-warning"> '. implode(' / ', $attributes).' </span>';
-                    }else{
-                        return '<b>'.$row->name.'</b>';
-                    }
-            
-            })->addColumn('stock_available', function ($row) {
-                $qty = ProductAvailable::select(DB::raw('SUM(qty) as total_qty'))->where('product_id', $row->id)->first()->total_qty;
-                return ($qty)?$qty:0;
-            })->addColumn('product_category_name', function ($row) {
-                     $tree = $row->categories_tree();
-                    return  $tree['category']['name'].' / '.$tree['sub_category']['name'].' / '.$tree['product_category']['name']; 
-            })->addColumn('attributes_tags', function ($row) {
-                return '';
-            })->addColumn('action', function ($row) {
-               //  return $row;
-                    $statusIcon = 'fa fa-ban';
-                    if($row->status == 1){
-                    $statusIcon = 'fa fa-check-circle-o';
-                    }
-                     $action = '<div class="hidden-sm hidden-xs btn-group">';
-                     $action .= '<a href="'.route('product.view', $row->id).'" class="btn btn-xs btn-success" data-toggle="tooltip" title="Detail" ><i class="ace-icon fa fa-eye bigger-120"></i></a>';
-                     $action .= '<a href="'.route('simple_product.edit', $row->id).'" class="btn btn-xs btn-info"  data-toggle="tooltip" title="Edit" ><i class="ace-icon fa fa-pencil bigger-120"></i></a>';
-                     $action .= '<a href="javascript:void(0);" onclick="changeStatus('.$row->id.');" class="btn btn-xs btn-warning" data-toggle="tooltip" title="Change Status" ><i class="ace-icon '.$statusIcon.' bigger-120"></i></a>';
-                    //  $action .= '<a href="javascript:void(0);" onclick="deleteConfirmation('.$row->id.');" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Delete" ><i class="ace-icon fa fa-trash-o bigger-120"></i></a>';
-                     $action .= '</div>';
-                    return $action;
-            })->rawColumns(['status_label','action','product_category_name','product_name']);
-
-            foreach($shops as $shop):
-                $datatable->addColumn('shop_'.$shop->id, function($row) use ($shop) {
-                    $qty = ProductAvailable::select(DB::raw('SUM(qty) as total_qty'))
-                            ->where('product_id', $row->id)
-                            ->where('shop_id', $shop->id)
-                            ->first()->total_qty;
-                    return ($qty)?$qty:0;
-                });
-                // $dt->addColumn($request->field, 'content here');
-            endforeach;
-
-            //  ->orderColumn('id', 'DESC')
-            return $datatable->make(true);
-    }
-    
-    */
 
 }

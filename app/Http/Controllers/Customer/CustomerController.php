@@ -11,7 +11,9 @@ use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\Validator;
 
 use App\Http\Requests\CustomerFromRequest;
+use App\Models\Finance\CustomerPayment;
 use App\Models\Location;
+use App\Models\SaleOrder;
 use Illuminate\Support\Facades\DB;
 
 class CustomerController extends Controller{
@@ -41,26 +43,10 @@ class CustomerController extends Controller{
      * @return \Illuminate\Http\Response
      */
     public function index(Request $request){
-        // echo Customer::find(1)->getAttri(); exit;
-
-
         $productID = $request->get('product_id');
-
         if($request->ajax()){
-                $results = Customer::select(); //->orderBy('id','ASC');
-// ->whereRelation('deliveries.deliveryProduct', 'product_id',3)
-            //    if($productID != ''){
-            //        $results =  $results->whereRelation('deliveries.deliveryProduct', 'product_id',$productID);    
-            //    }
-
-                
-
-
-
+                $results = Customer::select();
                 return Datatables::of($results)
-                // ->addColumn('city_name', function ($row) {
-                //         return optional($row->city)->name;
-                // })
                 ->addColumn('action', function ($row) {
                         $statusIcon = 'fa fa-ban';
                         if($row->status == 1){
@@ -113,6 +99,8 @@ class CustomerController extends Controller{
             'email' => $request->get('email'),
             'mobile' => $request->get('mobile'),
             'address' => $request->get('address'),
+            'bazaar' => $request->get('bazaar'),
+            'city' => $request->get('city'),
             'status' => $request->get('status'),
         );
 
@@ -145,6 +133,8 @@ class CustomerController extends Controller{
      */
     public function show($id, Customer $customer){
         $this->viewData['row'] = Customer::findOrFail($id);
+        $this->viewData['payments'] = CustomerPayment::where('customer_id', $id)->get();
+        $this->viewData['stats'] = $this->getCustomerStats($id);
         return view($this->view.'detail',$this->viewData);
     }
 
@@ -179,6 +169,8 @@ class CustomerController extends Controller{
             'email' => $request->get('email'),
             'mobile' => $request->get('mobile'),
             'address' => $request->get('address'),
+            'bazaar' => $request->get('bazaar'),
+            'city' => $request->get('city'),
             'status' => $request->get('status')
         );
         try{
@@ -288,6 +280,19 @@ class CustomerController extends Controller{
             'message' => 'OK'
         ]);
     }
+
+    function getCustomerStats($customerId){    
+        $pay = CustomerPayment::where('customer_id',$customerId)->where('type','cash')->sum('amount');
+        $due = CustomerPayment::where('customer_id',$customerId)->where('type','late_payment')->sum('amount');
+        $orders = SaleOrder::where('customer_id',$customerId)->count();
+        $ordersAmount = SaleOrder::where('customer_id',$customerId)->count();
+        return [
+            'pay' => $pay,
+            'due' => $due,
+            'orders' => $orders,
+            'orders_amount' => $ordersAmount
+        ];
+     }
 
 
 }

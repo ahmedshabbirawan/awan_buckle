@@ -69,12 +69,12 @@ class ProductCategoryController extends Controller
                 })
                 ->addColumn('parentCategoryName', function ($data) {
 
-                   $parentName = $data->parentCategoryName->name;
+                   $parentName = optional($data->parentCategoryName)->name;
                     return $parentName;
                 })
                 ->addColumn('SubCategoryName', function ($data) {
 
-                    $SubName = $data->parentSubCategoryName->name;
+                    $SubName = optional($data->parentSubCategoryName)->name;
                      return $SubName;
                  })
                  ->addColumn('CategoryAttributes', function ($data) {

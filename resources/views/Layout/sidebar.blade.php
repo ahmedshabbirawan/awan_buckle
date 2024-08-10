@@ -69,7 +69,7 @@
 
                     @can('product.create')
                     <li class="{{request()->is('Products/create*') ? 'active' : '' }}">
-                        <a href="{{ route('simple_product.create') }}"><i class="menu-icon fa fa-caret-right"></i>Quick Add</a>
+                        <a href="{{ route('product.create') }}"><i class="menu-icon fa fa-caret-right"></i>Quick Add</a>
                         <b class="arrow"></b>
                     </li>
                     @endcan
@@ -196,6 +196,36 @@
                 </ul>
             </li>
             <!--------------- End Customer -------------------->
+
+
+            <!--------------- Payments -------------------->
+            <li class="{{request()->is('finance*') ? 'active open' : '' }}">
+                <a href="#" class="dropdown-toggle ">
+                    <i class="menu-icon fa fa-dollar"></i>
+                    <span class="menu-text">
+                        Finance & Payments
+                    </span>
+                    <b class="arrow fa fa-angle-down"></b>
+                </a>
+
+                <b class="arrow"></b>
+
+                <ul class="submenu">
+                    <li class="{{request()->is('finance/payment/list*') ? 'active' : '' }}">
+                        <a href="{{ route('finance.payment.list') }}"><i class="menu-icon fa fa-caret-right"></i>List</a><b class="arrow"></b>
+                    </li>
+                        <!-- <li class="{{request()->is('customer/create*') ? 'active' : '' }}">
+                            <a href="{{ route('customer.create') }}"><i class="menu-icon fa fa-caret-right"></i>Add New</a><b class="arrow"></b>
+                        </li> -->
+                    @can('customer.read')
+                    
+                    @endcan
+                    @can('customer.create')
+                    
+                    @endcan
+                </ul>
+            </li>
+            <!--------------- End Payments -------------------->
 
 
             <!--------------- Shops -------------------->

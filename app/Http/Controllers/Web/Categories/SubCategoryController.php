@@ -78,7 +78,7 @@ class SubCategoryController extends Controller
                 })
                 ->addColumn('parentCategoryName', function ($data) {
 
-                   $parentName = $data->parentCategoryName->name;
+                   $parentName = optional($data->parentCategoryName)->name;
                     return $parentName;
                 })
                 ->rawColumns(['action', 'status','parentCategoryName'])

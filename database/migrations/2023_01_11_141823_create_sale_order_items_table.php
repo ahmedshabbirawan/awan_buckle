@@ -13,6 +13,7 @@ class CreateSaleOrderItemsTable extends Migration
      */
     public function up()
     {
+        /*
         Schema::create('sale_order_items', function (Blueprint $table) {
             $table->id();
             $table->integer("order_id")->nullable();
@@ -37,6 +38,7 @@ class CreateSaleOrderItemsTable extends Migration
             $table->softDeletes();
             $table->timestamps();
         });
+        */
     }
 
     /**

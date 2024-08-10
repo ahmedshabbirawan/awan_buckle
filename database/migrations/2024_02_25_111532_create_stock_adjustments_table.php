@@ -14,6 +14,8 @@ class CreateStockAdjustmentsTable extends Migration
     public function up()
     {
 
+        /*
+
         $fillable = ['product_id', 'shop_id', 'user_id', 'qty_when_adjust', 'qty', 'stock_type','created_by','description'
         ,'updated_by','deleted_by','deleted_at','created_at','updated_at']; 
 
@@ -36,6 +38,7 @@ class CreateStockAdjustmentsTable extends Migration
             $table->softDeletes();
             $table->timestamps();
         });
+        */
     }
     
     /**

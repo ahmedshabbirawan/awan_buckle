@@ -4,22 +4,16 @@ namespace App\Http\Controllers\Sale;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-
-use App\Models\ReturnDetail;
 use Yajra\DataTables\DataTables;
-
-use App\Models\Products;
-use App\Models\Employee;
 use App\Models\Product;
 use App\Models\ProductAvailable;
 use App\Models\SaleCart;
 use App\Models\Customer;
-use App\Models\SaleItem;
+use App\Models\Finance\CustomerPayment;
 use App\Models\SaleOrder;
 use App\Models\SaleOrderItem;
 use App\Models\Shop;
 use App\Models\StockAudit;
-use App\Models\StockItem;
 use Illuminate\Support\Facades\DB;
 use Exception;
 
@@ -442,9 +436,15 @@ class SaleCartController extends Controller{
 
     
     public function finalPlaceOrder(Request $request){
+
+      //   dd($request->all());
+
         $validator = Validator::make($request->all(), [
-            'sale_key'   => 'required'
+            'sale_key' => 'required',
+            'payment_type' => 'required'
         ]);
+
+        $paymentType = $request->get('payment_type');
 
         $customerID = $request->get('customer_id');
         if ($validator->fails()) {
@@ -536,6 +536,46 @@ class SaleCartController extends Controller{
             $saleOrder->total_discount      = $totalDiscount;
             $saleOrder->total_price         = $totalPrice;
             $saleOrder->save();
+
+
+           // protected $fillable = ['customer_id','order_id','title','amount','type','detail','status', 'created_by','updated_by','updated_at','deleted_by'];
+
+
+
+            /* Customer Payments */
+            if($paymentType == 'multiple'){
+                $paymentModeArr = $request->get('payment_mode');
+                $paymentAmountArr = $request->get('payment_amount'); //floatval($request->get('payment_amount'));
+
+                $detail['mode'] = $paymentModeArr;
+                $detail['amount'] = $paymentAmountArr;
+                $detail['order'] = $saleOrder;
+
+                    for($i = 0; $i < count($paymentModeArr); $i++){
+                        $paymentAmount = $paymentAmountArr[$i];
+                        $paymentMode = $paymentModeArr[$i];
+                        
+                        if($paymentAmount != ''){
+                            CustomerPayment::create([
+                                'customer_id' => $customerID,
+                                'order_id' => $saleOrder->id,
+                                'title' => 'Pay',
+                                'amount' => $paymentAmount,
+                                'type' => $paymentMode, // ($paymentMode == 'cash')?'received':''
+                                'detail' => json_encode($detail),
+                                'status' => 'ok'
+                            ]);
+                        }
+                    }
+                
+
+                
+
+              
+            }
+
+
+
             
             SaleCart::whereIn('id',$itemWillDelete)->delete();
             

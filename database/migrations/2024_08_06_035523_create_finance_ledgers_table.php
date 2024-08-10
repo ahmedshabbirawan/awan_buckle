@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateAccountingLedgersTable extends Migration
+class CreateFinanceLedgersTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,8 +13,15 @@ class CreateAccountingLedgersTable extends Migration
      */
     public function up()
     {
-        Schema::create('accounting_ledgers', function (Blueprint $table) {
+        Schema::create('finance_ledgers', function (Blueprint $table) {
             $table->id();
+            $table->string('name');
+            $table->integer('ledger_id')->nullable();
+            $table->string('status')->nullable();
+            $table->integer('created_by')->nullable();
+            $table->integer('updated_by')->nullable();
+            $table->integer('deleted_by')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

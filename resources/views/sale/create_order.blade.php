@@ -117,19 +117,106 @@ Issuance Items
                 <tr><td class="total-label" >Total Item</td><td id="total_item" class="total-label" > -- </td></tr>
                 <tr><td class="total-label" >Sub Total</td><td id="sub_total" class="total-label" > -- </td></tr>
                 <tr><td class="total-label" >Total Discount</td><td id="total_discount" class="total-label" > -- </td></tr>
-                <tr><td class="total-label" >Grand Total / BillAmount </td><td   id="billAmount" class="total-label" > -- </td></tr>
+                <tr><td class="total-label" >Grand Total / BillAmount </td><td  class="billAmount" id="billAmount" class="total-label" > -- </td></tr>
                 <tr><td class="total-label" > Cash Received </td><td   id="" class="total-label" > <input type="text" id="cash_received" onkeyup="calculateCash();" onblur="calculateCash();" name="cash_received" class="form-control" > </td></tr>
                 <tr><td class="total-label" > Cash Return </td><td   id="" class="total-label" > <input type="text" id="cash_returned" name="cash_returned" class="form-control disabledInput" readonly > </td></tr>
             </table>
-
-            <a href="javascript:void(0);" onclick="placeOrderConfirm();"  class="btn btn-primary btn-block" >Place Order</a>
+            <a href="javascript:void(0);" onclick="placeOrderConfirm();"  class="btn btn-primary btn-block" >Place Order With Cash</a>
+            <a href="javascript:void(0);" onclick="multiplePayments();"  class="btn btn-primary btn-block" >Multiple Payment</a>
             <a href="javascript:void(0);" onclick="openPreviewPopUp();" class="btn btn-primary btn-block hidden" >Preview</a>
+        </div>
+        <div class="udar_contain" >
+            <input type="hidden" name="payment_type" id="payment_type" value="" >
+            
+<!--- payment modal --->
+<div>
+<div class="modal" tabindex="-1" role="dialog" id="multiple_payment_modal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+                <div class="modal-header no-padding">
+                    <h5 class="modal-title">Multiple Payments</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-striped table-bordered table-hover no-margin-bottom no-border-top" >
+                        <tr>
+                            <th>Total Order</th>
+                            <th>Orders Amount</th>
+                            <th>Amount Pay</th>
+                            <th>Amount Pending</th>
+                        </tr>
+                        <tr>
+                            <th class="cus_total_order" >--</th>
+                            <th class="cus_order_amount" >--</th>
+                            <th class="cus_amount_pay" >--</th>
+                            <th class="cus_amount_due" >--</th>
+                        </tr>
+                    </table>
 
+                    <div class="" style="padding: 15px; width:15px;" ></div>
+
+                    <table class="table table-striped table-bordered table-hover no-margin-bottom no-border-top" >
+                        <tr>
+                            <th colspan="2">Total Amount</th>
+                            <th colspan="2" class="billAmount"></th>
+                        </tr>
+                        <tr><th colspan="4"></th></tr>
+
+                        <tr>
+                            <th>Sr</th>
+                            <th>Mode</th>
+                            <th>Amounts</th>
+                            <th>Action</th>
+                        </tr>
+
+                        <tr>
+                            <th>#</th>
+                            <th><select name="payment_mode[]" class="form-control" > <option value="cash" >Cash</option> <option value="late_payment" >Late Payment</option> </select></th>
+                            <th><input type="text" name="payment_amount[]" value="" id="payment_first"  class="" placeholder="Amount" ></th>
+                            <th>X</th>
+                        </tr>
+
+                        <tr>
+                        <th>#</th>
+                        <th><select name="payment_mode[]" class="form-control" > <option value="cash" >Cash</option> <option value="late_payment" >Late Payment</option> </select></th>
+                            <th><input type="text" name="payment_amount[]" value="" class="" placeholder="Amount" ></th>
+                            <th>X</th>
+                        </tr>
+
+                        <th>#</th>
+                        <th><select name="payment_mode[]" class="form-control" > <option value="cash" >Cash</option> <option value="late_payment" >Late Payment</option> </select></th>
+                            <th><input type="text" name="payment_amount[]" value="" class="" placeholder="Amount" ></th>
+                            <th>X</th>
+                        </tr>
+                        
+                    </table>
+
+                    
+
+                </div>
+
+                <div class="modal-body">
+
+                    
+
+
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary" onclick="placeOrder();" >Place Order</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                </div>
+        </div>
+    </div>
+</div>
+</div>
+<!--- payment modal end --->
         </div>
         </form>
     </div>
     </div>
-</div>
+</div>  
 
 
 </div>
@@ -269,7 +356,7 @@ Issuance Items
                     
                     $('#sub_total').html(data.subTotal);
                     $('#total_discount').html(data.totalDiscount);
-                    $('#billAmount').html(data.billAmount);
+                    $('.billAmount').html(data.billAmount);
                     billAmount = data.billAmount;
 
 
@@ -359,26 +446,55 @@ Issuance Items
 
 
     function placeOrderConfirm(){
+        
         $.confirm({
-                    title: 'Confirm',
-                    content: 'Do you really want to place order',
-                    buttons: {
-                        yes: {
-                            text: 'OK',
-                            action: function() {
-                                placeOrder();
-                            }
-                        },
-                        no: { text: 'Cancel', action: function() {} }
+            title: 'Confirm',
+            content: 'Do you really want to place order',
+            buttons: {
+                yes: {
+                    text: 'OK',
+                    action: function() {
+                        $('#payment_type').val('cash');
+                        placeOrder();
                     }
-                });
+                },
+                no: { text: 'Cancel', action: function() {} }
+            }
+        });
+    }
+
+    function multiplePayments(){
+        var customerId = parseInt($('#customer_select2').val());
+        if(isNaN(customerId)){
+            alert('please select customer first!');
+            return false;
+        }
+        $.ajax({
+            dataType: 'json',
+            type: 'GET',
+            url:  "{{ route('customer.finance.stats','') }}/"+customerId,
+            contentType: false,
+            processData: false,
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            error:ajaxFailBlock,
+            success: function(res) {
+                $('.cus_total_order').html(res.orders);
+                $('.cus_order_amount').html(res.orders_amount);
+                $('.cus_amount_pay').html(res.pay);
+                $('.cus_amount_due').html(res.due);
+            }
+        });
+        $('#payment_type').val('multiple');
+        $('#multiple_payment_modal').modal('show');
     }
 
 
     function placeOrder(){
         var formData = new FormData($('#order_form')[0]);
         var customer_id = $('#customer_select2').val();
-        formData.append('customer_id',customer_id)
+        formData.append('customer_id',customer_id);
         $.ajax({
             dataType: 'json',
             type: 'POST',
@@ -391,8 +507,6 @@ Issuance Items
             },
             error:ajaxFailBlock,
             success: function(res) {
-
-
                 if(res.status){
                     // cartDataTable.ajax.reload();
                     var url = "{{ route('sale.order.detail','') }}/"+res.data.id+'?view=print';
@@ -483,8 +597,9 @@ Issuance Items
                     
                     $('#sub_total').html(data.subTotal);
                     $('#total_discount').html(data.totalDiscount);
-                    $('#billAmount').html(data.billAmount);
+                    $('.billAmount').html(data.billAmount);
                     billAmount = data.billAmount;
+                    $('#payment_first').val(billAmount);
                 }
             },
             columns: [

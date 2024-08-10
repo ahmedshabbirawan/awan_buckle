@@ -10,67 +10,13 @@ Products
     </div>
     <div class="" style="float: right;">
         <a href="javascript:void(0);" onclick="pos_app.import_product_modal();"  class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-file-o"></i> Import Products </a> 
-        <a href="{{ route('simple_product.create') }}" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-floppy-o"></i> Add Record </a> 
+        <a href="{{ route('product.create') }}" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-floppy-o"></i> Add Record </a> 
     </div>
 </div>
 <?php 
 $actionURL =  route('simple_product.store');
 ?>
 <!-------------------------------------------------------------------->
-<div class="row ">
-
-<form method="post" id="product_form" action="{{ isset($product) ? route('simple_product.update', $product->id) : route('simple_product.store') }}" novalidate class="form-horizontal product_form">
-                @csrf
-
-<div class="col-12 col-lg-12" >
-    <div class="widget-box widget-color-blue ui-sortable-handle" >
-    <div class="widget-header"><h4 class="widget-title">Quick Add Product</h4></div>
-    <div class="card radius-10 border-top  border-danger">
-        <div class="card-body">
-
-
-        <div class="col-lg-4 col-sm-4">
-                <label for="form-field-1"> Product Name: </label>
-                <div class="">
-                    <input type="text" required class="form-control @error('name') is-invalid @enderror" value="{{old('name', (isset($product))? $product->name : '' )}}" name="name" id="name" placeholder="Name">
-                </div>
-        </div>
-        <div class="col-lg-4 col-sm-4" >
-            <label class="" for="form-field-1"> Price:</label>
-            <div class="">
-                <input type="text" class="col-xs-10 col-sm-5 form-control @error('price') is-invalid @enderror" value="{{ old('price',(isset($price))? $product->price : '') }}" name="price" id="price" placeholder="Price">
-            </div>
-        </div>
-
-        <div class="col-lg-4 col-sm-4" >
-            <label class="" for="form-field-1"> UOM:</label>
-            <div class="">
-            <select name="uom_id" id="uom_id" class="col-xs-10 col-sm-5 form-control">
-                                                @foreach($uoms as $id => $name)
-                                                    <option value="{{ $id }}">{{ $name }}</option>
-                                                @endforeach
-                                            </select>
-            </div>
-        </div>
-
-        <div class="col-lg-4 col-sm-4" >
-            <label class="" for="form-field-1"> &nbsp; </label>
-            <div class="">
-            <button class="btn btn-info" onclick="checkValidation();" type="button">
-                                            <i class="ace-icon fa fa-check bigger-110"></i>
-                                            Submit
-                                        </button>
-            </div>
-        </div>
-
-        </div>
-        <div class="card-footer">
-        </div>
-    </div>
-    </div>
-</div>     
-</form>
-</div>
 <!-------------------------------------------------------------------->
 <div class="row ">
     <div class="col-12 col-lg-12" style="margin-top:20px;">

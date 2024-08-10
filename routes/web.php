@@ -47,6 +47,7 @@ use App\Http\Controllers\Sale\SaleBoardController;
 use App\Http\Controllers\Sale\SaleOrderController;
 use App\Http\Controllers\Stock\StockItemController;
 use App\Http\Controllers\Customer\CustomerController;
+use App\Http\Controllers\Finance\CustomerPaymentController;
 use App\Http\Controllers\Shop\ShopController;
 use App\Http\Controllers\Sale\SaleCartController;
 use App\Http\Controllers\Sale\SaleReturnController;
@@ -182,7 +183,8 @@ Route::middleware(['web', 'auth'])->group(function () {
 
 
     Route::group(['prefix' => 'simple_product', 'as' => 'simple_product.'], function () {
-        Route::get('/create_by_modal', [SimpleProductController::class, 'createByModal'])->name('create_by_modal')->middleware('permission:product.create');
+        // will replace
+        Route::get('/create_by_modal', [ProductController::class, 'createByModal'])->name('create_by_modal')->middleware('permission:product.create');
         Route::get('/create', [SimpleProductController::class, 'create'])->name('create')->middleware('permission:product.create');
         Route::post('store', [SimpleProductController::class, 'store'])->name('store')->middleware('permission:product.create');
         Route::get('/edit/{id}', [SimpleProductController::class, 'edit'])->name('edit')->middleware('permission:product.update');
@@ -261,7 +263,7 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::get('/view/{id}', [SupplierController::class, 'show'])->name('view')->middleware('permission:supplier.read');
     });
 
-
+    
     Route::group(['prefix' => 'customer', 'as' => 'customer.'], function () {
         Route::get('/list', [CustomerController::class, 'index'])->name('list'); //->middleware('permission:supplier.read');
         Route::get('/create', [CustomerController::class, 'create'])->name('create'); //->middleware('permission:supplier.create');
@@ -272,8 +274,10 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::get('/delete/{id}', [CustomerController::class, 'destroy'])->name('delete'); //->middleware('permission:supplier.delete');
         Route::get('/view/{id}', [CustomerController::class, 'show'])->name('view'); //->middleware('permission:supplier.read');
         Route::get('/search', [CustomerController::class, 'search'])->name('search');
+        Route::get('/finance-stats/{id}', [CustomerController::class, 'getCustomerStats'])->name('finance.stats');
 
         Route::get('/search_select2', [CustomerController::class, 'searchSelectTwo'])->name('search_select2');
+        // Route::get('customer-payment/{id}', [CustomerPaymentController::class, 'getCustomerStats']);
 
         Route::get('/create_view_modal', [CustomerController::class, 'createViewModal'])->name('create_view_modal'); //->middleware('permission:supplier.create');
     });
@@ -311,31 +315,6 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::get('/list', [AttributeTypeController::class, 'index'])->name('list');
         Route::get('/{id}', [AttributeTypeController::class, 'show'])->name('show');
     });
-
-
-
-    /*
-    Route::group(['prefix' => 'attribute', 'as' => 'attribute.'], function () {
-
-        Route::group(['prefix' => 'type', 'as' => 'type.'], function () {
-            Route::get('/create', [AttributeController::class, 'create'])->name('create');
-            Route::post('/store', [AttributeController::class, 'store'])->name('store');
-            Route::get('/edit/{id}', [AttributeController::class, 'edit'])->name('edit');
-            Route::post('/update/{id}', [AttributeController::class, 'update'])->name('update');
-            Route::get('/list', [AttributeController::class, 'index'])->name('list');
-        });
-
-        Route::group(['prefix' => 'value', 'as' => 'value.'], function () {
-            Route::get('/create', [AttributeController::class, 'create'])->name('create');
-            Route::post('/store', [AttributeController::class, 'store'])->name('store');
-            Route::get('/edit/{id}', [AttributeController::class, 'edit'])->name('edit');
-            Route::post('/update/{id}', [AttributeController::class, 'update'])->name('update');
-            Route::get('/list', [AttributeController::class, 'index'])->name('list');
-        });
-        // Route::get('/', [AttributeController::class, 'create'])->name('create');
-    });
-*/
-
 
 
 
@@ -553,26 +532,24 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::get('list', [StockExchangeController::class, 'indexList'])->name('list');
         Route::get('create_req_view_modal', [StockExchangeController::class, 'createReqViewModal'])->name('create_req_view_modal');
         Route::get('request-form', [StockExchangeController::class, 'requestForm'])->name('req_form');
-
-        /*
-
-        Route::post('request-post-form',[StockExchangeController::class,'requestPost'])->name('req_post');
-        Route::get('request-send-list',[StockExchangeController::class,'requestSendList'])->name('req_send_list');
-        Route::get('request-receive-list',[StockExchangeController::class,'requestReceiveList'])->name('req_receive_list');
-        Route::get('request-detail/{exchange_key}',[StockExchangeController::class,'requestDetail'])->name('req_detail');
-        Route::post('request-aprove',[StockExchangeController::class,'requestAprove'])->name('req_aprove');
-        Route::get('request-deny',[StockExchangeController::class,'requestDeny'])->name('req_deny');
-        
-        Route::get('darft-list',[StockExchangeController::class,'darftList'])->name('darft_list');
-        Route::post('final-submit',[StockExchangeController::class,'finalSubmit'])->name('final_submit');
-        
-
-        Route::get('request-mark-receive/{exchange_key}',[StockExchangeController::class,'markReceive'])->name('mark_receive');
-        */
     });
 
 
+    
 
+    Route::group(['prefix' => 'finance/payment/', 'as' => 'finance.payment.'], function () {
+        // Route::get('customer-payment', [CustomerPaymentController::class, 'index'])->name('payment.list');
+        Route::get('/list', [CustomerPaymentController::class, 'index'])->name('list'); //->middleware('permission:supplier.read');
+        Route::get('/create', [CustomerPaymentController::class, 'create'])->name('create'); //->middleware('permission:supplier.create');
+        Route::post('/store', [CustomerPaymentController::class, 'store'])->name('store'); //->middleware('permission:supplier.create');
+        Route::get('/edit/{id}', [CustomerPaymentController::class, 'edit'])->name('edit'); //->middleware('permission:supplier.update');
+        Route::post('/update/{id}', [CustomerPaymentController::class, 'update'])->name('update'); //->middleware('permission:supplier.update');
+        Route::get('/status/{id}', [CustomerPaymentController::class, 'status'])->name('status'); //->middleware('permission:supplier.status');
+        Route::get('/delete/{id}', [CustomerPaymentController::class, 'destroy'])->name('delete'); //->middleware('permission:supplier.delete');
+        Route::get('/view/{id}', [CustomerPaymentController::class, 'show'])->name('view'); //->middleware('permission:supplier.read');
+
+
+    });
 
     Route::group(['prefix' => 'stock-adjustment/', 'as' => 'stock_adjustment.'], function () {
         Route::get('form', [StockAdjustmentController::class, 'form'])->name('form');
@@ -599,4 +576,7 @@ Route::middleware(['web', 'auth'])->group(function () {
             Route::get('all', [SaleReportController::class, 'all'])->name('all');
         });
     });
+
+
+
 }); // main auth end

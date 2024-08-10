@@ -201,18 +201,18 @@ Customers
                     title: 'Address',
                     width: '15%'
                 },
-                // {
-                //     data: 'address',
-                //     name: 'address',
-                //     title: 'Address',
-                //     width: '15%'
-                // },
-                // {
-                //     data: 'city_name',
-                //     name: 'city_name',
-                //     title: 'City',
-                //     width: '10%'
-                // },
+                {
+                    data: 'bazaar',
+                    name: 'bazaar',
+                    title: 'Bazaar',
+                    width: '15%'
+                },
+                {
+                    data: 'city',
+                    name: 'city',
+                    title: 'City',
+                    width: '10%'
+                },
                 {
                     data: 'status_label',
                     name: 'status',

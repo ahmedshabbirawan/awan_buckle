@@ -30,9 +30,19 @@ use Illuminate\Support\Facades\Validator;
 class SaleOrderController extends Controller{
 
         function index(Request $request){
+
+
+           
+
             if($request->ajax()){
                 $groupBy    = $request->get('group_by');
                 $items      = SaleOrder::with('shop')->where(function($query) use ($request) {
+
+
+                    if($request->get('customer_id') != ''){
+                        $query->where('customer_id',$request->get('customer_id'));
+                    }
+
                     if(auth()->user()->hasRole('Super Admin')){
                         
                     }else{

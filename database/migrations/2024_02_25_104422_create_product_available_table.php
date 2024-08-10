@@ -13,6 +13,7 @@ class CreateProductAvailableTable extends Migration
      */
     public function up()
     {
+        /*
         Schema::create('product_available', function (Blueprint $table) {
             $table->id();
             $table->integer('product_id')->nullable();
@@ -24,6 +25,7 @@ class CreateProductAvailableTable extends Migration
             $table->timestamps();
             $table->softDeletes();
         });
+        */
     }
 
     /**

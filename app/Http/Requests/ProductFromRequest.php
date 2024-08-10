@@ -8,6 +8,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Contracts\Validation\Validator;
 
+
 class ProductFromRequest extends FormRequest
 {
     /**
@@ -20,11 +21,7 @@ class ProductFromRequest extends FormRequest
         return true;
     }
 
-    protected function failedValidation(Validator $validator) {
-        throw new HttpResponseException(response()->json(['status'=>'failed',
-                                                    'message'=>$validator->errors()->first(),
-                                                    'errors'=>$validator->errors()->all()], 422));
-    }
+
 
     /**
      * Get the validation rules that apply to the request.
@@ -46,10 +43,18 @@ class ProductFromRequest extends FormRequest
         //     $rules['name']  =  'required|unique:products';
         // }
         $rules['name']      =  'required';
-        $rules['price']     =  'required|numeric';
+        // $rules['price']     =  'required|numeric';
 
         // $rules['description']   =  'required';
         $rules['uom_id']        =  'required';
         return $rules;
     }
+
+    protected function failedValidation(Validator $validator) {
+        throw new HttpResponseException(response()->json(['status'=>'failed',
+                                                    'message'=>$validator->errors()->first(),
+                                                    'errors'=>$validator->errors()->all()], 422));
+    }
+
+
 }

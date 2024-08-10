@@ -30,7 +30,7 @@
             <div class="form-group">
                 <label class="col-sm-3 control-label no-padding-right" for="form-field-1"> CNIC </label>
                 <div class="col-sm-9">
-                    <input type="text" class="col-xs-10 col-sm-5 form-control @error('cnic') is-invalid @enderror" value="{{old('cnic' , (isset($customer))? $customer->cnic : '' ) }}" name="cnic" id="cnic" placeholder="NTN">
+                    <input type="text" class="col-xs-10 col-sm-5 form-control @error('cnic') is-invalid @enderror" value="{{old('cnic' , (isset($customer))? $customer->cnic : '' ) }}" name="cnic" id="cnic" placeholder="CNIC">
                 </div>
             </div>
 
@@ -38,6 +38,20 @@
                 <label class="col-sm-3 control-label no-padding-right" for="form-field-1"> Address </label>
                 <div class="col-sm-9">
                     <textarea name="address" id="address" class="form-control @error('address') is-invalid @enderror" id="form-field-8" placeholder="Address">{{old('address', (isset($customer))? $customer->address : '' ) }}</textarea>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-sm-3 control-label no-padding-right" for="form-field-1"> Bazaar </label>
+                <div class="col-sm-9">
+                    <textarea name="bazaar" id="bazaar" class="form-control @error('bazaar') is-invalid @enderror" id="form-field-8" placeholder="Bazaar">{{old('bazaar', (isset($customer))? $customer->bazaar : '' ) }}</textarea>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-sm-3 control-label no-padding-right" for="form-field-1"> City </label>
+                <div class="col-sm-9">
+                    <input type="text" class="col-xs-10 col-sm-5 form-control @error('city') is-invalid @enderror" value="{{old('city' , (isset($customer))? $customer->city : '' ) }}" name="city" id="city" placeholder="city">
                 </div>
             </div>
 

@@ -17,8 +17,42 @@ pos_app = {
                     onchange: null,
                     thumbnail: false
                   });
+
+                $('input[type=radio][name=product_type]').change(function() {
+                    $('.div_product_type').hide();
+                    $('#div_'+this.value).show();
+                    $('.chosen-select').chosen({
+                    allow_single_deselect: true
+                });
+                });  
+
+
+                $('.chosen-container').css('width','100%');
+
             }
         });
+    },
+    getAttributeValue : function(attributeTypeEle){
+        var attrTypeId = $(attributeTypeEle).val();
+        var index = $(attributeTypeEle).data('index');
+        $.ajax({
+            dataType: 'json',
+            type: 'get',
+            url: baseURL+"attribute-value/" + attrTypeId,
+            success: function(res) {
+                var html = '';
+                $(res).each(function(i,ele){
+                    html += '<option value="'+ele.id+'" >'+ele.value+'</option>';
+                });
+                $('#val-'+index).html(html);
+                $('.chosen-select').chosen({
+                    allow_single_deselect: true
+                });
+
+                $(".chosen-select").trigger("chosen:updated");
+            }
+        });
+
     },
     saveProductWithForm : function(){
         $(".add-product-btn").LoadingOverlay("show");
