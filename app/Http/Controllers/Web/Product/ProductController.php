@@ -130,16 +130,15 @@ class ProductController extends Controller
     {
         $this->viewData['sub_category']     = ParentCategory::with('subCategories')->orderBy('name','DESC')->get();
         $this->viewData['uoms']             = Uom::orderBy('code','ASC')->get()->pluck('code','id');
-        $this->viewData['attribute_type']   = AttributeType::orderBy('name','ASC')->get()->pluck('name','id');
-        
-        $this->viewData['productID']   = null;
-        
+    
+        $this->viewData['productID']   = null;    
         $this->viewData['subCategoryID']   = null;
         $this->viewData['uomID']   = null;
         
-        $this->viewData['attribute_type']   = AttributeType::orderBy('name','ASC')->get()->pluck('name','id');
+        $this->viewData['attribute_type']   = AttributeType::select('name', 'id')->orderBy('name','ASC')->get();
         return response()->json([
             'view' => View('product.create_by_modal', $this->viewData)->render(),
+            'attribute_type' =>  $this->viewData['attribute_type'],
             'data' =>   [],
             'status' => true,
             'message' => 'OK'

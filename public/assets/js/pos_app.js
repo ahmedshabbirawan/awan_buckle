@@ -1,14 +1,24 @@
 var onHoldTable;
 pos_app = {
     
-    showAddProductModal : function(){
+    showAddProductModal : function(isModal=true){
         $.ajax({
             dataType: 'json',
             type:'get',
             url : baseURL + 'simple_product/create_by_modal',
             success:function(res){
                 $('#add_product_modal_con').html(res.view);
-                $('#add_product_modal').modal('show');
+                if(isModal){
+                    $('#add_product_modal').modal('show');                    
+                }else{
+                    // <div class="modal-dialog modal-lg" id="add_product_modal_doc" role="document">
+                    $('#add_product_modal').removeClass('modal');
+                    $('#add_product_modal_doc').removeClass('modal-lg');
+                    $('#add_product_modal_doc').removeClass('modal-dialog');
+                }
+                $('#add_variant').click(function(){
+                    pos_app.addMoreVarinateAttribute(res.attribute_type);
+                });
                 $('#file_2').ace_file_input({
                     no_file: 'No File ...',
                     btn_choose: 'Choose',
@@ -16,8 +26,7 @@ pos_app = {
                     droppable: false,
                     onchange: null,
                     thumbnail: false
-                  });
-
+                });
                 $('input[type=radio][name=product_type]').change(function() {
                     $('.div_product_type').hide();
                     $('#div_'+this.value).show();
@@ -25,16 +34,29 @@ pos_app = {
                     allow_single_deselect: true
                 });
                 });  
-
-
                 $('.chosen-container').css('width','100%');
-
             }
         });
     },
-    getAttributeValue : function(attributeTypeEle){
+    addMoreVarinateAttribute : function(attributeArr){
+        var currentIndex = parseInt($('#variant_index').val());
+        var index = currentIndex+1;
+        $('#variant_index').val(index);
+        attributeSelectHtml = '';
+        $(attributeArr).each(function(index,value){
+            attributeSelectHtml += '<option value="'+value.id+'">'+value.name+'</option>';
+        });
+        var variantTr =  '<tr class="row" id="va_row_'+index+'"><td class="center col-lg-1">1</td>';
+        variantTr += '<td class="col-lg-3" ><select name="attribute_type[]" id="attribute_type_'+index+'"  data-placeholder="Select Variant" class="form-control chosen-select" onchange="pos_app.getAttributeValue(this,'+index+');"  required>'+attributeSelectHtml+'</select></td>';
+        variantTr += '<td class="col-lg-3" ><select name="attribute_value[]" id="attribute_value_'+index+'" data-placeholder="Select Value" class="col-xs-10 col-sm-5 form-control chosen-select" required></select></td>';                                   
+        variantTr += '<td class="col-lg-3" > <input name="price_arr[]" id="attribute_price_'+index+'" type="text" class="col-xs-10 col-sm-5 form-control"   placeholder="Price"> </td>';
+        variantTr += '<td class="col-lg-3" ><a href="javascript:void(0);" onclick="pos_app.remove_variant('+index+');" >Delete</a></td></tr>';
+
+        $('#variant_body').append(variantTr);
+    },
+    getAttributeValue : function(attributeTypeEle,index){
         var attrTypeId = $(attributeTypeEle).val();
-        var index = $(attributeTypeEle).data('index');
+       //  var index = $(attributeTypeEle).data('index');
         $.ajax({
             dataType: 'json',
             type: 'get',
@@ -44,7 +66,7 @@ pos_app = {
                 $(res).each(function(i,ele){
                     html += '<option value="'+ele.id+'" >'+ele.value+'</option>';
                 });
-                $('#val-'+index).html(html);
+                $('#attribute_value_'+index).html(html);
                 $('.chosen-select').chosen({
                     allow_single_deselect: true
                 });
@@ -53,6 +75,9 @@ pos_app = {
             }
         });
 
+    },
+    remove_variant:function(index){
+        $('#va_row_'+index).remove();
     },
     saveProductWithForm : function(){
         $(".add-product-btn").LoadingOverlay("show");

@@ -1,5 +1,5 @@
 <div class="modal" id="add_product_modal" tabindex="-1" role="dialog">
-  <div class="modal-dialog modal-lg" role="document">
+  <div class="modal-dialog modal-lg" id="add_product_modal_doc" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Create Product</h5>
@@ -64,12 +64,6 @@
                                     </div>
                                     <!---------  category end  ----------->
                                     <div style="clear:both;" class="space"></div>
-                                    <div class="col-lg-4 col-sm-4" style="display: none;">
-                                        <label class="" for="form-field-1"> Threshold Quantity:</label>
-                                        <div class="">
-                                            <input type="text" class="col-xs-10 col-sm-5 form-control @error('threshold_qty') is-invalid @enderror" value="{{ old('threshold_qty') }}" name="threshold_qty" id="threshold_qty"  style="width:100%"  placeholder="Threshold Quantity">
-                                        </div>
-                                    </div>
                                     <div class="col-lg-4">
                                         <label style="font-size:11px;">Product Image</label>
                                         <input type="file" name="product_image" id="file_2" />
@@ -108,72 +102,54 @@
                                     <div class="col-lg-12">
                                         <h3 class="header smaller lighter blue">
                                             Product Variation
-                                            <small style="float:right;"><a href="javascript:void(0);" onclick="addNewVariant();" >Add More Variant</a> </small>
+                                            <small style="float:right;"><a href="javascript:void(0);" id="add_variant" >Add More Variant</a> </small>
                                         </h3>
                                         <div style="clear:both;"></div>
                                         <div class="col-lg-12">
                                             <table class="table table-striped table-bordered">
                                                 <thead>
-                                                    <tr>
-                                                        <th class="center">#</th>
-                                                        <th>Variant</th>
-                                                        <th>Value</th>
-                                                        <th>Sale Price</th>
-                                                        <th>&nbsp;</th>
+                                                    <tr class="row">
+                                                        <th class="center col-lg-1">#</th>
+                                                        <th class="col-lg-3" >Variant</th>
+                                                        <th class="col-lg-3" >Value</th>
+                                                        <th class="col-lg-3" >Sale Price</th>
+                                                        <th class="col-lg-1" >&nbsp;</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody id="variant_body">
-                                                    <tr>
-                                                        <td class="center">1</td>
-                                                        <td>
-                                                        <div class="col-lg-10" style="width: 100%;" >
-                                                            <select name="attribute_type[]" data-index="1"  data-placeholder="Select Variant" onchange="pos_app.getAttributeValue(this);" class=" form-control chosen-select" required>
+
+                                                @for($i =0; $i < 3; $i++)
+                                                    <tr class="row" id="va_row_{{$i}}" >
+                                                        <td class="center col-lg-1">1</td>
+                                                        <td class="col-lg-3" >
+                                                        <div >
+                                                            <select name="attribute_type[]" id="attribute_type_{{$i}}" data-index="1"  data-placeholder="Select Variant" onchange="pos_app.getAttributeValue(this,'{{$i}}');" class=" form-control chosen-select" required>
                                                                 <option value=""></option>
-                                                                <?php foreach ($attribute_type as $key => $val) : ?>
-                                                                    <option value="<?= $key ?>" <?= ($uomID == $key) ? 'selected="selected"' : '' ?>><?= $val ?></option>
+                                                                <?php foreach ($attribute_type as $attrType) : ?>
+                                                                    <option value="{{ $attrType['id'] }}" >{{ $attrType['name'] }}</option>
                                                                 <?php endforeach; ?>
                                                             </select>
                                                         </div>
                                                         </td>
-                                                        <td>
+                                                        <td class="col-lg-3" >
                                                         <div class="col-lg-10" style="width: 100%;" >
-                                                            <select name="attribute_value[]" style="width: 100%;" id="val-1"  data-placeholder="Select Value" class="form-control " required>
+                                                            <select name="attribute_value[]" id="attribute_value_{{$i}}"  style="width: 100%;"  data-placeholder="Select Value" class="form-control " required>
                                                                 <option value=""></option>
                                             
                                                             </select>
                                                         </div>
                                                         </td>
-                                                        <td> <input type="text" value="" name="price_arr[]" id="price" placeholder="Price" class="col-xs-10 col-sm-5 form-control @error('price') is-invalid @enderror" > </td>
-                                                        <td>&nbsp;</td>
+                                                        <td class="col-lg-3" > <input name="price_arr[]" id="price_arr_{{$i}}" type="text" value=""  placeholder="Price" class="col-xs-10 col-sm-5 form-control @error('price') is-invalid @enderror" > </td>
+                                                        <td class="col-lg-2">@if($i != 0) <a href="javascript:void(0);" onclick="pos_app.remove_variant('{{$i}}');" >Delete</a> @endif </td>
                                                     </tr>
+                                                    @endfor
 
-
-                                                    <tr>
-                                                        <td class="center">2</td>
-                                                        <td>
-                                                        <div class="col-lg-12" style="width: 100%;" >
-                                                            <select name="attribute_type[]" data-index="2"  data-placeholder="Select Variant" onchange="pos_app.getAttributeValue(this);" class=" form-control chosen-select" required>
-                                                                <option value=""></option>
-                                                                <?php foreach ($attribute_type as $key => $val) : ?>
-                                                                    <option value="<?= $key ?>" <?= ($uomID == $key) ? 'selected="selected"' : '' ?>><?= $val ?></option>
-                                                                <?php endforeach; ?>
-                                                            </select>
-                                                        </div>
-                                                        </td>
-                                                        <td>
-                                                        <div class="col-lg-10" style="width: 100%;" >
-                                                            <select name="attribute_value[]" style="width: 100%;"  id="val-2" data-placeholder="Select Value" class="form-control " required>
-                                                                <option value=""></option>
-                                                            </select>
-                                                        </div>
-                                                        </td>
-                                                        <td> <input type="text" name="price_arr[]" id="price" class="col-xs-10 col-sm-5 form-control @error('price') is-invalid @enderror" value=""  placeholder="Price"> </td>
-                                                        <td>&nbsp;</td>
-                                                    </tr>
+                                                   
 
 
                                                 </tbody>
                                             </table>
+                                            <input type="hidden" id="variant_index" value="{{ $i }}" >
                                         </div>
                                         </div>
                                     </div>
