@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\CustomerFromRequest;
 use App\Models\Location;
 use Illuminate\Support\Facades\DB;
+use App\Models\SaleOrder;
 
 class CustomerController extends Controller{
 
@@ -145,6 +146,8 @@ class CustomerController extends Controller{
      */
     public function show($id, Customer $customer){
         $this->viewData['row'] = Customer::findOrFail($id);
+        $this->viewData['payments'] = []; // CustomerPayment::where('customer_id', $id)->get();
+        $this->viewData['stats'] = $this->getCustomerStats($id);
         return view($this->view.'detail',$this->viewData);
     }
 
@@ -288,6 +291,19 @@ class CustomerController extends Controller{
             'message' => 'OK'
         ]);
     }
+
+    function getCustomerStats($customerId){    
+        // $pay = CustomerPayment::where('customer_id',$customerId)->where('type','cash')->sum('amount');
+        // $due = CustomerPayment::where('customer_id',$customerId)->where('type','late_payment')->sum('amount');
+        $orders = SaleOrder::where('customer_id',$customerId)->count();
+        $ordersAmount = SaleOrder::where('customer_id',$customerId)->sum('total_price');
+        return [
+            'pay' => 'N/A', //$pay,
+            'due' => 'N/A', //$due,
+            'orders' => $orders,
+            'orders_amount' => $ordersAmount
+        ];
+     }
 
 
 }
