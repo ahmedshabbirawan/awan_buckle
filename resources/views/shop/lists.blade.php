@@ -20,19 +20,12 @@ Shop
 <div class="row ">
     <div class="col-12 col-lg-12" style="margin-top:20px;">
         <div class="card radius-10 border-top border-0 border-4 border-danger">
-          
-
             <div class="card-body">
-
                 @include('Layout.alerts')
-
                 <div class="table-responsive">
                     <table class="table table-striped table-bordered yajratable" id="yajra-table" style="width:100%"></table>
                 </div>
             </div>
-
-
-
         </div>
     </div>
 </div>
@@ -42,25 +35,40 @@ Shop
 
 
 <!--- delete confirmation modal --->
-<div class="modal" tabindex="-1" role="dialog" id="deletePopup">
+<div class="modal" tabindex="-1" role="dialog" id="closeShopPopUp">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
 
 
-            <form action="#" method="post" id="delete_form">
-                <input type="hidden" name="_method" value="delete" />
+            <form action="#" method="post" id="close_shop_form">
                 @csrf
                 <div class="modal-header">
                     <h5 class="modal-title">confirmation</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
                 </div>
                 <div class="modal-body">
-                    <p>Do you really want to delete ?</p>
+                    <p>Do you really want to close shop and marge stock ?</p>
+                    <div class="row">
+                    <div class="col-12">
+                    <div class="form-group">
+                <label class="col-sm-3 control-label no-padding-right" for="form-field-1"> Marge Shop Stock </label>
+                <div class="col-sm-9">
+                <input type="hidden" id="close_shop_id" name="close_shop_id" value="" >    
+                <select class="form-control" name="shop_id" id="shop_id">
+                    </select>
+                </div>
+            </div>
+
+
+                    </div>
+
+                    </div>
+
+                    
+
+
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Confirm</button>
+                    <button type="button" onclick="doCloseShop();" class="btn btn-primary">Yes</button>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                 </div>
 
@@ -80,6 +88,58 @@ Shop
     var table;
     var selectID;
 
+    var shopsJson = '<?=json_encode($shops)?>';
+
+    function closeShop(shopId){
+        $('#close_shop_id').val(shopId);
+        $('#closeShopPopUp').modal('show');
+        var shops =  JSON.parse(shopsJson);
+        var shopHtml = '<option value="">Select Shop</option>';
+        $(shops).each(function(index, ele){
+           if(shopId != ele.id){
+            shopHtml += '<option value="'+ele.id+'" >'+ele.name+'</option>';
+           }
+        });
+        $('#shop_id').html(shopHtml);
+    }
+
+    function doCloseShop(){
+        let myform = document.getElementById("close_shop_form");
+        let fdata = new FormData(myform);
+
+
+        $.ajax({
+                data: fdata,
+                cache: false,
+                processData: false,
+                contentType: false,
+                type: 'POST',
+                dataType: "JSON",
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                url: "{{ route('shop.close') }}",
+                success: function(res, textStatus, jqXHR) {
+                    alert(res);
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    // console.log(textStatus,jqXHR, errorThrown);
+                    if (jqXHR.status != 200) {
+                        if (typeof jqXHR.responseJSON !== 'undefined') {
+                            $.confirm({
+                                title: 'Error',
+                                content: jqXHR.responseJSON.message
+                            });
+                        }
+                    }
+                }
+            });
+    }
+
+
+
+
+
     function deleteConfirmation(id) {
         selectID = id;
         $.confirm({
@@ -90,12 +150,11 @@ Shop
                     text: 'Yes',
                     action: function() {
                         var changeURL = "{{ route('shop.delete','') }}";
-                        // alert(changeURL);
                         window.location = changeURL + '/' + selectID;
                     }
                 },
                 no: {
-                    text: 'No', // With spaces and symbols
+                    text: 'No',
                     action: function() {
 
                     }
@@ -103,6 +162,31 @@ Shop
             }
         });
     }
+
+    function deleteConfirmation(id) {
+        selectID = id;
+        $.confirm({
+            title: 'Confirmation',
+            content: 'Do you really want to change status ?',
+            buttons: {
+                yes: {
+                    text: 'Yes',
+                    action: function() {
+                        var changeURL = "{{ route('shop.delete','') }}";
+                        window.location = changeURL + '/' + selectID;
+                    }
+                },
+                no: {
+                    text: 'No',
+                    action: function() {
+
+                    }
+                }
+            }
+        });
+    }
+
+
 
 
     function doChangeStatus(objID){
@@ -150,29 +234,13 @@ Shop
 
         console.log('i am db');
         table = $('#yajra-table').DataTable({
-            // lengthMenu: [
-            //         [1, 2, 3, -1],
-            //         [1, 2, 3, 'All'],
-            //     ],
-            // "aLengthMenu": [[1,5,10, 25, 50, 100, -1], [1,5,10, 25, 50, 100, "All"]],
-            // 					"iDisplayLength": -1,
-            // dom: 'Bfrtip',
-            // buttons: ['excel'],
             processing: true,
             serverSide: true,
             ajax: "{{ route('shop.list') }}",
             columns: [
-                //   {data: 'id', name: 'id', title : 'ID'},
+                {data: 'id', name: 'id', title : 'ID'},
                 {
-                    "data": "id",
-                    title: 'Sr.',
-                    render: function(data, type, row, meta) {
-                        return meta.row + meta.settings._iDisplayStart + 1;
-                    }
-                },
-                {
-                    data: 'name',
-                 
+                    data: 'name', 
                     title: 'Name',
                     render: function(data, type, row, meta) {
                         return row.name;
@@ -184,31 +252,12 @@ Shop
                     title: 'Shop Manager',
                     width: '10%'
                 },
-                // {
-                //     data: 'phone',
-                //     name: 'phone',
-                //     title: 'phone',
-                //     width: '10%'
-                // },
-                // {
-                //     data: 'email',
-                //     name: 'email',
-                //     title: 'Email',
-                //     width: '10%'
-                // },
-               
                 {
                     data: 'address',
                     name: 'address',
                     title: 'Address',
                     width: '15%'
                 },
-                // {
-                //     data: 'city_name',
-                //     name: 'city_name',
-                //     title: 'City',
-                //     width: '10%'
-                // },
                 {
                     data: 'status_label',
                     name: 'status',

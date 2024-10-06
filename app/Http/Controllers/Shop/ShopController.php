@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 
 use App\Http\Requests\ShopFromRequest;
 use App\Models\Location;
+use App\Models\ProductAvailable;
 use Illuminate\Support\Facades\DB;
 
 class ShopController extends Controller
@@ -69,7 +70,10 @@ class ShopController extends Controller
                     $action .= '<a href="javascript:void(0);" onclick="changeStatus('.$row->id.');" class="btn btn-xs btn-warning" data-toggle="tooltip" title="Change Status" ><i class="ace-icon '.$statusIcon.' bigger-120"></i></a>';
                 // }
                 // if(auth()->user()->can('shop.delete')){
-                    $action .= '<a href="javascript:void(0);" onclick="deleteConfirmation('.$row->id.');" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Delete" ><i class="ace-icon fa fa-trash-o bigger-120"></i></a>';
+                    
+                    $action .= '<a href="javascript:void(0);" onclick="closeShop('.$row->id.');" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Delete" ><i class="ace-icon fa fa-times-circle-o bigger-120"></i> <span> Close Shop </span> </a>';
+                    
+                  //  $action .= '<a href="javascript:void(0);" onclick="deleteConfirmation('.$row->id.');" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Delete" ><i class="ace-icon fa fa-trash-o bigger-120"></i></a>';
                 // }
                 $action .= '</div>';
                 return $action;
@@ -85,7 +89,8 @@ class ShopController extends Controller
             //  ->orderColumn('id', 'DESC')
             ->make(true);
         }
-        return view('shop.lists');
+        $data['shops'] = Shop::select('id','name')->get()->makeHidden('status_label');
+        return view('shop.lists',$data);
     }
 
     /**
@@ -254,6 +259,34 @@ class ShopController extends Controller
         $emp->save();
         return array('status' => true);
     }
+
+
+    function close(Request $request){
+        $closeShopId = $request->get('close_shop_id');
+        $margeShopId = $request->get('shop_id');
+        $products =   ProductAvailable::where('shop_id',$closeShopId)->get();
+        try{
+            DB::beginTransaction();
+            foreach($products as $closeShopProduct){
+                $item = ProductAvailable::where('shop_id',$margeShopId)->where('product_id',$closeShopProduct->product_id)->first();
+                
+               //  dd($item->qty,$closeShopProduct->qty); 
+                $item->update([
+                'qty' => $item->qty +  $closeShopProduct->qty
+                ]);
+                $closeShopProduct->update([
+                    'qty' => 0
+                ]);
+            }
+            DB::commit();
+            return 'Done';
+        }catch(\Exception $e){
+            DB::rollBack();
+            return $e->getMessage();
+        }
+    }
+
+
 
 
 }

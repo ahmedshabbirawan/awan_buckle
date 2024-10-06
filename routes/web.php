@@ -283,6 +283,7 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::get('/status/{id}', [ShopController::class, 'status'])->name('status')->middleware('permission:supplier.status');
         Route::get('/delete/{id}', [ShopController::class, 'destroy'])->name('delete')->middleware('permission:supplier.delete');
         Route::get('/view/{id}', [ShopController::class, 'show'])->name('view')->middleware('permission:supplier.read');
+        Route::post('/close_shop', [ShopController::class, 'close'])->name('close')->middleware('permission:supplier.create');
     });
 
 
