@@ -749,7 +749,6 @@ $qty = '';
   }
 
   function select_product(ele){
-    alert('dd');
     var id  = $(ele).val();
     var uom_id    = $('#product_id  option[value="' + id + '"]').attr("data-uom-id");
     var uom_code  = $('#product_id  option[value="' + id + '"]').attr("data-uom-code");

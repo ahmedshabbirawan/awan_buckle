@@ -384,7 +384,11 @@ class ProductController extends Controller
         }else{
             $where['product_cat_id']              = $productCatID;
         }
-        $data['products']   = Product::with(['product_Attribute_Value', 'product_Attribute_Value.attribute_type'])->where($where)->orderBy('name','ASC')->get();
+        // $data['products']   = Product::with(['product_Attribute_Value', 'product_Attribute_Value.attribute_type'])->where($where)->orderBy('name','ASC')->get();
+        $data['products']   = Product::with(['productQtyShopWise'])->where($where)->orderBy('name','ASC')->get();
+
+        // print_r($data['products']);
+
         return view('product.ajax_view.product_with_attribute_select',$data);
     }
 

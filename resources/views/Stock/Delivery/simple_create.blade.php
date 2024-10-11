@@ -179,7 +179,7 @@ $qty = '';
                       </div>
                     </div>
 
-                    <div class="col-lg-3 col-sm-3"><label class="" for="form-field-1"> Quantity </label>
+                    <div class="col-lg-3 col-sm-3"><label class="" for="form-field-1"> Quantity  &nbsp; &nbsp; &nbsp; <span style="color: #ba4444;">Current Quantity : <b id="current_qty"> -- </b></span>   </label>
                       <div><input type="text" required class="form-control stock_item_input" value="" name="qty" id="qty" placeholder="Quantity"></div>
                     </div>
 
@@ -561,9 +561,12 @@ $qty = '';
     var uom_id = $('#product_id  option[value="' + id + '"]').attr("data-uom-id");
     var uom_code = $('#product_id  option[value="' + id + '"]').attr("data-uom-code");
     var unit_price = $('#product_id  option[value="' + id + '"]').attr("data-cost-price");
+    var current_qty = $('#product_id  option[value="' + id + '"]').attr("data-qty");
+    console.log(current_qty);
     $('#uom_id').val(uom_id);
     $('#uom_code').val(uom_code);
     $('#unit_price').val(unit_price);
+    $('#current_qty').html(current_qty);
   }
 
 
