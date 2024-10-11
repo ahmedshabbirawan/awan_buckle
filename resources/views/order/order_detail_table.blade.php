@@ -125,7 +125,7 @@ body{ margin : 0px;}
 
 							<tr>
 								<td colspan="6" style="padding-bottom:2px; text-align:center;" >
-									<span>Shop # 1-G Mustafa Center, Doctor Line Shoes Market Shah Alam Lahore.</span>
+									<span>H#1846 Bazar Ali Center Doctor Line Shoes Market Shah Alam Lahore.</span>
 									<br/>
 									<b> 0321-9999668 / 042-37659668</b> 
 								</td>
