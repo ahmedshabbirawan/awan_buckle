@@ -86,9 +86,7 @@ class StockDeliveryProductController extends Controller{
                      // $statusIcon = 'fa fa-check-circle-o';
                      // }
                      $action = '<div class="hidden-sm hidden-xs btn-group">';
-                    
                  //     $action .= '<a href="'.route('product.edit', $row->id).'" class="btn btn-xs btn-info"  data-toggle="tooltip" title="Edit" ><i class="ace-icon fa fa-pencil bigger-120"></i></a>';
-                  
                      $action .= '<a href="javascript:void(0);" onclick="deleteConfirmation('.$row->id.');" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Delete" ><i class="ace-icon fa fa-trash-o bigger-120"></i></a>';
                      
                      $action .= '</div>';
@@ -404,7 +402,7 @@ class StockDeliveryProductController extends Controller{
             })
             ->addColumn('action', function ($row) {
                 $action = '<div class="hidden-sm hidden-xs btn-group">';
-               //  $action .= '<a href="'.route('sale.order.detail',$row->id).'" class="btn btn-xs btn-success" data-toggle="tooltip" title="Detail" ><i class="ace-icon fa fa-eye bigger-120"></i></a>';
+                $action .= '<a href="'.route('stocks.purchase_return_detail',$row->id).'" class="btn btn-xs btn-success" data-toggle="tooltip" title="Detail" ><i class="ace-icon fa fa-eye bigger-120"></i></a>';
                 $action .= '</div>';
                 return $action;
             })->rawColumns(['title','product_attribute','status_label','action'])
@@ -412,6 +410,20 @@ class StockDeliveryProductController extends Controller{
         }else{
             return view('Stock.Delivery.purchase_return_lists');
         }  
+    }
+
+
+    function purchaseReturnDetail(Request $request, $id){
+        
+        $data['row']     = PurchaseReturnItem::where('purchase_return_id',$id)->first();
+        $data['project']        =  []; //Project::find($data['row']->project_id); //Project::with('manager')->whereNotNull('manager_id')->pluck('name','id', 'manager.name');
+        $data['suppliers']      = Supplier::all()->pluck('name', 'id');
+        $data['designations']   = Util::designations();
+
+       //  dd($data);
+
+        return view('Stock.Delivery.purchase_return_detail', $data);
+        
     }
 
 

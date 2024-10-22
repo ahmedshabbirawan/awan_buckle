@@ -411,6 +411,7 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::post('unknow-purchase-return-save', [StockDeliveryProductController::class, 'unknowPurchaseReturnSave'])->name('unknow_purchase_return_save');
 
         Route::get('purchase-return-list', [StockDeliveryProductController::class, 'purchaseReturnList'])->name('purchase_return_list');
+        Route::get('purchase-return-detail/{id}', [StockDeliveryProductController::class, 'purchaseReturnDetail'])->name('purchase_return_detail');
 
 
         //--------------------------------------
