@@ -174,17 +174,9 @@ class ShopController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function update($id, ShopFromRequest $request){
-
-        // dd($request->all());
-
-
         $array = array(
             'name' => $request->get('name'),
             'code' => $request->get('code'),
-           //  'email' => $request->get('email'),
-           //  'phone' => $request->get('phone'),
-            // 'ntn' => $request->get('ntn'),
-           // 'fax' => $request->get('fax'),
             'address' => $request->get('address'),
             'city_id' => $request->get('city_id'),
             'province_id' => $request->get('province_id'),

@@ -245,8 +245,6 @@ class StockDeliveryProductController extends Controller{
         $purchase       = StockDelivery::findOrFail($purchaseID);
         $desc           = $request->get('description');
 
-        // [ 'supplier_id', 'purchase_id', 'shop_id', 'total_amount', 'description', 'status', 'created_by', 'updated_by', 'deleted_by', 'deleted_at', 'created_at', 'updated_at'];
-
         $purchaseReturn = PurchaseReturn::create([
             'supplier_id' => $purchase->supplier_id, 
             'purchase_id' => $purchase->id, 
@@ -264,8 +262,8 @@ class StockDeliveryProductController extends Controller{
                     continue;
                 }
             $saleOrder = StockDeliveryProduct::find($item);
-            $saleOrder->quantity = $saleOrder->quantity - $returnQty;
-            $saleOrder->save();
+            // $saleOrder->quantity = $saleOrder->quantity - $returnQty;
+            // $saleOrder->save();
             $shopID = $saleOrder->shop_id;
             // ProductAvailable::where(['shop_id' => $shopID, 'product_id' => $saleOrder->product_id])->decrement('qty', $returnQty);
             ProductAvailable::manageStockByShopAndProductId($returnQty, StockAudit::STOCK_ACTION_MINUS,$saleOrder->product_id,$shopID, StockAudit::STOCK_OBJECT_TYPE_PURCHASE_RETURN, $purchaseReturn->id);
@@ -358,7 +356,7 @@ class StockDeliveryProductController extends Controller{
             // $saleOrder->quantity = $saleOrder->quantity - $returnQty;
             // $saleOrder->save();
            // ProductAvailable::where(['shop_id' => $shopID, 'product_id' => $productID])->decrement('qty', $returnQty);
-            ProductAvailable::manageStockByShopAndProductId($returnQty, StockAudit::STOCK_ACTION_ADD,$productID, $shopID,StockAudit::STOCK_OBJECT_TYPE_PURCHASE_RETURN, $purchaseReturn->id);
+            ProductAvailable::manageStockByShopAndProductId($returnQty, StockAudit::STOCK_ACTION_MINUS,$productID, $shopID,StockAudit::STOCK_OBJECT_TYPE_PURCHASE_RETURN, $purchaseReturn->id);
             $product = Product::find($productID);
             PurchaseReturnItem::create([
                 'purchase_return_id' => $purchaseReturn->id , 
@@ -414,14 +412,10 @@ class StockDeliveryProductController extends Controller{
 
 
     function purchaseReturnDetail(Request $request, $id){
-        
         $data['row']     = PurchaseReturnItem::where('purchase_return_id',$id)->first();
         $data['project']        =  []; //Project::find($data['row']->project_id); //Project::with('manager')->whereNotNull('manager_id')->pluck('name','id', 'manager.name');
         $data['suppliers']      = Supplier::all()->pluck('name', 'id');
         $data['designations']   = Util::designations();
-
-       //  dd($data);
-
         return view('Stock.Delivery.purchase_return_detail', $data);
         
     }
