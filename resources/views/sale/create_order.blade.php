@@ -116,9 +116,9 @@ Issuance Items
             <table class="table">
                 <tr><td class="total-label" >Total Item</td><td id="total_item" class="total-label" > -- </td></tr>
                 <tr><td class="total-label" >Sub Total</td><td id="sub_total" class="total-label" > -- </td></tr>
-                <tr><td class="total-label" >Total Discount</td><td id="total_discount" class="total-label" > -- </td></tr>
+                <tr><td class="total-label" >Total Discount</td> <td class="total-label"> <input type="text" id="total_discount" name="total_discount" class="form-control" readonly > </td></tr>
                 <tr><td class="total-label" >Grand Total / BillAmount </td><td   id="billAmount" class="total-label" > -- </td></tr>
-                <tr><td class="total-label" > Cash Received </td><td   id="" class="total-label" > <input type="text" id="cash_received" onkeyup="calculateCash();" onblur="calculateCash();" name="cash_received" class="form-control" > </td></tr>
+                <tr><td class="total-label" > Cash Received </td><td   id="" class="total-label" >  <input type="text" id="cash_received" onkeyup="calculateCash();" onblur="calculateCash();" name="cash_received" class="form-control" > </td></tr>
                 <tr><td class="total-label" > Cash Return </td><td   id="" class="total-label" > <input type="text" id="cash_returned" name="cash_returned" class="form-control disabledInput" readonly > </td></tr>
             </table>
 
@@ -268,7 +268,7 @@ Issuance Items
                     $('#total_item').html(data.recordsTotal);
                     
                     $('#sub_total').html(data.subTotal);
-                    $('#total_discount').html(data.totalDiscount);
+                    $('#total_discount').val(data.totalDiscount);
                     $('#billAmount').html(data.billAmount);
                     billAmount = data.billAmount;
 

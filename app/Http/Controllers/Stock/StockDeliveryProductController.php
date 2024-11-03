@@ -412,12 +412,11 @@ class StockDeliveryProductController extends Controller{
 
 
     function purchaseReturnDetail(Request $request, $id){
-        $data['row']     = PurchaseReturnItem::where('purchase_return_id',$id)->first();
-        $data['project']        =  []; //Project::find($data['row']->project_id); //Project::with('manager')->whereNotNull('manager_id')->pluck('name','id', 'manager.name');
-        $data['suppliers']      = Supplier::all()->pluck('name', 'id');
-        $data['designations']   = Util::designations();
+        $detail = PurchaseReturn::where('id',$id)->first();
+        $data['row'] = $detail;
+        $data['items'] = PurchaseReturnItem::with('product')->where('purchase_return_id',$id)->get();
+        $data['supplier'] = ($detail->supplier_id)?Supplier::where('id',$detail->supplier_id)->first():null;
         return view('Stock.Delivery.purchase_return_detail', $data);
-        
     }
 
 
