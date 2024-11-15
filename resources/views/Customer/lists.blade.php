@@ -156,6 +156,7 @@ Customers
             // 					"iDisplayLength": -1,
             // dom: 'Bfrtip',
             // buttons: ['excel'],
+            iDisplayLength: -1,
             processing: true,
             serverSide: true,
             ajax: "{{ route('customer.list') }}",

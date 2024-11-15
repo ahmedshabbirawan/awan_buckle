@@ -223,11 +223,11 @@ var listTable;
     $(document).ready(function() {
         var dataColumns = [
             { data: 'id', name: 'id', title: 'ID.', width: '10%'  },
-            {"data": "image_url",title: 'Image',
-                render: function(data, type, row, meta) {
-                    return '<image src="'+data+'" style="width:75px; height:75px;" >';
-                }, width: '10%'
-            },
+            // {"data": "image_url",title: 'Image',
+            //     render: function(data, type, row, meta) {
+            //         return '<image src="'+data+'" style="width:75px; height:75px;" >';
+            //     }, width: '10%'
+            // },
             { data: 'product_name', name: 'product_name', title: 'Name',},
 
             @if(auth()->user()->hasRole('Super Admin'))
@@ -248,13 +248,19 @@ var listTable;
         <?php
         endforeach;
         ?>
-        dataColumns.push({ data: 'status_label', name: 'status', title: 'Status', width: '10%'  });
-        dataColumns.push({ data: 'action', name: 'action', title: 'Action', width: '15%' });
+      //  dataColumns.push({ data: 'status_label', name: 'status', title: 'Status', width: '10%'  });
+     //   dataColumns.push({ data: 'action', name: 'action', title: 'Action', width: '15%' });
 
         setTimeout(() => {
             listTable = $('#yajra-table').DataTable({
             sort:true,
-            dom: 'Bfrtip',
+            paging: false,
+            aLengthMenu: [
+        [25, 50, 100, 200, -1],
+        [25, 50, 100, 200, "All"]
+    ],
+    iDisplayLength: -1,
+          //  dom: 'Bfrtip',
             buttons: [
             'excel', 'pdf'
             ],
@@ -274,7 +280,7 @@ var listTable;
                 }
             },
             columns: dataColumns,
-            order: [[ 0 , 'desc']]
+            order: [[ 1 , 'asc']]
         });
         }, 500);
     });
