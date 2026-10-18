@@ -13,6 +13,7 @@ use App\Models\Customer;
 use App\Models\StockDelivery;
 use App\Models\StockDeliveryItem;
 use App\Models\StockDeliveryProduct;
+use App\Models\SaleReturnItem;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -54,44 +55,128 @@ class ProductStockController extends Controller{
 
 
     function product(Request $request){
-        $data['sub_category']   = ParentCategory::with(['subCategories'])->orderBy('name','DESC')->get();
-        $data['products'] = Product::all();// ->pluck('name','id');
-        if($request->ajax()){
-            $productId      = $request->get('product_id');
-            $productDetail  = Product::findoRFail($productId); // Product::where('id',$productId)->first();
-            $dateRange  = ($request->has('date_range')) ? $request->get('date_range'): optional($productDetail)->created_at->format('d/m/Y').'-'.date('d/m/Y');
-            $dateString = explode('-',$dateRange);
-            $startDate  = Carbon::createFromFormat('d/m/Y H:i:s',trim($dateString[0]).' 00:00:01' );
-            $endDate    = Carbon::createFromFormat('d/m/Y H:i:s',trim($dateString[1]).' 23:59:59' );
+        $data['sub_category'] = ParentCategory::with(['subCategories'])->orderBy('name','DESC')->get();
+        $data['products']     = Product::all();
+        if ($request->ajax()) {
+            $productId     = $request->get('product_id');
+            $productDetail = Product::findOrFail($productId);
+            $dateRange     = ($request->has('date_range') && !empty($request->get('date_range'))) 
+                ? $request->get('date_range') 
+                : optional($productDetail)->created_at->format('d/m/Y') . ' - ' . date('d/m/Y');
 
+            $startDate = null;
+            $endDate   = null;
 
-            $dates = function($query)use($startDate,$endDate){
-                if($startDate && $endDate){
-                    $query->whereDate('created_at','>=',$startDate)->whereDate('created_at','<=',$endDate);
+            try {
+                if (strpos($dateRange, '-') !== false) {
+                    $dateString = explode('-', $dateRange);
+                    $startDate  = Carbon::createFromFormat('d/m/Y H:i:s', trim($dateString[0]) . ' 00:00:01');
+                    $endDate    = Carbon::createFromFormat('d/m/Y H:i:s', trim($dateString[1]) . ' 23:59:59');
+                }
+            } catch (\Exception $e) {
+                $startDate = null;
+                $endDate   = null;
+            }
+
+            $dates = function($query) use ($startDate, $endDate) {
+                if ($startDate && $endDate) {
+                    $query->whereBetween('created_at', [$startDate, $endDate]);
                 }
             };
 
-
             $response['product_detail'] = $productDetail;
 
-            $productStat['sale_count']      = SaleOrderItem::where('product_id',$productId)->where($dates)->sum('qty');
-            $productStat['purchase_count']  = StockDeliveryProduct::where('product_id',$productId)->where($dates)->sum('quantity');
-            $productStat['available_count'] = ProductAvailable::where('product_id',$productId)->sum('qty');
-            $shops          = Shop::all();
+            $costPrice = (float)($productDetail->cost_price ?: 0);
+            $salePrice = (float)($productDetail->price ?: 0);
 
+            // Global product statistics
+            $saleCount = (int)SaleOrderItem::where('product_id', $productId)->where($dates)->sum('qty');
+            $saleAmount = (float)SaleOrderItem::where('product_id', $productId)->where($dates)
+                ->selectRaw('SUM(qty * price) as total')->value('total') ?: ($saleCount * $salePrice);
 
-            $shops->map(function($shop, $val)use($productId, $dates){
-                $shop->available_qty = ProductAvailable::where('product_id',$productId)->where('shop_id', $shop->id)->sum('qty');
-                // $shop->available_qty = ProductAvailable::where('product_id',$productId)->where('shop_id', $shop->id)->sum('qty');
-                $shop->sale_count      = SaleOrderItem::where('product_id',$productId)->where($dates)->sum('qty');
-                $shop->purchase_count  = StockDeliveryProduct::where('product_id',$productId)->where($dates)->sum('quantity');
+            $returnCount = (int)SaleReturnItem::where('product_id', $productId)->where($dates)->sum('qty');
+            $returnAmount = $returnCount * $salePrice;
+
+            $netSaleCount = max(0, $saleCount - $returnCount);
+            $netSaleAmount = max(0, $saleAmount - $returnAmount);
+
+            $purchaseCount = (int)StockDeliveryProduct::where('product_id', $productId)->where($dates)->sum('quantity');
+            $purchaseAmount = (float)StockDeliveryProduct::where('product_id', $productId)->where($dates)
+                ->selectRaw('SUM(quantity * unit_price) as total')->value('total') ?: ($purchaseCount * $costPrice);
+
+            $availableCount = (int)ProductAvailable::where('product_id', $productId)->sum('qty');
+            $availableAmount = $availableCount * $salePrice;
+
+            $cogs = (float)SaleOrderItem::where('product_id', $productId)->where($dates)
+                ->selectRaw('SUM(qty * COALESCE(cost_price, 0)) as total')->value('total') ?: ($netSaleCount * $costPrice);
+
+            $grossProfit = $netSaleAmount - $cogs;
+            $profitMargin = $netSaleAmount > 0 ? round(($grossProfit / $netSaleAmount) * 100, 1) : 0;
+
+            $productStat['sale_count']        = $saleCount;
+            $productStat['return_count']      = $returnCount;
+            $productStat['net_sale_count']    = $netSaleCount;
+            $productStat['sale_price']        = round($netSaleAmount);
+            $productStat['purchase_count']    = $purchaseCount;
+            $productStat['purchase_price']    = round($purchaseAmount);
+            $productStat['available_count']   = $availableCount;
+            $productStat['available_price']   = round($availableAmount);
+            $productStat['cogs']              = round($cogs);
+            $productStat['gross_profit']      = round($grossProfit);
+            $productStat['profit_margin']     = $profitMargin;
+
+            // Per-shop statistics with accurate shop filters
+            $shops = Shop::all();
+            $shops->map(function($shop) use ($productId, $dates, $costPrice, $salePrice) {
+                $shopAvailable = (int)ProductAvailable::where('product_id', $productId)->where('shop_id', $shop->id)->sum('qty');
+                
+                $shopPurchases = (int)StockDeliveryProduct::where('product_id', $productId)
+                    ->where('shop_id', $shop->id)
+                    ->where($dates)->sum('quantity');
+
+                $shopPurchaseAmount = (float)StockDeliveryProduct::where('product_id', $productId)
+                    ->where('shop_id', $shop->id)
+                    ->where($dates)->selectRaw('SUM(quantity * unit_price) as total')->value('total') ?: ($shopPurchases * $costPrice);
+
+                $shopSales = (int)SaleOrderItem::where('product_id', $productId)
+                    ->whereHas('saleOrder', function($q) use ($shop) {
+                        $q->where('shop_id', $shop->id);
+                    })->where($dates)->sum('qty');
+
+                $shopSaleAmount = (float)SaleOrderItem::where('product_id', $productId)
+                    ->whereHas('saleOrder', function($q) use ($shop) {
+                        $q->where('shop_id', $shop->id);
+                    })->where($dates)->selectRaw('SUM(qty * price) as total')->value('total') ?: ($shopSales * $salePrice);
+
+                $shopReturns = (int)SaleReturnItem::where('product_id', $productId)
+                    ->where('shop_id', $shop->id)
+                    ->where($dates)->sum('qty');
+
+                $shopReturnAmount = $shopReturns * $salePrice;
+                $shopNetSales = max(0, $shopSales - $shopReturns);
+                $shopNetSaleAmount = max(0, $shopSaleAmount - $shopReturnAmount);
+
+                $shopCogs = (float)SaleOrderItem::where('product_id', $productId)
+                    ->whereHas('saleOrder', function($q) use ($shop) {
+                        $q->where('shop_id', $shop->id);
+                    })->where($dates)->selectRaw('SUM(qty * COALESCE(cost_price, 0)) as total')->value('total') ?: ($shopNetSales * $costPrice);
+
+                $shopProfit = $shopNetSaleAmount - $shopCogs;
+
+                $shop->available_qty    = $shopAvailable;
+                $shop->available_price  = round($shopAvailable * $salePrice);
+                $shop->purchase_count   = $shopPurchases;
+                $shop->purchase_price   = round($shopPurchaseAmount);
+                $shop->sale_count       = $shopNetSales;
+                $shop->sale_price       = round($shopNetSaleAmount);
+                $shop->profit           = round($shopProfit);
             });
+
             $response['product_stats_shops_wise'] = $shops;
-            $response['product_stats'] = $productStat;
+            $response['product_stats']            = $productStat;
             return response()->json($response);
-        }else{
-           //  $data['shops'] = Shop::all()->pluck('name','id');
-            return view('reports.product_report',$data);
+        } else {
+            return view('reports.product_report', $data);
         }
     }
 

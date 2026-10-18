@@ -171,49 +171,49 @@ class SaleCartController extends Controller{
 
 
         $prodcutAvail = ProductAvailable::where(['product_id' => $productID, 'shop_id' => $shopID ])->first();
+        $availableQty = $prodcutAvail ? (int)$prodcutAvail->qty : 0;
 
-        
-
-
-        if( !($prodcutAvail->product_id) || ($prodcutAvail->qty < 1) ){
-            return response()->json(['status' => false, 'message' => 'Product not available'],406);
+        if ($availableQty < 1) {
+            return response()->json(['status' => false, 'message' => 'Product not available in stock.'], 406);
         }
 
+        $product = Product::find($productID);
+        if (!$product) {
+            return response()->json(['status' => false, 'message' => 'Product not found.'], 404);
+        }
 
+        $itemObj = SaleCart::where('product_id', $productID)->where('sale_key', $saleKey)->first();
 
-        $product = Product::find($productID);        
-        $itemObj = SaleCart::where('product_id', $productID)->where('sale_key',$saleKey)->first();
+        $targetQty = $qty;
+        if ($itemObj && $action === 'add') {
+            $targetQty = $itemObj->qty + $qty;
+        }
 
-        $shopID = auth()->user()->shop_id;
+        if ($targetQty > $availableQty) {
+            return response()->json([
+                'status' => false, 
+                'message' => "Requested quantity ({$targetQty}) exceeds available stock ({$availableQty})."
+            ], 406);
+        }
 
-        /*
-        Please check the is item available in Product_Available
-        */
-        if($itemObj){
-            if($action  == 'add' ){
-                $qty = $itemObj->qty  + $qty;
-            }
-
+        if ($itemObj) {
             $finalPrice = $itemObj->offer_price - $itemObj->discount;
 
-            $item = SaleCart::where(['product_id' => $productID, 'sale_key'=> $saleKey])->update([
-                'product_id'    => $product->id,
-    //            'product_name'  => $product->name,
-  //              'price'         => $product->price,
-//                'offer_price'   => $product->price,
+            $item = SaleCart::where(['product_id' => $productID, 'sale_key' => $saleKey])->update([
+                'product_id'  => $product->id,
                 'final_price' => $finalPrice, 
-                'qty'           => $qty,
-                'sale_key'      => $saleKey,
-                'shop_id'       => $shopID
+                'qty'         => $targetQty,
+                'sale_key'    => $saleKey,
+                'shop_id'     => $shopID
             ]);
-        }else{
+        } else {
             $item = SaleCart::create([
                 'product_id'    => $product->id,
                 'product_name'  => $product->name,
                 'orignal_price' => $product->price,
                 'offer_price'   => $product->price,
                 'final_price'   => $product->price,
-                'qty'           => $qty,
+                'qty'           => $targetQty,
                 'sale_key'      => $saleKey,
                 'shop_id'       => $shopID
             ]);
@@ -506,7 +506,7 @@ class SaleCartController extends Controller{
                 $itemData['offer_price']    =    $tItem->offer_price;
                 $itemData['discount']       =    $tItem->discount;
                 $itemData['price']          =    $tItem->final_price;
-                $itemData['cost_price']     =    $product->cost_price;
+                $itemData['cost_price']     =    ($product && $product->cost_price > 0) ? $product->cost_price : 0;
 
 
                 $totalOfferPrice            =    $totalOfferPrice + ( $tItem->offer_price * $tItem->qty );

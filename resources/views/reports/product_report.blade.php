@@ -145,25 +145,36 @@ $title = 'Product Report';
                     </table>
                     <table class="table table-striped table-bordered no-footer">
                         <tr class="odd" >
-                            <td class="even">Cost Price (Rs) : <b id="pro_cost_price" > -- </b> </td> 
-                            <td>Sale Price (Rs) : <b id="pro_sale_price" > -- </b> </td>
+                            <td class="even" style="width:50%;">Cost Price (Rs) : <b id="pro_cost_price" > -- </b> </td> 
+                            <td style="width:50%;">Sale Price (Rs) : <b id="pro_sale_price" > -- </b> </td>
                         </tr>
                     </table>
                     <table class="table table-striped table-bordered no-footer">
                         <tr class="odd" >
-                            <td>Total Purchase (Pair) : <b id="pro_total_purchase_qty"> --  </b> </td> <td> Total Purchase (Rs) : <b id="pro_total_purchase_price" > -- </b> </td> 
+                            <td style="width:50%;">Total Purchase (Qty) : <b id="pro_total_purchase_qty"> --  </b> </td> 
+                            <td style="width:50%;">Total Purchase (Rs) : <b id="pro_total_purchase_price" > -- </b> </td> 
                         </tr>
                         <tr class="odd" >
-                            <td>Total Sale (Pair) : <b id="pro_total_sale_qty" > --  </b> </td> <td> Total Sale (Rs) : <b id="pro_total_sale_price" > -- </b> </td> 
+                            <td>Total Sale (Qty) : <b id="pro_total_sale_qty" > --  </b> </td> 
+                            <td>Total Sale (Rs) : <b id="pro_total_sale_price" > -- </b> </td> 
                         </tr>
                     </table>
 
                     <table class="table table-striped table-bordered no-footer">
                         <tr class="odd" >
-                            <td colspan="3" ><b>Available in Shop</b></td> 
+                            <td style="width:33%;">COGS (Rs) : <b id="pro_cogs"> -- </b></td> 
+                            <td style="width:34%;">Gross Profit (Rs) : <b id="pro_profit" class="text-success"> -- </b></td> 
+                            <td style="width:33%;">Profit Margin : <b id="pro_margin" class="text-info"> -- </b></td> 
+                        </tr>
+                    </table>
+
+                    <table class="table table-striped table-bordered no-footer">
+                        <tr class="odd" >
+                            <td colspan="2" ><b>Available in Stores</b></td> 
                         </tr>
                         <tr class="odd" > 
-                            <td>Total Available (Pair) : <b id="pro_total_available_qty" > --  </b> </td> <td> Total Available (Rs) : <b id="pro_total_available_price" > -- </b> </td> 
+                            <td style="width:50%;">Total Available (Qty) : <b id="pro_total_available_qty" > --  </b> </td> 
+                            <td style="width:50%;">Total Available (Rs) : <b id="pro_total_available_price" > -- </b> </td> 
                         </tr>
                     </table>
 
@@ -171,25 +182,23 @@ $title = 'Product Report';
 
                 <!----------------->
                 <div class="widget-toolbox padding-8 clearfix">
-                    Shops
+                    <b>Store-Wise Inventory & Profit Breakdown</b>
                 </div>
-
-
 
                 <div class="widget-main">
                     <table class="table table-striped table-bordered table-hover no-margin-bottom no-border-top no-footer">
                         <thead>
-                            <tr>
-                                <td>Shop</td> 
-                                <td>Total Purchase (Pair) : </td> 
-                                <td>Total Purchase (Rs) :</td> 
-                                <td>Total Sale (Pair) : </td>
-                                <td> Total Sale (Rs) :</td>
+                            <tr class="heading-item">
+                                <th>Shop Name</th> 
+                                <th>Available (Stock / Value)</th> 
+                                <th>Total Purchases (Qty / Rs)</th> 
+                                <th>Net Sales (Qty / Rs)</th> 
+                                <th>Gross Profit (Rs)</th>
                             </tr>
                         </thead>
                         <tbody id="shop_table_body">
                             <tr>
-                                <td colspan="5" >---</td> 
+                                <td colspan="5" class="text-center">Select a product to view store-wise breakdown</td> 
                             </tr>
                         </tbody>
                     </table>
@@ -276,6 +285,7 @@ $title = 'Product Report';
 
     function getResultsByProductId(){
         var productId = $('#product_ids').val();
+        if (!productId) return;
         saleTable.ajax.reload();
         purchase_table.ajax.reload();
 
@@ -286,28 +296,48 @@ $title = 'Product Report';
             success: function(res) {
                 console.log(res);
 
-                var productDetail = res.product_detail;
-                var productStat = res.product_stats;
+                var productDetail = res.product_detail || {};
+                var productStat = res.product_stats || {};
 
-                $('#pro_name').html(productDetail.name);
-                $('#pro_cost_price').html(productDetail.cost_price);
-                $('#pro_sale_price').html(productDetail.price);
+                $('#pro_name').html(productDetail.name || '--');
+                $('#pro_desc').html(productDetail.description || '--');
+                $('#pro_cost_price').html(Number(productDetail.cost_price || 0).toLocaleString());
+                $('#pro_sale_price').html(Number(productDetail.price || 0).toLocaleString());
                 
-                $('#pro_total_sale_qty').html(productStat.sale_count);
-               // $('#pro_total_sale_price').html(productStat);
+                var netSaleCount = (productStat.net_sale_count !== undefined) ? productStat.net_sale_count : productStat.sale_count;
+                var returnQtyText = (productStat.return_count > 0) ? ' <small class="text-danger">(' + productStat.return_count + ' returned)</small>' : '';
+                $('#pro_total_sale_qty').html((netSaleCount || 0) + returnQtyText);
+                $('#pro_total_sale_price').html(Number(productStat.sale_price || 0).toLocaleString());
 
-                $('#pro_total_purchase_qty').html(productStat.purchase_count);
-               // $('#pro_total_purchase_qty').html(productStat);
+                $('#pro_total_purchase_qty').html(productStat.purchase_count || 0);
+                $('#pro_total_purchase_price').html(Number(productStat.purchase_price || 0).toLocaleString());
 
-                $('#pro_total_available_qty').html(productStat.available_count);
-               // $('#pro_total_available_price').html(productStat);
+                $('#pro_total_available_qty').html(productStat.available_count || 0);
+                $('#pro_total_available_price').html(Number(productStat.available_price || 0).toLocaleString());
+
+                $('#pro_cogs').html(Number(productStat.cogs || 0).toLocaleString());
+                var grossProfit = Number(productStat.gross_profit || 0);
+                var profitClass = (grossProfit >= 0) ? 'text-success' : 'text-danger';
+                $('#pro_profit').removeClass('text-success text-danger').addClass(profitClass).html(grossProfit.toLocaleString());
+                $('#pro_margin').html((productStat.profit_margin || 0) + '%');
 
                 var html = '';
-                $(res.product_stats_shops_wise).each(function(index, row){
-                    html += '<tr><td>'+row.name+'</td><td>'+row.name+'</td><td>5800</td><td>15600</td><td>265878</td></tr>'; 
-                });
+                if (res.product_stats_shops_wise && res.product_stats_shops_wise.length > 0) {
+                    $(res.product_stats_shops_wise).each(function(index, row){
+                        var profitVal = Number(row.profit || 0);
+                        var profitBadgeClass = (profitVal >= 0) ? 'badge bg-success' : 'badge bg-danger';
+                        html += '<tr>' +
+                            '<td><strong>' + (row.name || '--') + '</strong></td>' +
+                            '<td>' + (row.available_qty || 0) + ' <span class="text-muted">(Rs ' + Number(row.available_price || 0).toLocaleString() + ')</span></td>' +
+                            '<td>' + (row.purchase_count || 0) + ' <span class="text-muted">(Rs ' + Number(row.purchase_price || 0).toLocaleString() + ')</span></td>' +
+                            '<td>' + (row.sale_count || 0) + ' <span class="text-muted">(Rs ' + Number(row.sale_price || 0).toLocaleString() + ')</span></td>' +
+                            '<td><span class="' + profitBadgeClass + '">Rs ' + profitVal.toLocaleString() + '</span></td>' +
+                        '</tr>'; 
+                    });
+                } else {
+                    html = '<tr><td colspan="5" class="text-center text-muted">No store data found for this product.</td></tr>';
+                }
                 $('#shop_table_body').html(html);
-                // <tr><td>ABC Store</td><td>458</td><td>5800</td><td>15600</td><td>265878</td></tr>
             }
         });
     }

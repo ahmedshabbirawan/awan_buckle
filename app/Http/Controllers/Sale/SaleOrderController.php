@@ -137,77 +137,81 @@ class SaleOrderController extends Controller{
             $validator = Validator::make($request->all(), [
                 'order_id'          => 'required',
                 'order_item_id'     => 'required',
-                'product_id'        => 'required',
-                'qty'               => 'required',
                 'return_qty'        => 'required',
-                'order_item_price'  => 'required'
             ]);
             if ($validator->fails()) {
                 return response()->json(['status' => false, 'message' => $validator->errors()->first()],406);
             }
 
-            $orderID    = $request->get('order_id');
-            $items      = $request->get('order_item_id');
-            $returnsQty = $request->get('return_qty');
-            $order      = SaleOrder::findOrFail($orderID);
-            $shopID     = $order->shop_id; 
-            $loginShopID    = auth()->user()->shop_id; 
+            $orderID        = $request->get('order_id');
+            $items          = $request->get('order_item_id');
+            $returnsQty     = $request->get('return_qty');
+            $order          = SaleOrder::findOrFail($orderID);
+            $loginShopID    = auth()->user()->shop_id ?? $order->shop_id; 
             $desc           = $request->get('description');
 
-            $saleReturn = SaleReturn::create([
-                'order_id' => $orderID,
-                'description' => $desc,
-                'shop_id' => $loginShopID,
-                'customer_id' => $order->customer_id
-            ]);
+            try {
+                DB::beginTransaction();
 
-            $index = 0;
-            foreach($items as $item){
-                $returnQty = $returnsQty[$index];
-                $index++;
-                if( ($returnQty == 0)){
-                   
-                    continue;
-                }
-                $saleOrder = SaleOrderItem::find($item);
-                $saleOrder->qty = $saleOrder->qty - $returnQty;
-                $saleOrder->save();
-
-                SaleReturnItem::create([
-                    'sale_return_id' => $saleReturn->id,
-                    'product_id' => $saleOrder->product_id,
-                    'qty' => $returnQty,
-                    'shop_id' => $loginShopID
+                $saleReturn = SaleReturn::create([
+                    'order_id'    => $orderID,
+                    'description' => $desc,
+                    'shop_id'     => $loginShopID,
+                    'customer_id' => $order->customer_id
                 ]);
 
-                ProductAvailable::manageStockByShopAndProductId($returnQty, StockAudit::STOCK_ACTION_ADD,$saleOrder->product_id, $shopID, StockAudit::STOCK_OBJECT_TYPE_SALE_RETURN,$saleReturn->id);
+                $hasReturns = false;
+                $index = 0;
+                foreach($items as $item){
+                    $returnQty = isset($returnsQty[$index]) ? (int)$returnsQty[$index] : 0;
+                    $index++;
+                    if ($returnQty <= 0) {
+                        continue;
+                    }
 
-               // ProductAvailable::where(['shop_id' => $shopID, 'product_id' => $saleOrder->product_id])->increment('qty', $returnQty);
-               
+                    $saleOrder = SaleOrderItem::findOrFail($item);
+
+                    // Check already returned quantity for this order and product
+                    $alreadyReturned = (int)SaleReturnItem::whereHas('saleReturn', function($q) use ($orderID) {
+                        $q->where('order_id', $orderID);
+                    })->where('product_id', $saleOrder->product_id)->sum('qty');
+
+                    $maxReturnable = $saleOrder->qty - $alreadyReturned;
+                    if ($returnQty > $maxReturnable && $maxReturnable > 0) {
+                        throw new \Exception("Return quantity ({$returnQty}) exceeds remaining returnable quantity ({$maxReturnable}) for item.");
+                    }
+
+                    SaleReturnItem::create([
+                        'sale_return_id' => $saleReturn->id,
+                        'product_id'     => $saleOrder->product_id,
+                        'qty'            => $returnQty,
+                        'shop_id'        => $loginShopID
+                    ]);
+
+                    // Restock at the login shop physically receiving the item
+                    ProductAvailable::manageStockByShopAndProductId(
+                        $returnQty, 
+                        StockAudit::STOCK_ACTION_ADD,
+                        $saleOrder->product_id, 
+                        $loginShopID, 
+                        StockAudit::STOCK_OBJECT_TYPE_SALE_RETURN,
+                        $saleReturn->id
+                    );
+
+                    $hasReturns = true;
+                }
+
+                if (!$hasReturns) {
+                    throw new \Exception("No valid return quantities entered.");
+                }
+
+                DB::commit();
+                return response()->json(['status' => true, 'message' => 'Sale return processed successfully', 'url' => route('sale.order.detail',$orderID) ],200);
+
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return response()->json(['status' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
             }
-
-
-            // $priceOffer = SaleOrderItem::where('order_id', $orderID)->sum('offer_price');
-            // $priceOffer = SaleOrderItem::where('order_id', $orderID)->sum('offer_price');
-
-            $saleItems          = SaleOrderItem::where('order_id', $orderID)->get();
-            $priceOfferTotal    = 0;
-            $discountTotal      = 0;
-            $priceTotal         = 0; 
-            foreach($saleItems as $saleitem){
-                $priceOfferTotal = $priceOfferTotal + ( $saleitem->qty *  $saleitem->offer_price );
-                $discountTotal   = $discountTotal + ( $saleitem->qty *  $saleitem->discount );
-                $priceTotal      = $priceTotal + ( $saleitem->qty *  $saleitem->price );
-            }
-
-            $order->total_offer_price   = $priceOfferTotal;
-            $order->total_discount      = $discountTotal;
-            $order->total_price         = $priceTotal;
-
-            $order->save();
-
-            return response()->json(['status' => true, 'message' => 'Done', 'url' => route('sale.order.detail',$orderID) ],200);
-
         }
 
         function unknowSaleReturnView(Request $request){

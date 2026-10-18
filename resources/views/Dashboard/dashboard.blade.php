@@ -156,14 +156,16 @@
 												<div class="widget-body">
 													<div class="widget-main no-padding">
 														<table class="table table-striped table-bordered table-hover">
-															<thead class="thin-border-bottom">
 																<tr>
-																	<th><i class="ace-icon fa fa-user"></i> Days </th>
-																	<th> <i>@</i> Sale Count </th>
-                                                                    <th><i>@</i>Sale Amount</th>
-                                                                    <th><i>@</i>Purchase Count </th>
-                                                                    <th><i>@</i> Purchase Amount </th>
-																	<th class="hidden-480">Customer Create</th>
+																	<th><i class="ace-icon fa fa-calendar"></i> Days </th>
+																	<th> Sale Count </th>
+																	<th> Net Sales (Rs) </th>
+																	<th> Returns (Rs) </th>
+																	<th> Gross Profit (Rs) </th>
+																	<th> Margin </th>
+																	<th> Purchase Count </th>
+																	<th> Purchase Amount </th>
+																	<th class="hidden-480">New Customers</th>
 																</tr>
 															</thead>
 															<tbody id="stats_body" ></tbody>
@@ -1231,8 +1233,18 @@ function getDashboardStats() {
                 // stats_body
                 var statsBody = '';
                 $(res.dayWiseReport).each(function(index, row){
-                    console.log(index, row);
-                    statsBody += '<tr><td>'+row.labels.days+'</td><td>'+row.reports.sale_order_count+'</td><td>'+row.reports.sale_amount+'</td><td>'+row.reports.purchase_count+'</td><td>'+row.reports.purchase_amount+'</td><td>'+row.reports.customer_create+'</td></tr>';
+                    var profitBadgeClass = (row.reports.profit_amount >= 0) ? 'text-success' : 'text-danger';
+                    statsBody += '<tr>' +
+                        '<td><b>' + row.labels.days + ' Days</b></td>' +
+                        '<td>' + (row.reports.sale_order_count || 0) + '</td>' +
+                        '<td><b>' + (row.reports.sale_amount || 0).toLocaleString() + '</b></td>' +
+                        '<td class="text-danger">' + (row.reports.sale_return_amount || 0).toLocaleString() + '</td>' +
+                        '<td class="' + profitBadgeClass + '"><b>' + (row.reports.profit_amount || 0).toLocaleString() + '</b></td>' +
+                        '<td><span class="badge badge-info">' + (row.reports.profit_margin || 0) + '%</span></td>' +
+                        '<td>' + (row.reports.purchase_count || 0) + '</td>' +
+                        '<td>' + (row.reports.purchase_amount || 0).toLocaleString() + '</td>' +
+                        '<td>' + (row.reports.customer_create || 0) + '</td>' +
+                        '</tr>';
                 });
                 $('#stats_body').html(statsBody);
 

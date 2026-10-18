@@ -28,57 +28,17 @@ class ProductAvailable extends Model{
     }
 
 
-    public static function manageStockByShopAndProductId(int $chageQuantity, $action, $productId, $shopId , $objectType = null, $objectId = null){
-        $oldStock = ProductAvailable::where([
-            'shop_id' => $shopId,
-            'product_id' => $productId
-        ])->first();
-        $newQty = 0;
-        $oldQty = ($oldStock)?$oldStock->qty:0;
-
-        if($action == StockAudit::STOCK_ACTION_ADD){
-            $newQty = $oldQty + $chageQuantity;
-        }elseif($action == StockAudit::STOCK_ACTION_MINUS){
-            $newQty = $oldQty - $chageQuantity;
-        }
-        if($oldStock){
-            $newStock = ProductAvailable::where([
-                'shop_id' => $shopId,
-                'product_id' => $productId
-            ])->first();
-            $newStock->qty = $newQty;
-            $newStock->save();
-        }else{
-            $newStock = ProductAvailable::create([
-                'qty' => $chageQuantity,
-                'product_id' => $productId,
-                'shop_id' => $shopId 
-            ]);
-        }    
-
-        $oldValue = json_encode(($oldStock)?$oldStock->toArray():null);
-        $newValue = json_encode(($newStock)?$newStock->toArray():null);
-
-        if($newStock){
-            StockAudit::create([
-                'product_id' => $productId,
-                'shop_id' => $shopId,
-                'old_qty' => $oldQty,
-                'update_qty' => $chageQuantity,
-                'current_qty' => $newStock->qty,
-                'action' => $action,
-                'stock_old_value' => $oldValue,
-                'stock_new_value' => $newValue,
-                'object_type' => $objectType,
-                'object_id' => $objectId
-            ]);
-        }
-        
-        return $newStock;
-    }
-
-    public static function incrementStock( Array $whereArr, $qty ){
-        return static::query()->where($whereArr)->increment('qty', $qty);
+    public static function manageStockByShopAndProductId(int $chageQuantity, $action, $productId, $shopId , $objectType = null, $objectId = null, $description = null, bool $allowNegative = false){
+        return \App\Services\InventoryService::mutateStock(
+            (int)$productId,
+            (int)$shopId,
+            (int)$chageQuantity,
+            $action,
+            $objectType ?? 'Manual',
+            $objectId ? (int)$objectId : null,
+            $description,
+            $allowNegative
+        );
     }
 
 

@@ -93,18 +93,25 @@
                 <div class="table-responsive" id="report_con" >
                     <table class="table table-striped table-bordered yajratable"  style="width:100%">
                     <tr>
-                        <td class="td_label">Shops</td> <td id="shops_val" ></td> 
-                        <td class="td_divider" ></td>
-                        <td class="td_label" >Dates  </td> <td id="date_val" ></td> 
-                        <td class="td_divider" ></td>
-                        <td class="td_label"> </td> <td></td> 
+                        <td class="td_label">Shops:</td> <td id="shops_val"></td> 
+                        <td class="td_divider"></td>
+                        <td class="td_label">Dates:</td> <td id="date_val"></td> 
+                        <td class="td_divider"></td>
+                        <td class="td_label">Orders Count:</td> <td id="total_record"></td> 
                     </tr>
                     <tr>
-                        <td class="td_label"> Total Sale:</td> <td id="total_sales" ></td> 
+                        <td class="td_label">Gross Sales (Rs):</td> <td id="total_sales"></td> 
                         <td class="td_divider"></td> 
-                        <td class="td_label"> Records  </td> <td id="total_record" ></td>
+                        <td class="td_label">Sales Returns (Rs):</td> <td id="total_returns" class="text-danger"></td> 
                         <td class="td_divider"></td> 
-                        <td class="td_label"> Product Items</td> <td id="total_item" ></td> 
+                        <td class="td_label"><strong>Net Sales (Rs):</strong></td> <td id="net_sales" class="text-success" style="font-weight: bold; font-size: 1.1em;"></td> 
+                    </tr>
+                    <tr>
+                        <td class="td_label">Gross Items Sold:</td> <td id="total_item"></td> 
+                        <td class="td_divider"></td> 
+                        <td class="td_label">Returned Items:</td> <td id="return_item" class="text-danger"></td> 
+                        <td class="td_divider"></td> 
+                        <td class="td_label"><strong>Net Items Sold:</strong></td> <td id="net_item" class="text-primary" style="font-weight: bold;"></td> 
                     </tr>
                     </table>
                     <table class="table table-striped table-bordered yajratable" id="yajra-table" style="width:100%"></table>
@@ -179,12 +186,18 @@
                     d.date_range    = $('#date_range').val()
                 },
                 complete:function(res){
-                    var data = res['responseJSON'];
-                    $('#total_sales').html(data.totalPrice);
-                    $('#date_val').html($('#date_range').val());
-                    $('#total_record').html(data.recordsTotal);
-                    $('#shops_val').html(data.shopsName);
-                    $('#total_item').html(data.itemCount);
+                    var data = res['responseJSON'] || {};
+                    $('#shops_val').html(data.shopsName || 'All');
+                    $('#date_val').html($('#date_range').val() || 'All Time');
+                    $('#total_record').html(data.recordsTotal || 0);
+
+                    $('#total_sales').html(Number(data.totalPrice || 0).toLocaleString());
+                    $('#total_returns').html(Number(data.totalReturns || 0).toLocaleString());
+                    $('#net_sales').html(Number(data.netSales || 0).toLocaleString());
+
+                    $('#total_item').html(data.itemCount || 0);
+                    $('#return_item').html(data.returnItemCount || 0);
+                    $('#net_item').html(data.netItemCount || 0);
                 }
             },
             columns: [

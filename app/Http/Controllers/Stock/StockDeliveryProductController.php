@@ -245,59 +245,76 @@ class StockDeliveryProductController extends Controller{
         $purchase       = StockDelivery::findOrFail($purchaseID);
         $desc           = $request->get('description');
 
-        $purchaseReturn = PurchaseReturn::create([
-            'supplier_id' => $purchase->supplier_id, 
-            'purchase_id' => $purchase->id, 
-          //  'shop_id', 
-          //  'total_amount', 
-            'description' => $desc
-        ]);
+        try {
+            DB::beginTransaction();
 
-        $index          = 0;
-        $totalReturnPrice = 0;  
-        foreach($items as $item){
-            $returnQty = $returnsQty[$index];
-                if( ($returnQty < 1)){
-                    $index++;
-                    continue;
-                }
-            $saleOrder = StockDeliveryProduct::find($item);
-            // $saleOrder->quantity = $saleOrder->quantity - $returnQty;
-            // $saleOrder->save();
-            $shopID = $saleOrder->shop_id;
-            // ProductAvailable::where(['shop_id' => $shopID, 'product_id' => $saleOrder->product_id])->decrement('qty', $returnQty);
-            ProductAvailable::manageStockByShopAndProductId($returnQty, StockAudit::STOCK_ACTION_MINUS,$saleOrder->product_id,$shopID, StockAudit::STOCK_OBJECT_TYPE_PURCHASE_RETURN, $purchaseReturn->id);
-            PurchaseReturnItem::create([
-                'purchase_return_id' => $purchaseReturn->id , 
-                'product_id' => $saleOrder->product_id, 
-                'unit_price' => $saleOrder->unit_price, 
-                'shop_id' => auth()->user()->shop_id,
-                'qty' => $returnQty
+            $purchaseReturn = PurchaseReturn::create([
+                'supplier_id' => $purchase->supplier_id, 
+                'purchase_id' => $purchase->id, 
+                'description' => $desc
             ]);
 
+            $index          = 0;
+            $totalReturnPrice = 0;  
+            $hasReturn = false;
 
-            $totalReturnPrice =  $totalReturnPrice + ($returnQty * $saleOrder->unit_price);
-            
+            foreach($items as $item){
+                $returnQty = isset($returnsQty[$index]) ? (int)$returnsQty[$index] : 0;
+                $index++;
+                if ($returnQty < 1) {
+                    continue;
+                }
 
-            $index++;
+                $deliveryProduct = StockDeliveryProduct::findOrFail($item);
+                $shopID = $deliveryProduct->shop_id;
+
+                // Validate return quantity does not exceed original purchased quantity
+                if ($returnQty > $deliveryProduct->quantity) {
+                    throw new \Exception("Return quantity ({$returnQty}) cannot exceed delivered quantity ({$deliveryProduct->quantity}) for item #{$deliveryProduct->product_id}.");
+                }
+
+                // Decrement stock at the shop where items were received
+                ProductAvailable::manageStockByShopAndProductId(
+                    $returnQty, 
+                    StockAudit::STOCK_ACTION_MINUS,
+                    $deliveryProduct->product_id,
+                    $shopID, 
+                    StockAudit::STOCK_OBJECT_TYPE_PURCHASE_RETURN, 
+                    $purchaseReturn->id
+                );
+
+                $itemUnitPrice = (float)$deliveryProduct->unit_price;
+
+                PurchaseReturnItem::create([
+                    'purchase_return_id' => $purchaseReturn->id, 
+                    'product_id'         => $deliveryProduct->product_id, 
+                    'unit_price'         => $itemUnitPrice, 
+                    'shop_id'            => $shopID,
+                    'qty'                => $returnQty
+                ]);
+
+                $totalReturnPrice += ($returnQty * $itemUnitPrice);
+                $hasReturn = true;
+            }
+
+            if (!$hasReturn) {
+                throw new \Exception("No valid return quantities entered.");
+            }
+
+            $purchaseReturn->total_amount = $totalReturnPrice;
+            $purchaseReturn->save();
+
+            // Correctly subtract only the returned items' cost value from the delivery bill
+            $purchase->delivery_amount = max(0, $purchase->delivery_amount - $totalReturnPrice);
+            $purchase->save();
+
+            DB::commit();
+            return response()->json(['status' => true, 'message' => 'Purchase return processed successfully', 'url' => route('stocks.delivery.detail',$purchaseID) ],200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['status' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
         }
-
-        $purchaseReturn->total_amount = $totalReturnPrice;
-        $purchaseReturn->save();
-
-        $purchaseItems      = StockDeliveryProduct::where('stock_delivery_id', $purchaseID)->get();
-        $priceOfferTotal    = 0;
-        $discountTotal      = 0;
-        $priceTotal         = 0; 
-        foreach($purchaseItems as $purchaseItem){
-            $priceOfferTotal = $priceOfferTotal + ( $purchaseItem->quantity *  $purchaseItem->offer_price );
-            $discountTotal   = $discountTotal + ( $purchaseItem->quantity *  $purchaseItem->discount );
-            $priceTotal      = $priceTotal + ( $purchaseItem->quantity *  $purchaseItem->price );
-        }
-        $purchase->delivery_amount   = $purchase->delivery_amount -  $priceTotal;
-        $purchase->save();
-
-        return response()->json(['status' => true, 'message' => 'Done', 'url' => route('stocks.delivery.detail',$purchaseID) ],200);
 
     }
 
@@ -328,55 +345,76 @@ class StockDeliveryProductController extends Controller{
         $shopIDs        = $request->get('shop_ids');
         $productIDs     = $request->get('product_ids');
         $supplierID     = $request->get('supplier_id');
-        $itemDescArr     = $request->get('return_single_desc');
+        $itemDescArr    = $request->get('return_single_desc');
 
-        $purchaseReturn = PurchaseReturn::create([
-            'supplier_id' => $supplierID, 
-            'purchase_id' => 0, 
-            'description' => $desc
-        ]);
+        try {
+            DB::beginTransaction();
 
-        $index              = 0;
-        $totalReturnPrice   = 0;  
-
-        if(is_array($productIDs)){
-        foreach($productIDs as $item){
-            $returnQty = $returnsQty[$index];
-                if( ($returnQty < 1)){
-                    $index++;
-                    continue;
-                }
-              //  dd($index, $shopIDs);
-
-            $shopID =     $shopIDs[$index];
-            $productID = $productIDs[$index];
-            $itemDesc = $itemDescArr[$index];
-            
-            // $saleOrder = StockDeliveryProduct::find($item);
-            // $saleOrder->quantity = $saleOrder->quantity - $returnQty;
-            // $saleOrder->save();
-           // ProductAvailable::where(['shop_id' => $shopID, 'product_id' => $productID])->decrement('qty', $returnQty);
-            ProductAvailable::manageStockByShopAndProductId($returnQty, StockAudit::STOCK_ACTION_MINUS,$productID, $shopID,StockAudit::STOCK_OBJECT_TYPE_PURCHASE_RETURN, $purchaseReturn->id);
-            $product = Product::find($productID);
-            PurchaseReturnItem::create([
-                'purchase_return_id' => $purchaseReturn->id , 
-                'product_id' => $productID, 
-                'unit_price' => $product->price, 
-                'qty' => $returnQty,
-                'item_description' => $itemDesc
+            $purchaseReturn = PurchaseReturn::create([
+                'supplier_id' => $supplierID, 
+                'purchase_id' => 0, 
+                'description' => $desc
             ]);
 
+            $index              = 0;
+            $totalReturnPrice   = 0;  
+            $hasReturn          = false;
 
-            $totalReturnPrice =  $totalReturnPrice + ($returnQty * $product->price);
-            
+            if (is_array($productIDs)) {
+                foreach($productIDs as $item){
+                    $returnQty = isset($returnsQty[$index]) ? (int)$returnsQty[$index] : 0;
+                    if ($returnQty < 1) {
+                        $index++;
+                        continue;
+                    }
 
-            $index++;
+                    $shopID    = isset($shopIDs[$index]) ? (int)$shopIDs[$index] : auth()->user()->shop_id;
+                    $productID = (int)$productIDs[$index];
+                    $itemDesc  = isset($itemDescArr[$index]) ? $itemDescArr[$index] : '';
+                    $product   = Product::findOrFail($productID);
+
+                    // Use wholesale cost_price for vendor returns, not consumer retail selling price
+                    $unitPrice = ($product->cost_price > 0) ? (float)$product->cost_price : (float)$product->price;
+
+                    // Decrement stock at shop
+                    ProductAvailable::manageStockByShopAndProductId(
+                        $returnQty, 
+                        StockAudit::STOCK_ACTION_MINUS,
+                        $productID, 
+                        $shopID,
+                        StockAudit::STOCK_OBJECT_TYPE_PURCHASE_RETURN, 
+                        $purchaseReturn->id
+                    );
+
+                    PurchaseReturnItem::create([
+                        'purchase_return_id' => $purchaseReturn->id, 
+                        'product_id'         => $productID, 
+                        'unit_price'         => $unitPrice, 
+                        'qty'                => $returnQty,
+                        'shop_id'            => $shopID,
+                        'item_description'   => $itemDesc
+                    ]);
+
+                    $totalReturnPrice += ($returnQty * $unitPrice);
+                    $hasReturn = true;
+                    $index++;
+                }
+            }
+
+            if (!$hasReturn) {
+                throw new \Exception("No valid return quantities entered.");
+            }
+
+            $purchaseReturn->total_amount = $totalReturnPrice;
+            $purchaseReturn->save();
+
+            DB::commit();
+            return response()->json(['status' => true, 'message' => 'Purchase return recorded successfully', 'url' => route('stocks.purchase_return_list') ],200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['status' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
         }
-    }
-
-        $purchaseReturn->total_amount = $totalReturnPrice;
-        $purchaseReturn->save();
-        return response()->json(['status' => true, 'message' => 'Done', 'url' => route('stocks.purchase_return_list') ],200);
 
     }
 

@@ -7,7 +7,9 @@ use App\Models\Customer;
 use App\Models\Product;
 use App\Models\SaleCart;
 use App\Models\SaleOrder;
+use App\Models\SaleOrderItem;
 use App\Models\SaleReturn;
+use App\Models\SaleReturnItem;
 use App\Models\StockAdjustment;
 use App\Models\StockDelivery;
 use App\Models\StockExchange;
@@ -17,7 +19,6 @@ use Illuminate\Support\Facades\DB;
 
 use App\Models\StockItem;
 use App\Models\Supplier;
-// use App\Models\
 use App\Traits\Definitions;
 use Carbon\Carbon;
 
@@ -129,36 +130,85 @@ class DashboardController extends Controller
     }
 
     function getDaysWiseReportByDay($day){
-        $currentDateTime = date('Y-m-d').' 23:59:00';
+        $currentDateTime = date('Y-m-d') . ' 23:59:59';
+        $lastDay         = Carbon::now()->subDays($day)->format('Y-m-d');
+        $lastDayDateTime = $lastDay . ' 00:00:01';
+        $betweenDates    = [$lastDayDateTime, $currentDateTime];
 
-        $lastDay           = Carbon::parse()->subDays($day)->format('Y-m-d');
-        $lastDayDateTime   = $lastDay.' 00:00:01';
-        $betweenDates      = [$lastDayDateTime,$currentDateTime];
-
-        $whereArr = [];
-
-        if(auth()->user()->hasRole('Shop Manager')){
-            $whereArr['shop_id'] = auth()->user()->shop_id;
+        $whereShop = [];
+        if (auth()->check() && auth()->user()->hasRole('Shop Manager')) {
+            $whereShop['shop_id'] = auth()->user()->shop_id;
         }
 
-        $statsData['sale_order_count']      = SaleOrder::whereBetween('created_at',$betweenDates)->where($whereArr)->count();
-        $statsData['sale_amount']           = SaleOrder::whereBetween('created_at',$betweenDates)->where($whereArr)->sum('total_price'); //->get();
-       //  $statsData['sale_return_amount']    = SaleReturn::where()->count();
-      //  $statsData['profit_amount']         = SaleReturn::where()->count();
-        $statsData['purchase_count']        = StockDelivery::whereBetween('created_at',$betweenDates)->where([])->count();
-        $statsData['purchase_amount']       = StockDelivery::whereBetween('created_at',$betweenDates)->where([])->sum('delivery_amount');
-        $statsData['customer_create']       = Customer::whereBetween('created_at',$betweenDates)->count();
+        // 1. Sales Orders
+        $saleOrdersQuery = SaleOrder::whereBetween('created_at', $betweenDates)->where($whereShop);
+        $saleOrderCount  = $saleOrdersQuery->count();
+        $grossSaleAmount = (float)$saleOrdersQuery->sum('total_price');
+
+        // 2. Sales Returns
+        $saleReturnQuery = SaleReturn::whereBetween('created_at', $betweenDates);
+        if (auth()->check() && auth()->user()->hasRole('Shop Manager')) {
+            $saleReturnQuery->where('shop_id', auth()->user()->shop_id);
+        }
+        $saleReturnCount  = $saleReturnQuery->count();
+        $saleReturnIds    = $saleReturnQuery->pluck('id');
+
+        // Calculate return amount from SaleReturnItem
+        $saleReturnAmount = (float)SaleReturnItem::whereIn('sale_return_id', $saleReturnIds)
+            ->join('products', 'products.id', '=', 'sale_return_items.product_id')
+            ->selectRaw('SUM(sale_return_items.qty * products.price) as total')
+            ->value('total') ?: 0;
+
+        $netSaleAmount = max(0, $grossSaleAmount - $saleReturnAmount);
+
+        // 3. Cost of Goods Sold (COGS)
+        $orderIds = $saleOrdersQuery->pluck('id');
+        $grossCogs = (float)SaleOrderItem::whereIn('order_id', $orderIds)
+            ->selectRaw('SUM(qty * COALESCE(cost_price, 0)) as total_cogs')
+            ->value('total_cogs') ?: 0;
+
+        $returnedCogs = (float)SaleReturnItem::whereIn('sale_return_id', $saleReturnIds)
+            ->join('products', 'products.id', '=', 'sale_return_items.product_id')
+            ->selectRaw('SUM(sale_return_items.qty * COALESCE(products.cost_price, 0)) as ret_cogs')
+            ->value('ret_cogs') ?: 0;
+
+        $netCogs = max(0, $grossCogs - $returnedCogs);
+        $grossProfit = $netSaleAmount - $netCogs;
+        $profitMargin = $netSaleAmount > 0 ? round(($grossProfit / $netSaleAmount) * 100, 1) : 0;
+
+        // 4. Purchases
+        $deliveryQuery = StockDelivery::whereBetween('created_at', $betweenDates);
+        $purchaseCount = $deliveryQuery->count();
+        $purchaseAmount = (float)$deliveryQuery->sum('delivery_amount');
+
+        $statsData['sale_order_count']      = $saleOrderCount;
+        $statsData['gross_sale_amount']     = round($grossSaleAmount);
+        $statsData['sale_amount']           = round($netSaleAmount);
+        $statsData['sale_return_amount']    = round($saleReturnAmount);
+        $statsData['cogs_amount']           = round($netCogs);
+        $statsData['profit_amount']         = round($grossProfit);
+        $statsData['profit_margin']         = $profitMargin;
+        $statsData['purchase_count']        = $purchaseCount;
+        $statsData['purchase_amount']       = round($purchaseAmount);
+        $statsData['customer_create']       = Customer::whereBetween('created_at', $betweenDates)->count();
         return $statsData;
     }
 
 
     function getPropertiesCounts(){
-        $statsData['products']           = Product::count();
-        $statsData['sale_amount']        = SaleCart::count();
-        $statsData['stock_exchange']     = StockExchange::count();
-        $statsData['stock_adjustment']   = StockAdjustment::count();
-        $statsData['customer']           = Customer::count();
-        $statsData['purchases']          = StockDelivery::count();
+        $whereShop = [];
+        if (auth()->check() && auth()->user()->hasRole('Shop Manager')) {
+            $whereShop['shop_id'] = auth()->user()->shop_id;
+        }
+
+        $statsData['products']         = Product::count();
+        $statsData['pos_count']        = SaleOrder::where($whereShop)->count();
+        $statsData['item_total']       = $statsData['pos_count']; // Backwards compatibility for dashboard button
+        $statsData['sale_amount']      = SaleOrder::where($whereShop)->sum('total_price');
+        $statsData['stock_exchange']   = StockExchange::count();
+        $statsData['stock_adjustment'] = StockAdjustment::where($whereShop)->count();
+        $statsData['customer']         = Customer::count();
+        $statsData['purchases']        = StockDelivery::count();
         return $statsData;
     }
 

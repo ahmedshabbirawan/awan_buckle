@@ -120,12 +120,13 @@ class StockExchangeController extends Controller
                 $reqToShopID    = $item->req_receive_shop_id;
                 $reqFromShopID  = $item->req_send_shop_id;
                 $productID      = $item->product_id;
-                $productAvail = ProductAvailable::where(['shop_id' => $reqToShopID, 'product_id' => $productID])->first();
-                if ($productAvail && ($productAvail->qty > 0)) {
+                $productAvail   = ProductAvailable::where(['shop_id' => $reqToShopID, 'product_id' => $productID])->first();
+                if ($productAvail && ($productAvail->qty >= $reqQty)) {
                     $item->status = 'post';
                     $item->save();
                 } else {
-                    throw new Exception("Product Qty not available");
+                    $available = $productAvail ? $productAvail->qty : 0;
+                    throw new Exception("Product Qty not available for transfer. Available: {$available}, Requested: {$reqQty}");
                 }
             endforeach;
             DB::commit();
@@ -133,7 +134,7 @@ class StockExchangeController extends Controller
             return response()->json(['status' => true, 'message' => 'Successfully Posted.'], 200);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['status' => false, 'message' => 'Error.Please Contact   Support' . $e->getMessage()], 500);
+            return response()->json(['status' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
         }
     }
 
@@ -141,48 +142,40 @@ class StockExchangeController extends Controller
     function markApproveReq(Request $request)
     {
         $itemID         = $request->get('item_id');
-        $item           = StockExchange::find($itemID);
+        $item           = StockExchange::findOrFail($itemID);
 
-        $reqQty         = $item->req_qty;
+        $reqQty         = (int)$item->req_qty;
         $reqToShopID    = $item->req_receive_shop_id;
         $reqFromShopID  = $item->req_send_shop_id;
         $productID      = $item->product_id;
 
-        $productAvail = ProductAvailable::where(['shop_id' => $reqToShopID, 'product_id' => $productID])->first();
+        try {
+            DB::beginTransaction();
 
-        if ($productAvail && ($productAvail->qty > 0)) {
+            $productAvail = ProductAvailable::where(['shop_id' => $reqToShopID, 'product_id' => $productID])
+                ->lockForUpdate()
+                ->first();
 
-            // $productAvail->qty = $productAvail->qty - $reqQty;
-            // $productAvail->save();
+            if ($productAvail && ($productAvail->qty >= $reqQty)) {
 
-            $item->status = 'approve';
-            $item->save();
+                $item->status = 'approve';
+                $item->save();
 
-            ProductAvailable::manageStockByShopAndProductId($reqQty, StockAudit::STOCK_ACTION_MINUS, $productID, $reqToShopID, StockAudit::STOCK_OBJECT_TYPE_EXCHANGE, $itemID );
+                /* DEDUCT FROM DISPATCHING SHOP STOCK */
+                ProductAvailable::manageStockByShopAndProductId($reqQty, StockAudit::STOCK_ACTION_MINUS, $productID, $reqToShopID, StockAudit::STOCK_OBJECT_TYPE_EXCHANGE, $itemID );
 
+                /* UPDATE RECEIVING SHOP STOCK */
+                ProductAvailable::manageStockByShopAndProductId($reqQty, StockAudit::STOCK_ACTION_ADD, $productID, $reqFromShopID, StockAudit::STOCK_OBJECT_TYPE_EXCHANGE, $itemID );
 
-            /* UPDATE REQUESTED SHOP STOCK */
-            ProductAvailable::manageStockByShopAndProductId($reqQty, StockAudit::STOCK_ACTION_ADD, $productID, $reqFromShopID, StockAudit::STOCK_OBJECT_TYPE_EXCHANGE, $itemID );
-
-            /*
-            $reqProductAvailable = ProductAvailable::where([
-                'product_id' => $productID,
-                'shop_id' => $reqFromShopID
-            ])->first();
-
-            if ($reqProductAvailable) {
-                $reqProductAvailable->qty = $reqProductAvailable->qty + $reqQty;
-                $reqProductAvailable->save();
+                DB::commit();
+                return response()->json(['status' => true, 'message' => 'Transfer approved successfully.'], 200);
             } else {
-                ProductAvailable::create([
-                    'product_id' => $productID,
-                    'shop_id' => $reqFromShopID,
-                    'qty' => $reqQty
-                ]);
+                $available = $productAvail ? $productAvail->qty : 0;
+                throw new Exception("Insufficient stock for approval. Available: {$available}, Requested: {$reqQty}");
             }
-            */
-        } else {
-            throw new Exception("Product Qty not available");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['status' => false, 'message' => 'Error approving transfer: ' . $e->getMessage()], 500);
         }
     }
 
