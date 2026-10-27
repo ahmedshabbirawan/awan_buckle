@@ -557,6 +557,385 @@ class LedgerService
     }
 
     /**
+     * Generate Comprehensive Customer Statement
+     * Includes all sales transactions (cash, credit, split, bank transfer) and payment receipt vouchers.
+     */
+    public function getCustomerStatement($customer, ?string $startDate = null, ?string $endDate = null): array
+    {
+        if (is_numeric($customer)) {
+            $customer = Customer::findOrFail($customer);
+        }
+
+        $account = $this->getOrCreateAccount(Account::HOLDER_CUSTOMER, $customer->id);
+
+        // 1. Calculate Opening Balance if startDate is provided
+        $openingBalance = 0.00;
+        if ($startDate) {
+            $priorSales = SaleOrder::where('customer_id', $customer->id)
+                ->whereDate('created_at', '<', $startDate)
+                ->get();
+
+            $priorDue = 0.00;
+            foreach ($priorSales as $ps) {
+                $pTotal = (float) ($ps->total_amount > 0 ? $ps->total_amount : ((float) $ps->total_price > 0 ? $ps->total_price : 0));
+                $pPaid = (float) ($ps->paid_amount ?? 0);
+                $pDue = (float) ($ps->due_amount ?? 0);
+                $pMethod = strtolower($ps->payment_method ?? 'cash');
+
+                if ($pTotal > 0 && $pPaid == 0 && $pDue == 0) {
+                    if ($pMethod === 'credit') {
+                        $pDue = $pTotal;
+                    } elseif ($pMethod === 'cash' || $pMethod === 'bank_transfer') {
+                        $pPaid = $pTotal;
+                    } else {
+                        $pPaid = $pTotal;
+                    }
+                }
+                $priorDue += $pDue;
+            }
+
+            $priorReceipts = (float) Payment::where('party_type', Payment::PARTY_CUSTOMER)
+                ->where('party_id', $customer->id)
+                ->whereDate('payment_date', '<', $startDate)
+                ->sum('amount');
+
+            $priorAdjustments = (float) (LedgerEntry::where('account_id', $account->id)
+                ->whereHas('transaction', function ($q) use ($startDate) {
+                    $q->whereDate('transaction_date', '<', $startDate)
+                      ->whereNotIn('reference_type', [LedgerTransaction::REF_SALE, LedgerTransaction::REF_RECEIPT, LedgerTransaction::REF_PAYMENT]);
+                })
+                ->selectRaw('COALESCE(SUM(debit), 0) - COALESCE(SUM(credit), 0) as net_adj')
+                ->value('net_adj') ?? 0);
+
+            $openingBalance = round($priorDue - $priorReceipts + $priorAdjustments, 2);
+        }
+
+        // 2. Fetch Sales within date range
+        $salesQuery = SaleOrder::where('customer_id', $customer->id);
+
+        if ($startDate) {
+            $salesQuery->whereDate('created_at', '>=', $startDate);
+        }
+        if ($endDate) {
+            $salesQuery->whereDate('created_at', '<=', $endDate);
+        }
+
+        $sales = $salesQuery->get();
+
+        // 3. Fetch Payment Receipt Vouchers within date range
+        $paymentsQuery = Payment::where('party_type', Payment::PARTY_CUSTOMER)
+            ->where('party_id', $customer->id);
+
+        if ($startDate) {
+            $paymentsQuery->whereDate('payment_date', '>=', $startDate);
+        }
+        if ($endDate) {
+            $paymentsQuery->whereDate('payment_date', '<=', $endDate);
+        }
+
+        $payments = $paymentsQuery->get();
+
+        // 4. Fetch Adjustments within date range
+        $adjustmentsQuery = LedgerEntry::where('account_id', $account->id)
+            ->whereHas('transaction', function ($q) use ($startDate, $endDate) {
+                $q->whereNotIn('reference_type', [LedgerTransaction::REF_SALE, LedgerTransaction::REF_RECEIPT, LedgerTransaction::REF_PAYMENT]);
+                if ($startDate) {
+                    $q->whereDate('transaction_date', '>=', $startDate);
+                }
+                if ($endDate) {
+                    $q->whereDate('transaction_date', '<=', $endDate);
+                }
+            });
+
+        $adjustments = $adjustmentsQuery->with('transaction')->get();
+
+        // 5. Combine and normalize transactions
+        $rawItems = [];
+
+        foreach ($sales as $s) {
+            $totalAmt = (float) ($s->total_amount > 0 ? $s->total_amount : ((float) $s->total_price > 0 ? $s->total_price : 0));
+            $paidAmt = (float) ($s->paid_amount ?? 0);
+            $dueAmt = (float) ($s->due_amount ?? 0);
+            $method = strtolower($s->payment_method ?? 'cash');
+
+            // Safety check if paid_amount / due_amount were unpopulated
+            if ($totalAmt > 0 && $paidAmt == 0 && $dueAmt == 0) {
+                if ($method === 'credit') {
+                    $dueAmt = $totalAmt;
+                } elseif ($method === 'cash' || $method === 'bank_transfer') {
+                    $paidAmt = $totalAmt;
+                } else {
+                    $paidAmt = $totalAmt;
+                }
+            }
+
+            if ($dueAmt <= 0) {
+                if ($method === 'bank_transfer') {
+                    $typeBadge = 'info';
+                    $typeLabel = 'Online Sale (Paid)';
+                } else {
+                    $typeBadge = 'success';
+                    $typeLabel = 'Cash Sale (Paid)';
+                }
+            } elseif ($paidAmt <= 0) {
+                $typeBadge = 'danger';
+                $typeLabel = 'Credit Sale';
+            } else {
+                $typeBadge = 'warning';
+                $typeLabel = 'Split Sale';
+            }
+
+            $invNo = $s->sale_key ? (str_starts_with((string)$s->sale_key, 'INV') ? $s->sale_key : 'INV-' . $s->sale_key) : 'INV-' . str_pad($s->id, 5, '0', STR_PAD_LEFT);
+            $sDate = $s->created_at ? $s->created_at->toDateString() : now()->toDateString();
+
+            if ($method === 'bank_transfer') {
+                $methodLabel = 'Bank Transfer / Online';
+            } elseif ($method === 'credit') {
+                $methodLabel = 'Credit';
+            } elseif ($method === 'split') {
+                $methodLabel = 'Split (Cash + Credit)';
+            } else {
+                $methodLabel = 'Cash';
+            }
+
+            $rawItems[] = [
+                'sort_date' => $sDate,
+                'sort_order' => 1,
+                'id' => $s->id,
+                'date' => $s->created_at ? $s->created_at->format('d-m-Y') : Carbon::parse($sDate)->format('d-m-Y'),
+                'raw_date' => $sDate,
+                'invoice_no' => $invNo,
+                'reference_no' => $invNo,
+                'reference_type' => 'Sale',
+                'reference_id' => $s->id,
+                'type_badge' => $typeBadge,
+                'type_label' => $typeLabel,
+                'payment_method' => $methodLabel,
+                'raw_payment_method' => $method,
+                'description' => "POS Sale #{$s->id}" . ($s->sale_key ? " - Ref: {$s->sale_key}" : "") . " (Method: {$methodLabel})",
+                'total_amount' => $totalAmt,
+                'paid_amount' => $paidAmt,
+                'due_amount' => $dueAmt,
+                'debit' => $dueAmt,
+                'credit' => 0.00,
+            ];
+        }
+
+        foreach ($payments as $pmt) {
+            $amt = (float) $pmt->amount;
+            $pmtDate = $pmt->payment_date ? Carbon::parse($pmt->payment_date)->toDateString() : ($pmt->created_at ? $pmt->created_at->toDateString() : now()->toDateString());
+            $invNo = $pmt->voucher_no ?: 'RCP-' . str_pad($pmt->id, 5, '0', STR_PAD_LEFT);
+
+            $method = strtolower($pmt->payment_method ?? 'cash');
+            $methodLabel = ($method === 'bank_transfer') ? 'Bank Transfer / Online' : 'Cash';
+
+            $rawItems[] = [
+                'sort_date' => $pmtDate,
+                'sort_order' => 2,
+                'id' => $pmt->id,
+                'date' => Carbon::parse($pmtDate)->format('d-m-Y'),
+                'raw_date' => $pmtDate,
+                'invoice_no' => $invNo,
+                'reference_no' => $invNo,
+                'reference_type' => 'Payment',
+                'reference_id' => $pmt->id,
+                'type_badge' => 'primary',
+                'type_label' => 'Payment Receipt',
+                'payment_method' => $methodLabel,
+                'raw_payment_method' => $method,
+                'description' => "Customer Receipt Voucher {$invNo}" . ($pmt->notes ? " - {$pmt->notes}" : ""),
+                'total_amount' => 0.00,
+                'paid_amount' => $amt,
+                'due_amount' => 0.00,
+                'debit' => 0.00,
+                'credit' => $amt,
+            ];
+        }
+
+        foreach ($adjustments as $adj) {
+            $tx = $adj->transaction;
+            $adjDate = $tx ? Carbon::parse($tx->transaction_date)->toDateString() : now()->toDateString();
+            $deb = (float) $adj->debit;
+            $crd = (float) $adj->credit;
+
+            $rawItems[] = [
+                'sort_date' => $adjDate,
+                'sort_order' => 3,
+                'id' => $adj->id,
+                'date' => Carbon::parse($adjDate)->format('d-m-Y'),
+                'raw_date' => $adjDate,
+                'invoice_no' => $tx ? ($tx->reference_type . ' #' . ($tx->reference_id ?? $tx->id)) : 'ADJ-' . $adj->id,
+                'reference_no' => $tx ? ($tx->reference_type . ' #' . ($tx->reference_id ?? $tx->id)) : 'ADJ-' . $adj->id,
+                'reference_type' => 'Adjustment',
+                'reference_id' => $tx->id ?? null,
+                'type_badge' => 'inverse',
+                'type_label' => 'Adjustment',
+                'payment_method' => 'Adjustment',
+                'raw_payment_method' => 'adjustment',
+                'description' => $tx->description ?? 'Ledger Adjustment',
+                'total_amount' => 0.00,
+                'paid_amount' => $crd > 0 ? $crd : 0.00,
+                'due_amount' => $deb > 0 ? $deb : 0.00,
+                'debit' => $deb,
+                'credit' => $crd,
+            ];
+        }
+
+        // Sort chronologically
+        usort($rawItems, function ($a, $b) {
+            $cmp = strcmp($a['sort_date'], $b['sort_date']);
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+            $orderCmp = $a['sort_order'] <=> $b['sort_order'];
+            if ($orderCmp !== 0) {
+                return $orderCmp;
+            }
+            return $a['id'] <=> $b['id'];
+        });
+
+        // 6. Build running balance and period totals
+        $running = $openingBalance;
+        $statementRows = [];
+
+        $periodTotalSales = 0.00;
+        $periodCashReceivedAtSale = 0.00;
+        $periodOnlineReceivedAtSale = 0.00;
+        $periodCreditSales = 0.00;
+        $periodVoucherCash = 0.00;
+        $periodVoucherOnline = 0.00;
+        $periodTotalVouchers = 0.00;
+
+        foreach ($rawItems as $row) {
+            if ($row['reference_type'] === 'Sale') {
+                $periodTotalSales += $row['total_amount'];
+                $periodCreditSales += $row['due_amount'];
+
+                if ($row['raw_payment_method'] === 'bank_transfer') {
+                    $periodOnlineReceivedAtSale += $row['paid_amount'];
+                } else {
+                    $periodCashReceivedAtSale += $row['paid_amount'];
+                }
+
+                $running = round($running + $row['due_amount'], 2);
+            } elseif ($row['reference_type'] === 'Payment') {
+                $periodTotalVouchers += $row['paid_amount'];
+
+                if ($row['raw_payment_method'] === 'bank_transfer') {
+                    $periodVoucherOnline += $row['paid_amount'];
+                } else {
+                    $periodVoucherCash += $row['paid_amount'];
+                }
+
+                $running = round($running - $row['paid_amount'], 2);
+            } else {
+                $net = round($row['debit'] - $row['credit'], 2);
+                $running = round($running + $net, 2);
+            }
+
+            $row['running_balance'] = $running;
+            $statementRows[] = $row;
+        }
+
+        $periodCashReceived = round($periodCashReceivedAtSale + $periodVoucherCash, 2);
+        $periodOnlineReceived = round($periodOnlineReceivedAtSale + $periodVoucherOnline, 2);
+        $periodTotalCollected = round($periodCashReceived + $periodOnlineReceived, 2);
+
+        // 7. Calculate Lifetime Totals
+        $allLifetimeSales = SaleOrder::where('customer_id', $customer->id)->get();
+
+        $lifetimeSales = 0.00;
+        $lifetimeCashReceivedAtSale = 0.00;
+        $lifetimeOnlineReceivedAtSale = 0.00;
+        $lifetimeCreditSales = 0.00;
+
+        foreach ($allLifetimeSales as $ls) {
+            $t = (float) ($ls->total_amount > 0 ? $ls->total_amount : ((float) $ls->total_price > 0 ? $ls->total_price : 0));
+            $p = (float) ($ls->paid_amount ?? 0);
+            $d = (float) ($ls->due_amount ?? 0);
+            $m = strtolower($ls->payment_method ?? 'cash');
+
+            if ($t > 0 && $p == 0 && $d == 0) {
+                if ($m === 'credit') {
+                    $d = $t;
+                } else {
+                    $p = $t;
+                }
+            }
+
+            $lifetimeSales += $t;
+            $lifetimeCreditSales += $d;
+
+            if ($m === 'bank_transfer') {
+                $lifetimeOnlineReceivedAtSale += $p;
+            } else {
+                $lifetimeCashReceivedAtSale += $p;
+            }
+        }
+
+        $allLifetimePayments = Payment::where('party_type', Payment::PARTY_CUSTOMER)
+            ->where('party_id', $customer->id)
+            ->get();
+
+        $lifetimeVoucherCash = 0.00;
+        $lifetimeVoucherOnline = 0.00;
+        $lifetimeVoucherPaid = 0.00;
+
+        foreach ($allLifetimePayments as $lp) {
+            $amt = (float) $lp->amount;
+            $lifetimeVoucherPaid += $amt;
+            if (strtolower($lp->payment_method ?? 'cash') === 'bank_transfer') {
+                $lifetimeVoucherOnline += $amt;
+            } else {
+                $lifetimeVoucherCash += $amt;
+            }
+        }
+
+        $lifetimeCashReceived = round($lifetimeCashReceivedAtSale + $lifetimeVoucherCash, 2);
+        $lifetimeOnlineReceived = round($lifetimeOnlineReceivedAtSale + $lifetimeVoucherOnline, 2);
+        $lifetimeTotalCollected = round($lifetimeCashReceived + $lifetimeOnlineReceived, 2);
+
+        $currentBalance = $this->getCustomerBalance($customer->id);
+
+        return [
+            'customer' => $customer,
+            'account' => $account,
+            'opening_balance' => $openingBalance,
+            'closing_balance' => $running,
+
+            // Period Totals
+            'period_total_sales' => round($periodTotalSales, 2),
+            'period_cash_received_at_sale' => round($periodCashReceivedAtSale, 2),
+            'period_online_received_at_sale' => round($periodOnlineReceivedAtSale, 2),
+            'period_credit_sales' => round($periodCreditSales, 2),
+            'period_voucher_cash' => round($periodVoucherCash, 2),
+            'period_voucher_online' => round($periodVoucherOnline, 2),
+            'period_voucher_paid' => round($periodTotalVouchers, 2),
+            'period_cash_received' => $periodCashReceived,
+            'period_online_received' => $periodOnlineReceived,
+            'period_total_collected' => $periodTotalCollected,
+            'period_total_paid' => $periodTotalCollected,
+            'total_debit' => round($periodCreditSales, 2),
+            'total_credit' => round($periodTotalVouchers, 2),
+
+            // Lifetime Totals (Required 6 metrics)
+            'lifetime_sales' => round($lifetimeSales, 2),
+            'lifetime_cash_received_at_sale' => round($lifetimeCashReceivedAtSale, 2),
+            'lifetime_online_received_at_sale' => round($lifetimeOnlineReceivedAtSale, 2),
+            'lifetime_cash_received' => $lifetimeCashReceived,
+            'lifetime_online_received' => $lifetimeOnlineReceived,
+            'lifetime_credit_sales' => round($lifetimeCreditSales, 2),
+            'lifetime_voucher_cash' => round($lifetimeVoucherCash, 2),
+            'lifetime_voucher_online' => round($lifetimeVoucherOnline, 2),
+            'lifetime_voucher_paid' => round($lifetimeVoucherPaid, 2),
+            'lifetime_total_collected' => $lifetimeTotalCollected,
+            'current_balance' => $currentBalance,
+
+            'rows' => $statementRows,
+        ];
+    }
+
+    /**
      * Generate Comprehensive Supplier Statement
      * Includes all purchase transactions (cash, credit, split) and payment vouchers.
      */

@@ -37,22 +37,17 @@ class CustomerLedgerController extends Controller
                     return '<span class="' . $badgeClass . '">PKR ' . number_format($bal, 2) . '</span>';
                 })
                 ->addColumn('total_billed', function ($row) {
-                    $account = $row->account;
-                    if ($account) {
-                        $billed = (float) $account->entries()->sum('debit');
-                    } else {
-                        $billed = (float) SaleOrder::where('customer_id', $row->id)->sum('total_amount');
-                    }
+                    $billed = (float) SaleOrder::where('customer_id', $row->id)
+                        ->selectRaw('COALESCE(SUM(COALESCE(total_amount, total_price, 0)), 0) as total')
+                        ->value('total');
                     return 'PKR ' . number_format($billed, 2);
                 })
                 ->addColumn('total_paid', function ($row) {
-                    $account = $row->account;
-                    if ($account) {
-                        $paid = (float) $account->entries()->sum('credit');
-                    } else {
-                        $paid = (float) SaleOrder::where('customer_id', $row->id)->sum('paid_amount');
-                    }
-                    return 'PKR ' . number_format($paid, 2);
+                    $posPaid = (float) SaleOrder::where('customer_id', $row->id)->sum('paid_amount');
+                    $voucherPaid = (float) Payment::where('party_type', Payment::PARTY_CUSTOMER)
+                        ->where('party_id', $row->id)
+                        ->sum('amount');
+                    return 'PKR ' . number_format($posPaid + $voucherPaid, 2);
                 })
                 ->addColumn('action', function ($row) {
                     $statementUrl = route('customer.ledger.show', $row->id);
@@ -68,15 +63,18 @@ class CustomerLedgerController extends Controller
         }
 
         // Global Customer summary metrics
-        $customerAccountIds = Account::where('holder_type', Account::HOLDER_CUSTOMER)->pluck('id');
-        
-        $totals = DB::table('ledger_entries')
-            ->whereIn('account_id', $customerAccountIds)
-            ->selectRaw('COALESCE(SUM(debit), 0) as total_billed, COALESCE(SUM(credit), 0) as total_paid')
-            ->first();
+        $totalBilled = (float) SaleOrder::whereNotNull('customer_id')
+            ->where('customer_id', '>', 0)
+            ->selectRaw('COALESCE(SUM(COALESCE(total_amount, total_price, 0)), 0) as total')
+            ->value('total');
 
-        $totalBilled = $totals ? (float) $totals->total_billed : 0.00;
-        $totalPaid = $totals ? (float) $totals->total_paid : 0.00;
+        $totalPosPaid = (float) SaleOrder::whereNotNull('customer_id')
+            ->where('customer_id', '>', 0)
+            ->sum('paid_amount');
+
+        $totalVouchers = (float) Payment::where('party_type', Payment::PARTY_CUSTOMER)->sum('amount');
+
+        $totalPaid = round($totalPosPaid + $totalVouchers, 2);
         $totalReceivable = round($totalBilled - $totalPaid, 2);
 
         $customerCount = Customer::count();
@@ -104,20 +102,18 @@ class CustomerLedgerController extends Controller
         $startSql = $startDate ? Carbon::parse($startDate)->toDateString() : null;
         $endSql = $endDate ? Carbon::parse($endDate)->toDateString() : null;
 
-        $statement = $this->ledgerService->getAccountStatement($account, $startSql, $endSql);
+        $statement = $this->ledgerService->getCustomerStatement($customer, $startSql, $endSql);
 
-        // Calculate summary figures
-        $allTotals = $account->entries()
-            ->selectRaw('COALESCE(SUM(debit), 0) as total_billed, COALESCE(SUM(credit), 0) as total_paid')
-            ->first();
-
-        $lifetimeBilled = (float) ($allTotals->total_billed ?? 0);
-        $lifetimePaid = (float) ($allTotals->total_paid ?? 0);
-        $currentBalance = round($lifetimeBilled - $lifetimePaid, 2);
+        $lifetimeSales = $statement['lifetime_sales'];
+        $lifetimeCashReceived = $statement['lifetime_cash_received'];
+        $lifetimeOnlineReceived = $statement['lifetime_online_received'];
+        $lifetimeCreditSales = $statement['lifetime_credit_sales'];
+        $lifetimeTotalCollected = $statement['lifetime_total_collected'];
+        $currentBalance = $statement['current_balance'];
 
         // Handle Export to CSV
         if ($request->get('export') === 'csv') {
-            return $this->exportStatementCsv($customer, $statement);
+            return $this->exportStatementCsv($customer, $statement, $startDate, $endDate);
         }
 
         return view('Ledger.customer_statement', [
@@ -126,8 +122,11 @@ class CustomerLedgerController extends Controller
             'statement' => $statement,
             'startDate' => $startDate,
             'endDate' => $endDate,
-            'lifetimeBilled' => $lifetimeBilled,
-            'lifetimePaid' => $lifetimePaid,
+            'lifetimeSales' => $lifetimeSales,
+            'lifetimeCashReceived' => $lifetimeCashReceived,
+            'lifetimeOnlineReceived' => $lifetimeOnlineReceived,
+            'lifetimeCreditSales' => $lifetimeCreditSales,
+            'lifetimeTotalCollected' => $lifetimeTotalCollected,
             'currentBalance' => $currentBalance,
             'isPrint' => $request->get('view') === 'print',
         ]);
@@ -218,7 +217,7 @@ class CustomerLedgerController extends Controller
     /**
      * Export Statement to CSV
      */
-    protected function exportStatementCsv(Customer $customer, array $statement)
+    protected function exportStatementCsv(Customer $customer, array $statement, ?string $startDate = null, ?string $endDate = null)
     {
         $filename = 'customer_statement_' . $customer->id . '_' . date('Ymd_His') . '.csv';
 
@@ -227,45 +226,83 @@ class CustomerLedgerController extends Controller
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ];
 
-        $callback = function () use ($customer, $statement) {
+        $callback = function () use ($customer, $statement, $startDate, $endDate) {
             $file = fopen('php://output', 'w');
 
             // Header info
-            fputcsv($file, ['CUSTOMER LEDGER STATEMENT']);
+            fputcsv($file, ['CUSTOMER ACCOUNT STATEMENT']);
             fputcsv($file, ['Customer Name:', $customer->name]);
-            fputcsv($file, ['Mobile:', $customer->mobile]);
+            fputcsv($file, ['Mobile:', $customer->mobile ?? 'N/A']);
+            fputcsv($file, ['CNIC:', $customer->cnic ?? 'N/A']);
+            fputcsv($file, ['Address:', $customer->address ?? 'N/A']);
             fputcsv($file, ['Statement Generated At:', date('d-m-Y H:i')]);
+            if ($startDate || $endDate) {
+                fputcsv($file, ['Filter Period:', ($startDate ? date('d-m-Y', strtotime($startDate)) : 'Start') . ' to ' . ($endDate ? date('d-m-Y', strtotime($endDate)) : 'Present')]);
+            }
             fputcsv($file, []);
 
             // Table headers
-            fputcsv($file, ['Date', 'Reference No', 'Type', 'Description', 'Debit (Billed)', 'Credit (Paid)', 'Running Balance']);
+            fputcsv($file, [
+                'Date',
+                'Invoice / Reference No',
+                'Transaction Type',
+                'Payment Method',
+                'Description',
+                'Total Sale Amount (PKR)',
+                'Amount Paid (PKR)',
+                'Credit / Due Impact (PKR)',
+                'Running Outstanding Balance (PKR)'
+            ]);
 
             // Opening Balance row
-            fputcsv($file, ['-', '-', 'Opening Balance', 'Opening Balance', '-', '-', number_format($statement['opening_balance'], 2, '.', '')]);
+            fputcsv($file, [
+                $startDate ? date('d-m-Y', strtotime($startDate)) : '-',
+                'OPENING',
+                'Opening Balance',
+                '-',
+                'Opening Balance as of ' . ($startDate ? date('d-m-Y', strtotime($startDate)) : 'Inception'),
+                '-',
+                '-',
+                '-',
+                number_format($statement['opening_balance'], 2, '.', '')
+            ]);
 
             // Data rows
             foreach ($statement['rows'] as $row) {
                 fputcsv($file, [
                     $row['date'],
-                    $row['reference_no'],
-                    $row['reference_type'],
+                    $row['invoice_no'],
+                    $row['type_label'],
+                    $row['payment_method'],
                     $row['description'],
-                    $row['debit'] > 0 ? number_format($row['debit'], 2, '.', '') : '0.00',
-                    $row['credit'] > 0 ? number_format($row['credit'], 2, '.', '') : '0.00',
+                    $row['total_amount'] > 0 ? number_format($row['total_amount'], 2, '.', '') : '0.00',
+                    $row['paid_amount'] > 0 ? number_format($row['paid_amount'], 2, '.', '') : '0.00',
+                    $row['due_amount'] > 0 ? number_format($row['due_amount'], 2, '.', '') : '0.00',
                     number_format($row['running_balance'], 2, '.', ''),
                 ]);
             }
 
-            // Totals row
+            // Period Totals row
             fputcsv($file, [
-                'TOTAL',
+                'PERIOD TOTALS',
                 '',
                 '',
                 '',
-                number_format($statement['total_debit'], 2, '.', ''),
-                number_format($statement['total_credit'], 2, '.', ''),
+                '',
+                number_format($statement['period_total_sales'], 2, '.', ''),
+                number_format($statement['period_total_collected'], 2, '.', ''),
+                number_format($statement['period_credit_sales'], 2, '.', ''),
                 number_format($statement['closing_balance'], 2, '.', ''),
             ]);
+
+            fputcsv($file, []);
+            fputcsv($file, ['LIFETIME ACCOUNT RECONCILIATION SUMMARY']);
+            fputcsv($file, ['Total Sales Amount (Cash, Credit & Online):', number_format($statement['lifetime_sales'], 2, '.', '')]);
+            fputcsv($file, ['Total Cash Received:', number_format($statement['lifetime_cash_received'], 2, '.', '')]);
+            fputcsv($file, ['Total Online Payments Received:', number_format($statement['lifetime_online_received'], 2, '.', '')]);
+            fputcsv($file, ['Total Credit Sales:', number_format($statement['lifetime_credit_sales'], 2, '.', '')]);
+            fputcsv($file, ['Total Amount Collected:', number_format($statement['lifetime_total_collected'], 2, '.', '')]);
+            fputcsv($file, ['Remaining Outstanding Balance (Receivable):', number_format($statement['current_balance'], 2, '.', '')]);
 
             fclose($file);
         };

@@ -10,27 +10,53 @@ Customer Statement - {{ $customer->name }}
     .no-print { display: none !important; }
     .breadcrumbs { display: none !important; }
     .page-header { margin-bottom: 5px; }
-    body { background-color: #fff; font-size: 12px; }
-    .widget-box { border: none !important; }
+    body { background-color: #fff; font-size: 11px; }
+    .widget-box { border: none !important; margin-bottom: 5px !important; }
     .widget-header { display: none !important; }
     .widget-body { border: none !important; }
+    .table-bordered, .table-bordered > tbody > tr > td, .table-bordered > thead > tr > th {
+        border: 1px solid #ddd !important;
+        padding: 4px 6px !important;
+    }
+}
+.summary-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-left: -5px;
+    margin-right: -5px;
+    margin-bottom: 10px;
+}
+.summary-col {
+    flex: 1;
+    min-width: 175px;
+    padding-left: 5px;
+    padding-right: 5px;
+    margin-bottom: 10px;
 }
 .summary-card {
     border-radius: 6px;
-    padding: 15px;
+    padding: 12px 14px;
     color: #fff;
-    margin-bottom: 15px;
+    height: 100%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
 }
 .summary-title {
-    font-size: 13px;
+    font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    opacity: 0.9;
+    opacity: 0.95;
+    font-weight: 600;
 }
 .summary-amount {
-    font-size: 24px;
+    font-size: 19px;
     font-weight: bold;
-    margin-top: 5px;
+    margin-top: 4px;
+    margin-bottom: 2px;
+    white-space: nowrap;
+}
+.summary-sub {
+    font-size: 10px;
+    opacity: 0.85;
 }
 </style>
 
@@ -43,7 +69,7 @@ Customer Statement - {{ $customer->name }}
             Customer Statement: <span class="blue">{{ $customer->name }}</span>
             <small>
                 <i class="ace-icon fa fa-angle-double-right"></i>
-                Detailed Transaction & Running Balance Ledger
+                Complete Purchase History, Cash & Credit Transactions & Account Reconciliation
             </small>
         </h1>
     </div>
@@ -52,7 +78,7 @@ Customer Statement - {{ $customer->name }}
     <div class="widget-box widget-color-blue" style="margin-bottom: 15px;">
         <div class="widget-header">
             <h5 class="widget-title bigger lighter">
-                <i class="ace-icon fa fa-user"></i> Customer Details
+                <i class="ace-icon fa fa-user"></i> Customer Profile & Account Status
             </h5>
             <div class="widget-toolbar no-print">
                 <button type="button" class="btn btn-xs btn-success" onclick="openPaymentModal();">
@@ -82,12 +108,12 @@ Customer Statement - {{ $customer->name }}
                         <strong>Account Code:</strong> {{ $account->code }}
                     </div>
                     <div class="col-sm-3 text-right">
-                        <span style="font-size: 13px; color: #555;">Current Net Balance:</span><br>
-                        <span style="font-size: 22px; font-weight: bold; color: {{ $currentBalance > 0 ? '#d15b47' : '#87b87f' }};">
+                        <span style="font-size: 13px; color: #555;">Current Net Outstanding Balance:</span><br>
+                        <span style="font-size: 22px; font-weight: bold; color: {{ $currentBalance > 0 ? '#c53030' : '#2e8965' }};">
                             PKR {{ number_format($currentBalance, 2) }}
                         </span>
                         <div style="font-size: 11px; color: #888;">
-                            {{ $currentBalance > 0 ? '(Receivable / Due)' : ($currentBalance < 0 ? '(Advance Credit)' : '(Settled)') }}
+                            {{ $currentBalance > 0 ? '(Receivable / Customer Debt)' : ($currentBalance < 0 ? '(Customer Advance Credit)' : '(Fully Settled - Zero Due)') }}
                         </div>
                     </div>
                 </div>
@@ -95,29 +121,59 @@ Customer Statement - {{ $customer->name }}
         </div>
     </div>
 
-    <!-- Summary Cards -->
-    <div class="row">
-        <div class="col-xs-12 col-sm-4">
-            <div class="summary-card" style="background: linear-gradient(135deg, #2b6cb0, #3182ce);">
-                <div class="summary-title"><i class="fa fa-shopping-cart"></i> Total Purchased / Billed</div>
-                <div class="summary-amount">PKR {{ number_format($lifetimeBilled, 2) }}</div>
-                <div style="font-size: 11px; opacity: 0.8; margin-top: 4px;">Lifetime Total Sales Value</div>
+    <!-- 6 Summary Reconciliation Cards -->
+    <div class="summary-row">
+        <!-- Card 1: Total Sales Amount -->
+        <div class="summary-col">
+            <div class="summary-card" style="background: linear-gradient(135deg, #6b46c1, #805ad5);">
+                <div class="summary-title"><i class="fa fa-shopping-cart"></i> Total Sales Amount</div>
+                <div class="summary-amount">PKR {{ number_format($lifetimeSales, 2) }}</div>
+                <div class="summary-sub">All Cash, Credit & Online Invoiced</div>
             </div>
         </div>
 
-        <div class="col-xs-12 col-sm-4">
-            <div class="summary-card" style="background: linear-gradient(135deg, #2f855a, #38a169);">
-                <div class="summary-title"><i class="fa fa-check-circle"></i> Total Paid (Cash / Bank)</div>
-                <div class="summary-amount">PKR {{ number_format($lifetimePaid, 2) }}</div>
-                <div style="font-size: 11px; opacity: 0.8; margin-top: 4px;">Total Settlements & Cash Collected</div>
+        <!-- Card 2: Total Cash Received -->
+        <div class="summary-col">
+            <div class="summary-card" style="background: linear-gradient(135deg, #0e7490, #06b6d4);">
+                <div class="summary-title"><i class="fa fa-money"></i> Total Cash Received</div>
+                <div class="summary-amount">PKR {{ number_format($lifetimeCashReceived, 2) }}</div>
+                <div class="summary-sub">Sales: {{ number_format($statement['lifetime_cash_received_at_sale'], 2) }} | Vouchers: {{ number_format($statement['lifetime_voucher_cash'], 2) }}</div>
             </div>
         </div>
 
-        <div class="col-xs-12 col-sm-4">
-            <div class="summary-card" style="background: linear-gradient(135deg, #c53030, #e53e3e);">
-                <div class="summary-title"><i class="fa fa-exclamation-circle"></i> Total Outstanding Due</div>
+        <!-- Card 3: Total Online Payments Received -->
+        <div class="summary-col">
+            <div class="summary-card" style="background: linear-gradient(135deg, #1d4ed8, #3b82f6);">
+                <div class="summary-title"><i class="fa fa-university"></i> Total Online Received</div>
+                <div class="summary-amount">PKR {{ number_format($lifetimeOnlineReceived, 2) }}</div>
+                <div class="summary-sub">Bank Transfer & Online Receipts</div>
+            </div>
+        </div>
+
+        <!-- Card 4: Total Credit Sales -->
+        <div class="summary-col">
+            <div class="summary-card" style="background: linear-gradient(135deg, #b45309, #d97706);">
+                <div class="summary-title"><i class="fa fa-clock-o"></i> Total Credit Sales</div>
+                <div class="summary-amount">PKR {{ number_format($lifetimeCreditSales, 2) }}</div>
+                <div class="summary-sub">Initial Receivables Billed</div>
+            </div>
+        </div>
+
+        <!-- Card 5: Total Amount Collected -->
+        <div class="summary-col">
+            <div class="summary-card" style="background: linear-gradient(135deg, #15803d, #22c55e);">
+                <div class="summary-title"><i class="fa fa-check-circle"></i> Total Amount Collected</div>
+                <div class="summary-amount">PKR {{ number_format($lifetimeTotalCollected, 2) }}</div>
+                <div class="summary-sub">Cash + Online Payments Combined</div>
+            </div>
+        </div>
+
+        <!-- Card 6: Remaining Outstanding Balance -->
+        <div class="summary-col">
+            <div class="summary-card" style="background: linear-gradient(135deg, {{ $currentBalance > 0 ? '#b91c1c, #ef4444' : '#15803d, #22c55e' }});">
+                <div class="summary-title"><i class="fa fa-exclamation-triangle"></i> Remaining Balance</div>
                 <div class="summary-amount">PKR {{ number_format($currentBalance, 2) }}</div>
-                <div style="font-size: 11px; opacity: 0.8; margin-top: 4px;">Net Receivable Debt</div>
+                <div class="summary-sub">{{ $currentBalance > 0 ? 'Current Net Receivable' : 'Fully Settled / No Due' }}</div>
             </div>
         </div>
     </div>
@@ -148,11 +204,25 @@ Customer Statement - {{ $customer->name }}
         </div>
     </div>
 
+    @if($startDate || $endDate)
+        <div class="alert alert-info no-print" style="margin-bottom: 15px; padding: 10px 15px;">
+            <i class="fa fa-info-circle"></i> <strong>Filtered Period:</strong> 
+            {{ $startDate ? date('d-m-Y', strtotime($startDate)) : 'Start' }} to {{ $endDate ? date('d-m-Y', strtotime($endDate)) : 'Present' }}
+            <span class="pull-right">
+                <strong>Period Sales:</strong> PKR {{ number_format($statement['period_total_sales'], 2) }} | 
+                <strong>Period Cash Received:</strong> PKR {{ number_format($statement['period_cash_received'], 2) }} | 
+                <strong>Period Online Received:</strong> PKR {{ number_format($statement['period_online_received'], 2) }} | 
+                <strong>Period Collected:</strong> PKR {{ number_format($statement['period_total_collected'], 2) }} | 
+                <strong>Closing Balance:</strong> PKR {{ number_format($statement['closing_balance'], 2) }}
+            </span>
+        </div>
+    @endif
+
     <!-- Statement Table -->
     <div class="widget-box widget-color-blue2">
         <div class="widget-header">
             <h5 class="widget-title bigger lighter">
-                <i class="ace-icon fa fa-list-alt"></i> Account Statement
+                <i class="ace-icon fa fa-list-alt"></i> Complete Customer Account Statement (All Sales & Payments)
                 @if($startDate && $endDate)
                     <small style="color: #fff;">({{ date('d-m-Y', strtotime($startDate)) }} to {{ date('d-m-Y', strtotime($endDate)) }})</small>
                 @endif
@@ -165,12 +235,15 @@ Customer Statement - {{ $customer->name }}
                     <table class="table table-striped table-bordered table-hover" style="margin-bottom: 0;">
                         <thead style="background-color: #f7f9fb;">
                             <tr>
-                                <th style="width: 12%;">Date</th>
-                                <th style="width: 15%;">Reference No / Type</th>
-                                <th>Description</th>
-                                <th style="width: 14%; text-align: right;">Debit (Billed)</th>
-                                <th style="width: 14%; text-align: right;">Credit (Paid)</th>
-                                <th style="width: 16%; text-align: right;">Running Balance</th>
+                                <th style="width: 10%;">Date</th>
+                                <th style="width: 13%;">Invoice / Ref No</th>
+                                <th style="width: 13%;">Transaction Type</th>
+                                <th style="width: 11%;">Method</th>
+                                <th>Description / Notes</th>
+                                <th style="width: 12%; text-align: right;">Total Sale Amount</th>
+                                <th style="width: 11%; text-align: right;">Amount Paid</th>
+                                <th style="width: 11%; text-align: right;">Credit / Due</th>
+                                <th style="width: 14%; text-align: right;">Outstanding Balance</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -178,10 +251,13 @@ Customer Statement - {{ $customer->name }}
                             <tr style="background-color: #fff9e6; font-weight: bold;">
                                 <td>{{ $startDate ? date('d-m-Y', strtotime($startDate)) : '-' }}</td>
                                 <td><span class="label label-warning arrowed">OPENING</span></td>
+                                <td><em>Opening Balance</em></td>
+                                <td>-</td>
                                 <td><em>Opening Balance as of {{ $startDate ? date('d-m-Y', strtotime($startDate)) : 'Account Inception' }}</em></td>
                                 <td style="text-align: right;">-</td>
                                 <td style="text-align: right;">-</td>
-                                <td style="text-align: right; color: {{ $statement['opening_balance'] > 0 ? '#d15b47' : '#87b87f' }};">
+                                <td style="text-align: right;">-</td>
+                                <td style="text-align: right; color: {{ $statement['opening_balance'] > 0 ? '#c53030' : '#2e8965' }};">
                                     PKR {{ number_format($statement['opening_balance'], 2) }}
                                 </td>
                             </tr>
@@ -190,49 +266,129 @@ Customer Statement - {{ $customer->name }}
                                 <tr>
                                     <td>{{ $row['date'] }}</td>
                                     <td>
-                                        <strong>{{ $row['reference_no'] }}</strong>
-                                        <br>
-                                        <small class="text-muted">{{ $row['reference_type'] }}</small>
+                                        <strong>{{ $row['invoice_no'] }}</strong>
                                         @if($row['reference_type'] === 'Sale' && $row['reference_id'])
-                                            <a href="{{ route('sale.order.detail', $row['reference_id']) }}" target="_blank" class="no-print" title="View Invoice">
+                                            <a href="{{ route('sale.order.detail', $row['reference_id']) }}" target="_blank" class="no-print" title="View Sale Invoice" style="margin-left: 4px;">
                                                 <i class="fa fa-external-link"></i>
                                             </a>
                                         @elseif(in_array($row['reference_type'], ['Payment', 'Receipt']) && $row['reference_id'])
-                                            <a href="{{ route('customer.ledger.voucher', $row['reference_id']) }}" target="_blank" class="no-print" title="Print Receipt">
+                                            <a href="{{ route('customer.ledger.voucher', $row['reference_id']) }}" target="_blank" class="no-print" title="Print Receipt Voucher" style="margin-left: 4px;">
                                                 <i class="fa fa-print"></i>
                                             </a>
                                         @endif
                                     </td>
+                                    <td>
+                                        @if($row['type_badge'] === 'success')
+                                            <span class="label label-success arrowed"><i class="fa fa-check"></i> {{ $row['type_label'] }}</span>
+                                        @elseif($row['type_badge'] === 'info')
+                                            <span class="label label-info arrowed"><i class="fa fa-university"></i> {{ $row['type_label'] }}</span>
+                                        @elseif($row['type_badge'] === 'danger')
+                                            <span class="label label-danger arrowed"><i class="fa fa-clock-o"></i> {{ $row['type_label'] }}</span>
+                                        @elseif($row['type_badge'] === 'warning')
+                                            <span class="label label-warning arrowed"><i class="fa fa-pie-chart"></i> {{ $row['type_label'] }}</span>
+                                        @elseif($row['type_badge'] === 'primary')
+                                            <span class="label label-primary arrowed"><i class="fa fa-credit-card"></i> {{ $row['type_label'] }}</span>
+                                        @else
+                                            <span class="label label-inverse arrowed">{{ $row['type_label'] }}</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if(str_contains(strtolower($row['payment_method']), 'online') || str_contains(strtolower($row['payment_method']), 'bank'))
+                                            <span class="badge badge-info"><i class="fa fa-university"></i> Online</span>
+                                        @elseif(str_contains(strtolower($row['payment_method']), 'credit'))
+                                            <span class="badge badge-danger"><i class="fa fa-clock-o"></i> Credit</span>
+                                        @elseif(str_contains(strtolower($row['payment_method']), 'split'))
+                                            <span class="badge badge-warning"><i class="fa fa-pie-chart"></i> Split</span>
+                                        @elseif(str_contains(strtolower($row['payment_method']), 'cash'))
+                                            <span class="badge badge-success"><i class="fa fa-money"></i> Cash</span>
+                                        @else
+                                            <span class="badge badge-grey">{{ $row['payment_method'] }}</span>
+                                        @endif
+                                    </td>
                                     <td>{{ $row['description'] }}</td>
-                                    <td style="text-align: right; font-weight: {{ $row['debit'] > 0 ? 'bold' : 'normal' }};">
-                                        {{ $row['debit'] > 0 ? 'PKR ' . number_format($row['debit'], 2) : '-' }}
+                                    <td style="text-align: right; font-weight: {{ $row['total_amount'] > 0 ? 'bold' : 'normal' }};">
+                                        {{ $row['total_amount'] > 0 ? 'PKR ' . number_format($row['total_amount'], 2) : '-' }}
                                     </td>
-                                    <td style="text-align: right; font-weight: {{ $row['credit'] > 0 ? 'bold' : 'normal' }}; color: {{ $row['credit'] > 0 ? '#2e8965' : 'inherit' }};">
-                                        {{ $row['credit'] > 0 ? 'PKR ' . number_format($row['credit'], 2) : '-' }}
+                                    <td style="text-align: right; font-weight: {{ $row['paid_amount'] > 0 ? 'bold' : 'normal' }}; color: {{ $row['paid_amount'] > 0 ? '#2e8965' : 'inherit' }};">
+                                        {{ $row['paid_amount'] > 0 ? 'PKR ' . number_format($row['paid_amount'], 2) : '-' }}
                                     </td>
-                                    <td style="text-align: right; font-weight: bold; color: {{ $row['running_balance'] > 0 ? '#d15b47' : '#87b87f' }};">
+                                    <td style="text-align: right; font-weight: {{ $row['due_amount'] > 0 ? 'bold' : 'normal' }}; color: {{ $row['due_amount'] > 0 ? '#c53030' : 'inherit' }};">
+                                        {{ $row['due_amount'] > 0 ? 'PKR ' . number_format($row['due_amount'], 2) : '-' }}
+                                    </td>
+                                    <td style="text-align: right; font-weight: bold; color: {{ $row['running_balance'] > 0 ? '#c53030' : '#2e8965' }};">
                                         PKR {{ number_format($row['running_balance'], 2) }}
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-center text-muted" style="padding: 20px;">
-                                        No transactions recorded in this period.
+                                    <td colspan="9" class="text-center text-muted" style="padding: 25px;">
+                                        <i class="fa fa-info-circle fa-2x"></i><br>
+                                        No sales or payment transactions recorded for this customer in the selected period.
                                     </td>
                                 </tr>
                             @endforelse
                         </tbody>
-                        <tfoot style="background-color: #eaedf2; font-weight: bold; font-size: 14px;">
+                        <tfoot style="background-color: #eaedf2; font-weight: bold; font-size: 13px;">
                             <tr>
-                                <td colspan="3" style="text-align: right;">Period Totals:</td>
-                                <td style="text-align: right; color: #2b6cb0;">PKR {{ number_format($statement['total_debit'], 2) }}</td>
-                                <td style="text-align: right; color: #2f855a;">PKR {{ number_format($statement['total_credit'], 2) }}</td>
-                                <td style="text-align: right; color: {{ $statement['closing_balance'] > 0 ? '#d15b47' : '#87b87f' }};">
+                                <td colspan="5" style="text-align: right;">Period Totals:</td>
+                                <td style="text-align: right; color: #6b46c1;">PKR {{ number_format($statement['period_total_sales'], 2) }}</td>
+                                <td style="text-align: right; color: #2e8965;">PKR {{ number_format($statement['period_total_collected'], 2) }}</td>
+                                <td style="text-align: right; color: #c53030;">PKR {{ number_format($statement['period_credit_sales'], 2) }}</td>
+                                <td style="text-align: right; color: {{ $statement['closing_balance'] > 0 ? '#c53030' : '#2e8965' }}; font-size: 14px;">
                                     PKR {{ number_format($statement['closing_balance'], 2) }}
                                 </td>
                             </tr>
                         </tfoot>
                     </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reconciliation & Lifetime Summary Box -->
+    <div class="widget-box widget-color-blue" style="margin-top: 20px;">
+        <div class="widget-header">
+            <h5 class="widget-title bigger lighter">
+                <i class="ace-icon fa fa-balance-scale"></i> Customer Account Reconciliation Summary
+            </h5>
+        </div>
+        <div class="widget-body">
+            <div class="widget-main" style="padding: 15px;">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <table class="table table-condensed" style="margin-bottom: 0;">
+                            <tr>
+                                <td style="width: 60%;"><strong>Total Sales Amount (Cash, Credit & Online):</strong></td>
+                                <td class="text-right"><strong>PKR {{ number_format($lifetimeSales, 2) }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total Cash Received (Sales + Receipts):</strong></td>
+                                <td class="text-right text-success">PKR {{ number_format($lifetimeCashReceived, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total Online / Bank Received:</strong></td>
+                                <td class="text-right text-info">PKR {{ number_format($lifetimeOnlineReceived, 2) }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-sm-6">
+                        <table class="table table-condensed" style="margin-bottom: 0;">
+                            <tr>
+                                <td style="width: 60%;"><strong>Total Credit Sales Invoiced:</strong></td>
+                                <td class="text-right text-warning">PKR {{ number_format($lifetimeCreditSales, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total Amount Collected (Cash + Online):</strong></td>
+                                <td class="text-right text-success"><strong>PKR {{ number_format($lifetimeTotalCollected, 2) }}</strong></td>
+                            </tr>
+                            <tr style="border-top: 2px solid #ddd;">
+                                <td><strong>Remaining Outstanding Receivable:</strong></td>
+                                <td class="text-right" style="font-size: 15px; font-weight: bold; color: {{ $currentBalance > 0 ? '#c53030' : '#2e8965' }};">
+                                    PKR {{ number_format($currentBalance, 2) }}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -258,7 +414,7 @@ Customer Statement - {{ $customer->name }}
                     <div class="alert alert-info">
                         <strong>Customer:</strong> {{ $customer->name }} ({{ $customer->mobile ?? 'No Mobile' }})<br>
                         <strong>Current Outstanding Due:</strong> 
-                        <span style="font-weight: bold; color: #d15b47;">PKR {{ number_format($currentBalance, 2) }}</span>
+                        <span style="font-weight: bold; color: #c53030;">PKR {{ number_format($currentBalance, 2) }}</span>
                     </div>
 
                     <div class="form-group">
