@@ -46,6 +46,13 @@ Issuance Items
                         <i class="fa fa-plus bigger-110"></i>
                     </span>
                 </div>
+                <div id="customer_ledger_badge_container" style="margin-top: 6px; display: none;">
+                    <div class="alert alert-info" style="margin-bottom: 0; padding: 6px 10px; font-size: 12px; border-radius: 4px;">
+                        <i class="fa fa-book"></i> <strong>Customer Ledger:</strong>
+                        <span id="customer_balance_text" style="font-weight: bold;">Rs. 0.00</span>
+                        <span id="customer_balance_badge" class="label label-sm label-success pull-right" style="margin-top: -1px;">Settled</span>
+                    </div>
+                </div>
             </div>
         </div>
         </form>
@@ -122,7 +129,7 @@ Issuance Items
                 <tr><td class="total-label" > Cash Return </td><td   id="" class="total-label" > <input type="text" id="cash_returned" name="cash_returned" class="form-control disabledInput" readonly > </td></tr>
             </table>
 
-            <a href="javascript:void(0);" onclick="placeOrderConfirm();"  class="btn btn-primary btn-block" >Place Order</a>
+            <a href="javascript:void(0);" onclick="openCheckoutModal();" class="btn btn-primary btn-block btn-lg" style="font-weight: bold; font-size: 15px;"><i class="fa fa-shopping-cart"></i> Proceed to Checkout &amp; Settlement</a>
             <a href="javascript:void(0);" onclick="openPreviewPopUp();" class="btn btn-primary btn-block hidden" >Preview</a>
 
         </div>
@@ -171,6 +178,175 @@ Issuance Items
 
 <div id="create_customer_modal_con"></div>
 <div id="on_hold_list_modal_con"></div>
+
+<!-- POS Checkout & Ledger Settlement Modal -->
+<div class="modal fade" id="posCheckoutModal" tabindex="-1" role="dialog" aria-labelledby="posCheckoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document" style="width: 720px; max-width: 95%;">
+        <div class="modal-content" style="border-radius: 6px; overflow: hidden; box-shadow: 0 5px 25px rgba(0,0,0,0.3);">
+            <div class="modal-header" style="background-color: #307ECC; color: #fff; padding: 14px 20px;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: #fff; opacity: 0.85; font-size: 24px;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="posCheckoutModalLabel" style="font-weight: 600; margin: 0;">
+                    <i class="fa fa-shopping-cart"></i> POS Checkout &amp; Payment Settlement
+                </h4>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <!-- Summary Card -->
+                <div class="row" style="margin-bottom: 18px;">
+                    <div class="col-xs-6">
+                        <div class="well well-sm" style="background-color: #f5f9fc; border-left: 4px solid #307ECC; margin-bottom: 0; padding: 10px 14px;">
+                            <span class="text-muted" style="font-size: 11px; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Grand Total Bill</span>
+                            <h2 style="margin: 4px 0 0; color: #2C6AA0; font-weight: bold;" id="checkout_bill_display">Rs. 0.00</h2>
+                        </div>
+                    </div>
+                    <div class="col-xs-6">
+                        <div class="well well-sm" style="background-color: #fbfbfb; border-left: 4px solid #87B87F; margin-bottom: 0; padding: 10px 14px;">
+                            <span class="text-muted" style="font-size: 11px; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Customer &amp; Ledger Status</span>
+                            <div style="margin-top: 4px;" id="checkout_customer_display">
+                                <span class="label label-default"><i class="fa fa-user"></i> Walk-in / Guest Customer</span>
+                            </div>
+                            <div style="margin-top: 4px;" id="checkout_customer_balance_display">
+                                <small class="text-muted">Balance: Rs. 0.00</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Method Selector -->
+                <div class="form-group" style="margin-bottom: 18px;">
+                    <label style="font-weight: bold; font-size: 13px; margin-bottom: 8px; display: block;">Select Payment Method:</label>
+                    <div class="btn-group btn-group-justified" id="payment_method_btn_group">
+                        <a href="javascript:void(0);" class="btn btn-default active" id="btn_pay_cash" onclick="switchPaymentMethod('cash');" style="padding: 10px;">
+                            <i class="fa fa-money text-success" style="font-size: 16px;"></i><br><strong>Cash</strong>
+                        </a>
+                        <a href="javascript:void(0);" class="btn btn-default" id="btn_pay_credit" onclick="switchPaymentMethod('credit');" style="padding: 10px;">
+                            <i class="fa fa-book text-danger" style="font-size: 16px;"></i><br><strong>Credit (Account)</strong>
+                        </a>
+                        <a href="javascript:void(0);" class="btn btn-default" id="btn_pay_split" onclick="switchPaymentMethod('split');" style="padding: 10px;">
+                            <i class="fa fa-columns text-warning" style="font-size: 16px;"></i><br><strong>Split Payment</strong>
+                        </a>
+                        <a href="javascript:void(0);" class="btn btn-default" id="btn_pay_bank" onclick="switchPaymentMethod('bank_transfer');" style="padding: 10px;">
+                            <i class="fa fa-university text-primary" style="font-size: 16px;"></i><br><strong>Bank Transfer</strong>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Guest warning for credit/split -->
+                <div id="checkout_guest_warning" class="alert alert-danger" style="display: none; margin-bottom: 15px;">
+                    <i class="fa fa-exclamation-triangle"></i>
+                    <strong>Guest Checkout Blocked:</strong> Credit and Split payment require a registered customer account. Please select a customer from the customer dropdown before proceeding with credit.
+                </div>
+
+                <!-- Cash Method Panel -->
+                <div id="panel_pay_cash" class="payment-method-panel">
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="form-group">
+                                <label style="font-weight: bold;">Cash Received (Tendered):</label>
+                                <div class="input-group">
+                                    <span class="input-group-addon"><i class="fa fa-money"></i></span>
+                                    <input type="number" step="0.01" class="form-control input-lg" id="checkout_cash_received" placeholder="0.00" oninput="calculateModalCash();">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="form-group">
+                                <label style="font-weight: bold;">Change to Return:</label>
+                                <div class="input-group">
+                                    <span class="input-group-addon"><i class="fa fa-undo"></i></span>
+                                    <input type="text" class="form-control input-lg" id="checkout_cash_return" readonly style="background-color: #f7f7f7; font-weight: bold; color: #2C6AA0;" value="0.00">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Credit Method Panel -->
+                <div id="panel_pay_credit" class="payment-method-panel" style="display: none;">
+                    <div class="alert alert-warning" style="margin-bottom: 15px;">
+                        <i class="fa fa-info-circle"></i> 100% of the bill amount (<strong><span class="modal_due_preview">Rs. 0.00</span></strong>) will be posted to the customer's ledger as <strong>Accounts Receivable</strong>.
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="form-group">
+                                <label>Amount Received Now:</label>
+                                <input type="text" class="form-control input-lg" value="0.00" readonly style="background-color: #f9f9f9;">
+                            </div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="form-group">
+                                <label style="font-weight: bold;">Balance to Ledger (Due Receivable):</label>
+                                <input type="text" class="form-control input-lg" id="checkout_credit_due" readonly style="background-color: #fdf5f5; color: #d15b47; font-weight: bold;" value="0.00">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Split Method Panel -->
+                <div id="panel_pay_split" class="payment-method-panel" style="display: none;">
+                    <div class="alert alert-info" style="margin-bottom: 15px;">
+                        <i class="fa fa-info-circle"></i> Enter the partial cash/bank payment collected now. The remaining balance will be charged to the customer's ledger.
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="form-group">
+                                <label style="font-weight: bold;">Amount Received Now (Cash/Bank):</label>
+                                <div class="input-group">
+                                    <span class="input-group-addon"><i class="fa fa-money"></i></span>
+                                    <input type="number" step="0.01" class="form-control input-lg" id="checkout_split_paid" placeholder="Enter amount paid" oninput="calculateModalSplit();">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="form-group">
+                                <label style="font-weight: bold;">Balance to Ledger (Due Receivable):</label>
+                                <div class="input-group">
+                                    <span class="input-group-addon"><i class="fa fa-book"></i></span>
+                                    <input type="text" class="form-control input-lg" id="checkout_split_due" readonly style="background-color: #fdf5f5; color: #d15b47; font-weight: bold;" value="0.00">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bank Transfer Panel -->
+                <div id="panel_pay_bank" class="payment-method-panel" style="display: none;">
+                    <div class="alert alert-info" style="margin-bottom: 15px;">
+                        <i class="fa fa-university"></i> Full bill amount will be settled via <strong>Bank Transfer Account</strong>. Paid: <strong><span class="modal_bank_preview">Rs. 0.00</span></strong>, Due: <strong>Rs. 0.00</strong>.
+                    </div>
+                </div>
+
+                <!-- Live Settlement Impact Summary -->
+                <div class="well well-sm" style="margin-top: 15px; margin-bottom: 0; background-color: #fafafa; border: 1px dashed #ccc; border-radius: 4px;">
+                    <div class="row">
+                        <div class="col-xs-4 text-center">
+                            <small class="text-muted" style="text-transform: uppercase; font-size: 10px; font-weight: bold;">Total Bill</small>
+                            <div style="font-weight: bold; font-size: 15px;" id="summary_total_bill">Rs. 0.00</div>
+                        </div>
+                        <div class="col-xs-4 text-center" style="border-left: 1px solid #e5e5e5; border-right: 1px solid #e5e5e5;">
+                            <small class="text-muted" style="text-transform: uppercase; font-size: 10px; font-weight: bold;">Paid Now</small>
+                            <div style="font-weight: bold; font-size: 15px; color: #87B87F;" id="summary_paid_amount">Rs. 0.00</div>
+                        </div>
+                        <div class="col-xs-4 text-center">
+                            <small class="text-muted" style="text-transform: uppercase; font-size: 10px; font-weight: bold;">Balance to Ledger</small>
+                            <div style="font-weight: bold; font-size: 15px; color: #D15B47;" id="summary_due_amount">Rs. 0.00</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer" style="padding: 14px 20px; background-color: #f7f7f7;">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    <i class="fa fa-times"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-success btn-lg" id="btn_confirm_checkout" onclick="executeFinalCheckout();">
+                    <i class="fa fa-check-circle"></i> Confirm &amp; Finalize Order
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @endsection
 
@@ -358,45 +534,232 @@ Issuance Items
     }
 
 
-    function placeOrderConfirm(){
-        $.confirm({
-                    title: 'Confirm',
-                    content: 'Do you really want to place order',
-                    buttons: {
-                        yes: {
-                            text: 'OK',
-                            action: function() {
-                                placeOrder();
-                            }
-                        },
-                        no: { text: 'Cancel', action: function() {} }
-                    }
-                });
+    var currentCustomer = {
+        id: null,
+        name: null,
+        balance: 0,
+        formatted_balance: 'Rs. 0.00',
+        status: 'Settled'
+    };
+    var currentPaymentMethod = 'cash';
+
+    function fetchCustomerBalance(customerId, customerName) {
+        if (!customerId || parseInt(customerId) <= 0) {
+            currentCustomer = { id: null, name: null, balance: 0, formatted_balance: 'Rs. 0.00', status: 'Settled' };
+            $('#customer_ledger_badge_container').hide();
+            return;
+        }
+
+        $.ajax({
+            url: "{{ route('customer.ledger.balance', '') }}/" + customerId,
+            type: 'GET',
+            dataType: 'json',
+            success: function(res) {
+                currentCustomer = {
+                    id: customerId,
+                    name: customerName || res.customer_name,
+                    balance: parseFloat(res.balance),
+                    formatted_balance: res.formatted_balance,
+                    status: res.status
+                };
+
+                $('#customer_ledger_badge_container').show();
+                $('#customer_balance_text').text(res.formatted_balance);
+                var badge = $('#customer_balance_badge');
+                badge.removeClass('label-success label-danger label-warning');
+                if (currentCustomer.balance > 0) {
+                    badge.addClass('label-danger').text(res.status || 'Due Receivable');
+                } else if (currentCustomer.balance < 0) {
+                    badge.addClass('label-warning').text(res.status || 'Advance Credit');
+                } else {
+                    badge.addClass('label-success').text('Settled (0.00)');
+                }
+            }
+        });
     }
 
+    function placeOrderConfirm() {
+        openCheckoutModal();
+    }
 
-    function placeOrder(){
+    function openCheckoutModal() {
+        if (!billAmount || parseFloat(billAmount) <= 0) {
+            $.confirm({
+                title: 'Cart is Empty',
+                content: 'Please add products to cart before proceeding to checkout.',
+                type: 'red'
+            });
+            return;
+        }
+
+        var bill = parseFloat(billAmount);
+        var formattedBill = 'Rs. ' + bill.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        $('#checkout_bill_display').text(formattedBill);
+        $('.modal_due_preview').text(formattedBill);
+        $('.modal_bank_preview').text(formattedBill);
+
+        // Customer display
+        if (currentCustomer.id) {
+            $('#checkout_customer_display').html('<span class="label label-info" style="font-size: 13px;"><i class="fa fa-user"></i> ' + currentCustomer.name + '</span>');
+            var balanceColor = currentCustomer.balance > 0 ? '#D15B47' : '#87B87F';
+            $('#checkout_customer_balance_display').html('<span style="font-weight: bold; color: ' + balanceColor + ';">Current Balance: ' + currentCustomer.formatted_balance + ' (' + currentCustomer.status + ')</span>');
+        } else {
+            $('#checkout_customer_display').html('<span class="label label-default" style="font-size: 13px;"><i class="fa fa-user"></i> Walk-in / Guest Customer</span>');
+            $('#checkout_customer_balance_display').html('<span class="text-danger"><i class="fa fa-exclamation-circle"></i> Credit / Split requires registered customer</span>');
+        }
+
+        // Initialize cash values
+        $('#checkout_cash_received').val(bill);
+        $('#checkout_cash_return').val('0.00');
+        $('#checkout_credit_due').val(bill.toFixed(2));
+        $('#checkout_split_paid').val('');
+        $('#checkout_split_due').val(bill.toFixed(2));
+
+        switchPaymentMethod('cash');
+        $('#posCheckoutModal').modal('show');
+    }
+
+    function switchPaymentMethod(method) {
+        currentPaymentMethod = method;
+        $('#payment_method_btn_group a').removeClass('active btn-primary').addClass('btn-default');
+        $('#btn_pay_' + (method === 'bank_transfer' ? 'bank' : method)).removeClass('btn-default').addClass('active btn-primary');
+
+        $('.payment-method-panel').hide();
+        if (method === 'cash') {
+            $('#panel_pay_cash').show();
+            calculateModalCash();
+        } else if (method === 'credit') {
+            $('#panel_pay_credit').show();
+            calculateModalCredit();
+        } else if (method === 'split') {
+            $('#panel_pay_split').show();
+            calculateModalSplit();
+        } else if (method === 'bank_transfer') {
+            $('#panel_pay_bank').show();
+            calculateModalBank();
+        }
+
+        // Validate guest checkout for credit / split
+        if ((method === 'credit' || method === 'split') && !currentCustomer.id) {
+            $('#checkout_guest_warning').show();
+            $('#btn_confirm_checkout').attr('disabled', 'disabled');
+        } else {
+            $('#checkout_guest_warning').hide();
+            $('#btn_confirm_checkout').removeAttr('disabled');
+        }
+    }
+
+    function calculateModalCash() {
+        var bill = parseFloat(billAmount) || 0;
+        var received = parseFloat($('#checkout_cash_received').val()) || 0;
+        var change = received > bill ? (received - bill) : 0;
+        $('#checkout_cash_return').val(change.toFixed(2));
+
+        $('#summary_total_bill').text('Rs. ' + bill.toFixed(2));
+        $('#summary_paid_amount').text('Rs. ' + bill.toFixed(2));
+        $('#summary_due_amount').text('Rs. 0.00');
+    }
+
+    function calculateModalCredit() {
+        var bill = parseFloat(billAmount) || 0;
+        $('#checkout_credit_due').val(bill.toFixed(2));
+
+        $('#summary_total_bill').text('Rs. ' + bill.toFixed(2));
+        $('#summary_paid_amount').text('Rs. 0.00');
+        $('#summary_due_amount').text('Rs. ' + bill.toFixed(2));
+    }
+
+    function calculateModalSplit() {
+        var bill = parseFloat(billAmount) || 0;
+        var paid = parseFloat($('#checkout_split_paid').val()) || 0;
+        if (paid > bill) {
+            paid = bill;
+            $('#checkout_split_paid').val(bill.toFixed(2));
+        }
+        var due = Math.max(0, bill - paid);
+        $('#checkout_split_due').val(due.toFixed(2));
+
+        $('#summary_total_bill').text('Rs. ' + bill.toFixed(2));
+        $('#summary_paid_amount').text('Rs. ' + paid.toFixed(2));
+        $('#summary_due_amount').text('Rs. ' + due.toFixed(2));
+    }
+
+    function calculateModalBank() {
+        var bill = parseFloat(billAmount) || 0;
+        $('#summary_total_bill').text('Rs. ' + bill.toFixed(2));
+        $('#summary_paid_amount').text('Rs. ' + bill.toFixed(2));
+        $('#summary_due_amount').text('Rs. 0.00');
+    }
+
+    function executeFinalCheckout() {
+        var bill = parseFloat(billAmount) || 0;
+        var customerId = currentCustomer.id;
+
+        if ((currentPaymentMethod === 'credit' || currentPaymentMethod === 'split') && !customerId) {
+            $.confirm({
+                title: 'Customer Required',
+                content: 'Credit or Split payment requires a registered customer account. Please select or create a customer first.',
+                type: 'red'
+            });
+            return;
+        }
+
+        var paidAmount = bill;
+        var dueAmount = 0.00;
+        var cashReceived = 0.00;
+        var cashReturned = 0.00;
+
+        if (currentPaymentMethod === 'cash') {
+            paidAmount = bill;
+            dueAmount = 0.00;
+            cashReceived = parseFloat($('#checkout_cash_received').val()) || bill;
+            cashReturned = parseFloat($('#checkout_cash_return').val()) || 0.00;
+        } else if (currentPaymentMethod === 'credit') {
+            paidAmount = 0.00;
+            dueAmount = bill;
+            cashReceived = 0.00;
+            cashReturned = 0.00;
+        } else if (currentPaymentMethod === 'split') {
+            paidAmount = parseFloat($('#checkout_split_paid').val()) || 0.00;
+            dueAmount = parseFloat($('#checkout_split_due').val()) || (bill - paidAmount);
+            cashReceived = paidAmount;
+            cashReturned = 0.00;
+        } else if (currentPaymentMethod === 'bank_transfer') {
+            paidAmount = bill;
+            dueAmount = 0.00;
+            cashReceived = bill;
+            cashReturned = 0.00;
+        }
+
         var formData = new FormData($('#order_form')[0]);
-        var customer_id = $('#customer_select2').val();
-        formData.append('customer_id',customer_id)
+        formData.append('customer_id', customerId || '');
+        formData.append('payment_method', currentPaymentMethod);
+        formData.append('paid_amount', paidAmount);
+        formData.append('due_amount', dueAmount);
+        formData.append('cash_received', cashReceived);
+        formData.append('cash_returned', cashReturned);
+
+        $('#btn_confirm_checkout').attr('disabled', 'disabled').html('<i class="fa fa-spinner fa-spin"></i> Processing Order...');
+
         $.ajax({
             dataType: 'json',
             type: 'POST',
             data: formData,
-            url:  "{{ route('sale.cart.place_order') }}",
+            url: "{{ route('sale.cart.place_order') }}",
             contentType: false,
             processData: false,
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             },
-            error:ajaxFailBlock,
+            error: function(jqXHR, textStatus, errorThrown) {
+                $('#btn_confirm_checkout').removeAttr('disabled').html('<i class="fa fa-check-circle"></i> Confirm & Finalize Order');
+                ajaxFailBlock(jqXHR, textStatus, errorThrown);
+            },
             success: function(res) {
-
-
-                if(res.status){
-                    // cartDataTable.ajax.reload();
-                    var url = "{{ route('sale.order.detail','') }}/"+res.data.id+'?view=print';
-                    window.open(url, '_blank').focus(); 
+                $('#posCheckoutModal').modal('hide');
+                if (res.status) {
+                    var url = "{{ route('sale.order.detail', '') }}/" + res.data.id + '?view=print';
+                    window.open(url, '_blank').focus();
                     window.location = "{{ route('sale.board.create') }}";
                 }
             }
@@ -596,21 +959,17 @@ function formatRepoSelection (repo) {
 
     $('#customer_select2').select2({
         placeholder: "Select Customer",
+        allowClear: true,
         ajax: {
             url: "{{ route('customer.search_select2') }}",
-            dataType: 'json',
-            success: function(res) {
-                    console.log('oooooooooooooooooooooooooooooooooooooooooo',res);
-                   //  cartDataTable.ajax.reload();
-                }
-            // Additional AJAX parameters go here; see the end of this chapter for the full code of this example
+            dataType: 'json'
         }
     }).on('select2:select', function (e) {
             var obj = e.params.data;
-            // console.log(obj.id);
+            var custName = obj.text || (obj.name ? obj.name : 'Customer #' + obj.id);
+            fetchCustomerBalance(obj.id, custName);
             var saleKey = $('#sale_key').val();   
             $.ajax({
-                //  dataType: 'json',
                 type: 'post',
                 data:{'sale_key':saleKey, 'customer_id':obj.id},
                 url: "{{ route('sale.cart.attach_customer_with_cart') }}",
@@ -619,10 +978,11 @@ function formatRepoSelection (repo) {
                 },
                 error:ajaxFailBlock,
                 success: function(res) {
-                    console.log(res);
-                   //  cartDataTable.ajax.reload();
+                    console.log('Customer attached to cart:', res);
                 }
             });
+    }).on('select2:unselect select2:clear', function(e) {
+        fetchCustomerBalance(null, null);
     });
 
 

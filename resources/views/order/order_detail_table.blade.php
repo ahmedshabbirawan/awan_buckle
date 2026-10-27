@@ -205,27 +205,54 @@ body{ margin : 0px;}
                     </tr>
 
 					<tr class="heading item" >
-                        <td colspan="4"> Payable :</td>
-                        
-                       
-                        <td> <b> {{ round($order->total_price) }} </b> </td>
+                        <td colspan="4"> Grand Total / Net Payable :</td>
+                        <td> <b> {{ number_format($order->total_amount ?: $order->total_price, 2) }} </b> </td>
                     </tr>
-					<tr class=""> <td colspan="5"> &nbsp; </td></tr>
-
 					<tr class="">
-                        <td> Cash Receive :</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td> {{ round($order->cash_received) }}  </td>
+                        <td colspan="3"> Payment Method :</td>
+                        <td colspan="2" style="text-align: right;">
+                            <b>
+                            @if($order->payment_method == 'credit')
+                                Credit / On Account
+                            @elseif($order->payment_method == 'split')
+                                Split Payment
+                            @elseif($order->payment_method == 'bank_transfer')
+                                Bank Transfer
+                            @else
+                                Cash
+                            @endif
+                            </b>
+                            ({{ strtoupper($order->payment_status ?: 'PAID') }})
+                        </td>
+                    </tr>
+					<tr class="">
+                        <td colspan="3"> Amount Paid :</td>
+                        <td colspan="2" style="text-align: right; color: #2e8965;"> <b>Rs. {{ number_format($order->paid_amount !== null ? $order->paid_amount : $order->total_price, 2) }}</b> </td>
+                    </tr>
+                    @if($order->due_amount > 0)
+					<tr class="item" style="background-color: #fff2f2;">
+                        <td colspan="3" style="color: #c9302c;"> <b>Balance to Ledger (Due Receivable) :</b></td>
+                        <td colspan="2" style="text-align: right; color: #c9302c;"> <b>Rs. {{ number_format($order->due_amount, 2) }}</b> </td>
+                    </tr>
+                    @endif
+
+                    @if($order->payment_method == 'cash' || empty($order->payment_method))
+					<tr class="">
+                        <td colspan="3"> Cash Tendered / Received :</td>
+                        <td colspan="2" style="text-align: right;"> Rs. {{ number_format($order->cash_received, 2) }} </td>
                     </tr>
 					<tr class="total">
-                        <td> Cash Return :</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td> {{ round($order->cash_returned) }}  </td>
+                        <td colspan="3"> Change Return :</td>
+                        <td colspan="2" style="text-align: right;"> Rs. {{ number_format($order->cash_returned, 2) }} </td>
                     </tr>
+                    @endif
+
+                    @if($customer && $customer->current_balance)
+					<tr class="" style="font-size: 11px; border-top: 1px dashed #ddd;">
+                        <td colspan="3"> Customer Outstanding Ledger Balance :</td>
+                        <td colspan="2" style="text-align: right;"> <b>Rs. {{ number_format($customer->current_balance, 2) }}</b> </td>
+                    </tr>
+                    @endif
 
 
 					

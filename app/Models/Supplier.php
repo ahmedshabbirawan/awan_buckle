@@ -36,6 +36,24 @@ class Supplier extends Model{
         return $this->hasMany(StockDelivery::class,'supplier_id');
     }
 
+    public function account()
+    {
+        return $this->hasOne(Account::class, 'holder_id')
+            ->where('holder_type', Account::HOLDER_SUPPLIER);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class, 'party_id')
+            ->where('party_type', Payment::PARTY_SUPPLIER);
+    }
+
+    public function getCurrentBalanceAttribute(): float
+    {
+        $account = $this->account;
+        return $account ? $account->calculateBalance() : 0.00;
+    }
+
 
     public function country_city(){
         // $loc = array();

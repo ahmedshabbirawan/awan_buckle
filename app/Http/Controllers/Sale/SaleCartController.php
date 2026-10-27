@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\DB;
 use Exception;
 
 use Illuminate\Support\Facades\Validator;
+use App\Services\LedgerService;
 
 class SaleCartController extends Controller{
     
@@ -448,107 +449,144 @@ class SaleCartController extends Controller{
 
         $customerID = $request->get('customer_id');
         if ($validator->fails()) {
-            return response()->json(['status' => false, 'message' => $validator->errors()->first()],406);
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()], 406);
         }
 
         $saleKey            = $request->get('sale_key');
-        $cartItems          = SaleCart::where('sale_key',$saleKey)->get();  
+        $cartItems          = SaleCart::where('sale_key', $saleKey)->get();  
         $itemFound          = count($cartItems);
-        if($itemFound == 0){
-            return response(['message' => 'No items available'],422);
+        if ($itemFound == 0) {
+            return response(['message' => 'No items available'], 422);
+        }
+
+        $paymentMethod = $request->get('payment_method', 'cash'); // cash, credit, bank_transfer, split
+        $paidAmountReq = $request->has('paid_amount') ? round((float) $request->get('paid_amount'), 2) : null;
+        $dueAmountReq  = $request->has('due_amount') ? round((float) $request->get('due_amount'), 2) : null;
+
+        // Non-negotiable rule: Credit sales require registered customer (no guest checkout for credit)
+        if (in_array($paymentMethod, ['credit', 'split'])) {
+            if (!$customerID || (int)$customerID <= 0) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Credit / On-Account sales require a registered customer. Guest checkout is prohibited for ledger credit.'
+                ], 422);
+            }
         }
 
         DB::beginTransaction();
-        $cashReceived = (int) $request->get('cash_received');
-        $cashReturned = (int) $request->get('cash_returned');
+        $cashReceived = (float) $request->get('cash_received', 0);
+        $cashReturned = (float) $request->get('cash_returned', 0);
 
-        $saleOrder          = SaleOrder::create([
-            'sale_key' => $saleKey, 'item_count' => count($cartItems), 
-            'customer_id' => $customerID, 'shop_id' => auth()->user()->shop_id , 
-            'created_by' => auth()->user()->id,
-            'cash_received' => $cashReceived,
-            'cash_returned' => $cashReturned
-        ]);
-        $notFound           = 0;
-        $itemWillDelete     = [];
-        try{
-            
-            $totalOfferPrice    = 0;
+        try {
+            $saleOrder = SaleOrder::create([
+                'sale_key' => $saleKey,
+                'item_count' => count($cartItems), 
+                'customer_id' => $customerID ? (int)$customerID : null,
+                'shop_id' => auth()->user()->shop_id, 
+                'created_by' => auth()->user()->id,
+                'cash_received' => (int) $cashReceived,
+                'cash_returned' => (int) $cashReturned,
+            ]);
+
+            $totalOfferPrice = 0;
             $totalPrice = 0;
-            $billAmount = 0;
-            $totalDiscount      = 0;
-            foreach($cartItems as $tItem):
+            $totalDiscount = 0;
+            $totalCogs = 0;
+            $itemWillDelete = [];
 
-                $shopID     = auth()->user()->shop_id;
-                $proAvail   = ProductAvailable::where('product_id',$tItem->product_id)->where('shop_id',$shopID)->first();
-                $product    = Product::find($tItem->product_id);
+            foreach ($cartItems as $tItem) {
+                $shopID = auth()->user()->shop_id;
+                $proAvail = ProductAvailable::where('product_id', $tItem->product_id)->where('shop_id', $shopID)->first();
+                $product = Product::find($tItem->product_id);
 
-                if( !($proAvail) ){
-                    // $notFound++;
-                    // continue;
-                    throw new Exception("Product not available!");
+                if (!$proAvail) {
+                    throw new Exception("Product (" . ($product ? $product->name : $tItem->product_id) . ") not available in current shop stock!");
                 }
 
-                if( ($tItem->qty < 1) || ($proAvail->qty < 1) || ($proAvail->qty <  $tItem->qty) ){
-                    // $notFound++;
-                    // continue;
-                    throw new Exception("Product (".$product->name.") Quantity not available!");
+                if (($tItem->qty < 1) || ($proAvail->qty < 1) || ($proAvail->qty < $tItem->qty)) {
+                    throw new Exception("Product (" . ($product ? $product->name : $tItem->product_id) . ") insufficient stock! Requested: {$tItem->qty}, Available: {$proAvail->qty}");
                 }
-                // sale cart ==> ['product_id', 'product_name', 'item_id', 'sale_key', 'qty', 'offer_price', 'price', 'status', 'created_by','updated_by','deleted_by' ];
-                // sale orer item ==>  ['product_id', 'item_id', 'sale_key', 'order_id', 'customer_id', 'qty', 'offer_price', 'discount', 'price', 'status']; 
 
-                $itemData['product_id']     =    $tItem->product_id;
-                // $itemData['item_id']        =    $stockItem->id;
-                $itemData['order_id']       =    $saleOrder->id;
-                $itemData['customer_id']    =    $saleOrder->customer_id;
-                $itemData['qty']            =    $tItem->qty;
-                                
-                $itemData['offer_price']    =    $tItem->offer_price;
-                $itemData['discount']       =    $tItem->discount;
-                $itemData['price']          =    $tItem->final_price;
-                $itemData['cost_price']     =    ($product && $product->cost_price > 0) ? $product->cost_price : 0;
+                $costPrice = ($product && $product->cost_price > 0) ? (float) $product->cost_price : 0.00;
 
+                $itemData = [
+                    'product_id' => $tItem->product_id,
+                    'order_id' => $saleOrder->id,
+                    'customer_id' => $saleOrder->customer_id,
+                    'qty' => $tItem->qty,
+                    'offer_price' => $tItem->offer_price,
+                    'discount' => $tItem->discount,
+                    'price' => $tItem->final_price,
+                    'cost_price' => $costPrice,
+                ];
 
-                $totalOfferPrice            =    $totalOfferPrice + ( $tItem->offer_price * $tItem->qty );
-                $totalPrice                 =    $totalPrice + ( $tItem->final_price * $tItem->qty ) ;
-                $totalDiscount              =    $totalDiscount + ( $tItem->discount * $tItem->qty );
-                
+                $lineTotal = ($tItem->final_price * $tItem->qty);
+                $totalOfferPrice += ($tItem->offer_price * $tItem->qty);
+                $totalPrice += $lineTotal;
+                $totalDiscount += ($tItem->discount * $tItem->qty);
+                $totalCogs += ($costPrice * $tItem->qty);
 
                 SaleOrderItem::create($itemData);
 
-                // $proAvail->qty = $proAvail->qty - $tItem->qty;
-                // $proAvail->save();
-                
-                // ProductAvailable::manageStockByShopAndProductId()
-                ProductAvailable::manageStockByShopAndProductId($tItem->qty,StockAudit::STOCK_ACTION_MINUS, $tItem->product_id,
-                $shopID, StockAudit::STOCK_OBJECT_TYPE_SALE, $saleOrder->id);
-
-
-                /*
-                $stockItem->available_qty = $stockItem->available_qty - $tItem->qty;
-                $stockItem->save();
-                */
+                ProductAvailable::manageStockByShopAndProductId(
+                    $tItem->qty,
+                    StockAudit::STOCK_ACTION_MINUS,
+                    $tItem->product_id,
+                    $shopID,
+                    StockAudit::STOCK_OBJECT_TYPE_SALE,
+                    $saleOrder->id
+                );
 
                 $itemWillDelete[] = $tItem->id;
-            endforeach;
+            }
 
-            $saleOrder->total_offer_price   = $totalOfferPrice;
-            $saleOrder->total_discount      = $totalDiscount;
-            $saleOrder->total_price         = $totalPrice;
+            $totalPrice = round($totalPrice, 2);
+
+            // Determine financial distribution
+            if ($paymentMethod === 'credit') {
+                $paidAmount = 0.00;
+                $dueAmount = $totalPrice;
+                $paymentStatus = 'due';
+            } elseif ($paymentMethod === 'split') {
+                $paidAmount = ($paidAmountReq !== null) ? min($paidAmountReq, $totalPrice) : 0.00;
+                $dueAmount = round($totalPrice - $paidAmount, 2);
+                $paymentStatus = ($dueAmount <= 0) ? 'paid' : (($paidAmount <= 0) ? 'due' : 'partial');
+            } else { // cash or bank_transfer
+                $paidAmount = $totalPrice;
+                $dueAmount = 0.00;
+                $paymentStatus = 'paid';
+            }
+
+            $saleOrder->total_offer_price = $totalOfferPrice;
+            $saleOrder->total_discount = $totalDiscount;
+            $saleOrder->total_price = (int) $totalPrice;
+            $saleOrder->total_amount = $totalPrice;
+            $saleOrder->paid_amount = $paidAmount;
+            $saleOrder->due_amount = $dueAmount;
+            $saleOrder->payment_status = $paymentStatus;
+            $saleOrder->payment_method = $paymentMethod;
             $saleOrder->save();
-            
-            SaleCart::whereIn('id',$itemWillDelete)->delete();
-            
+
+            // Clear temporary cart items
+            SaleCart::whereIn('id', $itemWillDelete)->delete();
+
+            // Record Double-Entry Ledger Transaction
+            $ledgerService = app(LedgerService::class);
+            $ledgerService->recordSaleLedger($saleOrder, [
+                'total_amount' => $totalPrice,
+                'paid_amount' => $paidAmount,
+                'due_amount' => $dueAmount,
+                'payment_method' => $paymentMethod,
+                'cogs_amount' => $totalCogs,
+                'shop_id' => $shopID,
+            ]);
+
             DB::commit();
             return response(['status' => true, 'message' => 'Order created successfully!', 'data' => $saleOrder]);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['status' => false, 'message' => 'Error: '.$e->getMessage().' Please contact support'], 500);
+            return response()->json(['status' => false, 'message' => 'Error: ' . $e->getMessage()], 422);
         }
-
-        
-
-
     }
 
 

@@ -37,7 +37,9 @@ class IssuanceController extends Controller
 {
 
     function __construct(){
-        define('ISSUE_KEY','issue_temp_item');
+        if (!defined('ISSUE_KEY')) {
+            define('ISSUE_KEY','issue_temp_item');
+        }
     }
 
 

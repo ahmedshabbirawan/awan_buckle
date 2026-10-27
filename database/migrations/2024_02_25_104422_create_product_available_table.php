@@ -13,17 +13,19 @@ class CreateProductAvailableTable extends Migration
      */
     public function up()
     {
-        Schema::create('product_available', function (Blueprint $table) {
-            $table->id();
-            $table->integer('product_id')->nullable();
-            $table->integer('qty')->nullable();
-            $table->integer('shop_id')->nullable();
-            $table->integer('created_by')->nullable();
-            $table->integer('updated_by')->nullable();
-            $table->integer('deleted_by')->nullable();
-            $table->timestamps();
-            $table->softDeletes();
-        });
+        if (!Schema::hasTable('product_available')) {
+            Schema::create('product_available', function (Blueprint $table) {
+                $table->id();
+                $table->integer('product_id')->nullable();
+                $table->integer('qty')->nullable();
+                $table->integer('shop_id')->nullable();
+                $table->integer('created_by')->nullable();
+                $table->integer('updated_by')->nullable();
+                $table->integer('deleted_by')->nullable();
+                $table->timestamps();
+                $table->softDeletes();
+            });
+        }
     }
 
     /**

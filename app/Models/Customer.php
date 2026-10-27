@@ -28,4 +28,27 @@ class Customer extends Model{
         return self::statusLabel($this->status);
     }
 
+    public function account()
+    {
+        return $this->hasOne(Account::class, 'holder_id')
+            ->where('holder_type', Account::HOLDER_CUSTOMER);
+    }
+
+    public function sales()
+    {
+        return $this->hasMany(SaleOrder::class, 'customer_id');
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class, 'party_id')
+            ->where('party_type', Payment::PARTY_CUSTOMER);
+    }
+
+    public function getCurrentBalanceAttribute(): float
+    {
+        $account = $this->account;
+        return $account ? $account->calculateBalance() : 0.00;
+    }
+
 }

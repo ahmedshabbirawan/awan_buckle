@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateSalesTable extends Migration
+class CreateSaleOrdersTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,7 +13,8 @@ class CreateSalesTable extends Migration
      */
     public function up()
     {
-        Schema::create('sale_orders', function (Blueprint $table) {
+        if (!Schema::hasTable('sale_orders')) {
+            Schema::create('sale_orders', function (Blueprint $table) {
 
             $table->id();
             $table->integer("customer_id")->nullable();
@@ -32,6 +33,7 @@ class CreateSalesTable extends Migration
             $table->softDeletes();
             $table->timestamps();
         });
+        }
     }
 
     /**

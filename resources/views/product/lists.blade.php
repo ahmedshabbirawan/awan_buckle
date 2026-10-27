@@ -249,17 +249,17 @@ var listTable;
         endforeach;
         ?>
       //  dataColumns.push({ data: 'status_label', name: 'status', title: 'Status', width: '10%'  });
-     //   dataColumns.push({ data: 'action', name: 'action', title: 'Action', width: '15%' });
+       dataColumns.push({ data: 'action', name: 'action', title: 'Action', width: '15%' });
 
         setTimeout(() => {
             listTable = $('#yajra-table').DataTable({
             sort:true,
-            paging: false,
-            aLengthMenu: [
-        [25, 50, 100, 200, -1],
-        [25, 50, 100, 200, "All"]
-    ],
-    iDisplayLength: -1,
+            // paging: false,
+    //         aLengthMenu: [
+    //     [25, 50, 100, 200, -1],
+    //     [25, 50, 100, 200, "All"]
+    // ],
+    // iDisplayLength: -1,
           //  dom: 'Bfrtip',
             buttons: [
             'excel', 'pdf'

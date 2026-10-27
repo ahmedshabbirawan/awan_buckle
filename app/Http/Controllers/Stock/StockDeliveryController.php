@@ -24,6 +24,7 @@ use Illuminate\Support\Str;
 
 use App\Traits\Definitions;
 use Carbon\Carbon;
+use App\Services\LedgerService;
 
 class StockDeliveryController extends Controller
 {
@@ -121,36 +122,62 @@ class StockDeliveryController extends Controller
             return response(['message' => 'No record found!'], 422);
         }
 
-        //$filesData          = $this->uploadDeliveryDocuments($request);
-        //$data               = array_merge($data,$filesData);
+        // Calculate total amount from items if delivery_amount is not passed or empty
+        $calculatedTotal = 0.00;
+        foreach ($deliveryProducts as $dp) {
+            $calculatedTotal += round(((float)$dp->quantity * (float)$dp->unit_price), 2);
+        }
+
+        $totalAmount = round((float) ($request->get('delivery_amount') ?: $calculatedTotal), 2);
+        $paymentMethod = $request->get('payment_method', 'cash'); // cash, credit, bank_transfer, split
+        $paidReq = $request->has('paid_amount') ? round((float) $request->get('paid_amount'), 2) : null;
+
+        if ($paymentMethod === 'credit') {
+            $paidAmount = 0.00;
+            $dueAmount = $totalAmount;
+            $paymentStatus = 'due';
+        } elseif ($paymentMethod === 'split') {
+            $paidAmount = ($paidReq !== null) ? min($paidReq, $totalAmount) : 0.00;
+            $dueAmount = round($totalAmount - $paidAmount, 2);
+            $paymentStatus = ($dueAmount <= 0) ? 'paid' : (($paidAmount <= 0) ? 'due' : 'partial');
+        } else { // cash or bank_transfer
+            $paidAmount = $totalAmount;
+            $dueAmount = 0.00;
+            $paymentStatus = 'paid';
+        }
+
+        $data['total_amount'] = $totalAmount;
+        $data['paid_amount'] = $paidAmount;
+        $data['due_amount'] = $dueAmount;
+        $data['payment_status'] = $paymentStatus;
+        $data['payment_method'] = $paymentMethod;
+        $data['delivery_amount'] = (string) $totalAmount;
 
         try {
             DB::beginTransaction();
             $row                = StockDelivery::create($data);
             $stockDeliveryID    = $row->id;
-            $time               = time();
+            $firstShopID        = null;
+
             foreach ($deliveryProducts as $deliverProduct) {
                 $shopID                 =   $deliverProduct->shop_id;
+                if (!$firstShopID) {
+                    $firstShopID = $shopID;
+                }
                 $productID              =   $deliverProduct->product_id;
                 $productCategoryID      =   $deliverProduct->product_cat_id;
                 $subCategoryID          =   $deliverProduct->sub_cat_id;
                 $stockDeliveryProductID =   $deliverProduct->id;
                 $ProductStockItemCount  =   (int) StockItem::where('product_id', $productID)->where('shop_id', $shopID)->sum('qty');
-                //$project                =   Project::find($projectID);
                 $productCategory        =   ProductCategory::find($productCategoryID);
                 $qty = $deliverProduct->quantity;
-
-
 
                 $deliverProduct->status             = 1;
                 $deliverProduct->stock_delivery_id  = $stockDeliveryID;
                 $deliverProduct->save();
 
                 $snArr                              = ($deliverProduct->serial_numbers != '') ? explode(',', $deliverProduct->serial_numbers) : [];
-
-                // $itemKey = ' /'.Str::slug($project->code,'-').'/'.Str::slug($productCategory->name).'/';
-                $itemKey = 'tb/' . Str::slug($productCategory->name) . '/' . $productID;
-
+                $itemKey = 'tb/' . Str::slug($productCategory ? $productCategory->name : 'item') . '/' . $productID;
 
                 $itemData   = [
                     'product_id'            => $deliverProduct->product_id,
@@ -162,22 +189,16 @@ class StockDeliveryController extends Controller
                     'shop_id' => $deliverProduct->shop_id,
                 ];
 
-
                 $defaultCondition = Definitions::$CONDITION_WORKING;
 
-
-
                 if ($deliverProduct->parent_cat_id == 1) { // is consumable
-                    // $itemNumber                 = $ProductStockItemCount + 1;
                     $itemData['qty']            = $qty;
                     $itemData['available_qty']      = $qty;
                     $itemData['serial_number']      = $itemKey . str_pad($stockDeliveryID, 6, "0", STR_PAD_LEFT);
                     $itemData['condition_status']   = $defaultCondition;
 
-
                     StockItem::create($itemData);
                 } else {
-
                     for ($i = 0; $i < $qty; $i++) {
                         $itemNumber = $ProductStockItemCount + ($i + 1);
                         if (isset($snArr[$i])) {
@@ -192,19 +213,29 @@ class StockDeliveryController extends Controller
                     }
                 }
             }
+
+            // Record Double-Entry Ledger Transaction for Vendor Purchase
+            if ($totalAmount > 0) {
+                $ledgerService = app(LedgerService::class);
+                $ledgerService->recordPurchaseLedger($row, [
+                    'total_amount' => $totalAmount,
+                    'paid_amount' => $paidAmount,
+                    'due_amount' => $dueAmount,
+                    'payment_method' => $paymentMethod,
+                    'shop_id' => $firstShopID,
+                ]);
+            }
+
             DB::commit();
 
-
-
             if ($request->ajax()) {
-                return response(['status' => true, 'data' => $row, 'message' => 'Product Add successfully.']);
+                return response(['status' => true, 'data' => $row, 'message' => 'Product and Purchase Ledger recorded successfully.']);
             } else {
                 return redirect(route('product.list'))->with('success', ' added successful!');
             }
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Error.Please Contact   Support' . $e->getMessage()], 500);
-            // return redirect()->route('category.sub.list')->with('error','Error.Please Contact   Support');
+            return response()->json(['message' => 'Error. Please Contact Support: ' . $e->getMessage()], 500);
         }
     }
 

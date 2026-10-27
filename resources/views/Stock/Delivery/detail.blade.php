@@ -137,7 +137,30 @@ Supplier Detail
                                             <div class="profile-info-row">
                                                 <div class="profile-info-name"> Delivery Amount </div>
                                                 <div class="profile-info-value">
-                                                    <span class="editable editable-click" id="username">{{ $row->delivery_amount }}</span>
+                                                    <span style="font-weight: bold;">Rs. {{ number_format($row->total_amount ?: (float)$row->delivery_amount, 2) }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="profile-info-row">
+                                                <div class="profile-info-name"> Paid Amount </div>
+                                                <div class="profile-info-value">
+                                                    <span class="text-success" style="font-weight: bold;">Rs. {{ number_format($row->paid_amount !== null ? $row->paid_amount : (float)$row->delivery_amount, 2) }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="profile-info-row">
+                                                <div class="profile-info-name"> Due Amount (AP) </div>
+                                                <div class="profile-info-value">
+                                                    <span class="{{ $row->due_amount > 0 ? 'text-danger' : 'text-muted' }}" style="font-weight: bold;">Rs. {{ number_format($row->due_amount ?: 0, 2) }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="profile-info-row">
+                                                <div class="profile-info-name"> Payment Method / Status </div>
+                                                <div class="profile-info-value">
+                                                    <span class="label label-info arrowed-in arrowed-in-right">
+                                                        {{ strtoupper(str_replace('_', ' ', $row->payment_method ?: 'cash')) }}
+                                                    </span>
+                                                    <span class="label {{ $row->payment_status == 'paid' ? 'label-success' : ($row->payment_status == 'partial' ? 'label-warning' : 'label-danger') }}">
+                                                        {{ strtoupper($row->payment_status ?: 'paid') }}
+                                                    </span>
                                                 </div>
                                             </div>
                                             <div class="profile-info-row">

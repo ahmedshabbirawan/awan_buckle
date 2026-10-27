@@ -28,6 +28,7 @@ use Illuminate\Support\Str;
 
 use App\Traits\Definitions;
 use Carbon\Carbon;
+use App\Services\LedgerService;
 
 class SimpleStockDeliveryController extends Controller{
 
@@ -98,88 +99,107 @@ class SimpleStockDeliveryController extends Controller{
 
     function save(StockDeliveryFormRequest $request){
     
-        $data = $request->only(['rec_by_name', 'rec_by_designation', 'rec_by_cnic', 'rec_by_phone', 
-        'hand_name', 'hand_designation','hand_cnic', 'hand_phone',
-        'purchased_date', 'project_id', 'project_dg', 
-        'po_loa_loi','amount_category','delivery_amount','supplier_id','delivery_challan_no','warehouse_id',
-        'stock_ledger_reference'
+        $data = $request->only([
+            'rec_by_name', 'rec_by_designation', 'rec_by_cnic', 'rec_by_phone', 
+            'hand_name', 'hand_designation','hand_cnic', 'hand_phone',
+            'purchased_date', 'project_id', 'project_dg', 
+            'po_loa_loi','amount_category','delivery_amount','supplier_id','delivery_challan_no','warehouse_id',
+            'stock_ledger_reference'
         ]);
 
-       //  dd($data);
-
-       $data['purchased_date'] = Carbon::parse($data['purchased_date'])->format('Y-m-d');
+        $data['purchased_date'] = Carbon::parse($data['purchased_date'])->format('Y-m-d');
 
         $userID             = auth()->user()->id;
-        $projectID          = 1; // $data['project_id'];
+        $projectID          = 1;
                 
         $whereArr           = array('status' => 0, 'created_by' => $userID); 
         $deliveryProducts   = StockDeliveryProduct::where($whereArr)->get();
 
-        if( count($deliveryProducts)  == 0 ){
-            return response(['message' => 'No record found!'],422);
+        if (count($deliveryProducts) == 0) {
+            return response(['message' => 'No record found!'], 422);
         }
 
-        //$filesData          = $this->uploadDeliveryDocuments($request);
-        //$data               = array_merge($data,$filesData);
+        // Calculate total amount from items if delivery_amount is not passed or empty
+        $calculatedTotal = 0.00;
+        foreach ($deliveryProducts as $dp) {
+            $calculatedTotal += round(((float)$dp->quantity * (float)$dp->unit_price), 2);
+        }
 
-// dd($data);
+        $totalAmount = round((float) ($request->get('delivery_amount') ?: $calculatedTotal), 2);
+        $paymentMethod = $request->get('payment_method', 'cash'); // cash, credit, bank_transfer, split
+        $paidReq = $request->has('paid_amount') ? round((float) $request->get('paid_amount'), 2) : null;
 
-        try{
+        if ($paymentMethod === 'credit') {
+            $paidAmount = 0.00;
+            $dueAmount = $totalAmount;
+            $paymentStatus = 'due';
+        } elseif ($paymentMethod === 'split') {
+            $paidAmount = ($paidReq !== null) ? min($paidReq, $totalAmount) : 0.00;
+            $dueAmount = round($totalAmount - $paidAmount, 2);
+            $paymentStatus = ($dueAmount <= 0) ? 'paid' : (($paidAmount <= 0) ? 'due' : 'partial');
+        } else { // cash or bank_transfer
+            $paidAmount = $totalAmount;
+            $dueAmount = 0.00;
+            $paymentStatus = 'paid';
+        }
+
+        $data['total_amount'] = $totalAmount;
+        $data['paid_amount'] = $paidAmount;
+        $data['due_amount'] = $dueAmount;
+        $data['payment_status'] = $paymentStatus;
+        $data['payment_method'] = $paymentMethod;
+        $data['delivery_amount'] = (string) $totalAmount;
+
+        try {
             DB::beginTransaction();
             $row                = StockDelivery::create($data);
             $stockDeliveryID    = $row->id;
-            $time               = time();
-            foreach($deliveryProducts as $deliverProduct){
-                $shopID                 =   $deliverProduct->shop_id;
-                $productID              =   $deliverProduct->product_id;
-                $productCategoryID      =   0; // $deliverProduct->product_cat_id;
-                $subCategoryID          =   0; // $deliverProduct->sub_cat_id;
-                $stockDeliveryProductID =   $deliverProduct->id;
-                //  $ProductStockItemCount  =   (Int) StockItem::where('product_id',$productID)->where('shop_id',$shopID)->sum('qty');
-                //  $project                =   Project::find($projectID);
-                //  $productCategory        =   ProductCategory::find($productCategoryID);
-                $qty = $deliverProduct->quantity;
-                $deliverProduct->status             = 1;
-                $deliverProduct->stock_delivery_id  = $stockDeliveryID;
-                $deliverProduct->save();
-                $snArr                              = ($deliverProduct->serial_numbers != '')? explode(',',$deliverProduct->serial_numbers):[];
-                // $itemKey = 'tb/'.Str::slug($project->code,'-').'/'.Str::slug($productCategory->name).'/';
-                $itemKey = 'tb/'.$productID;
-                /*  MANAGE AVAILABLE ITEMS  */
-                $proAvail = [];
-                $proAvail['shop_id'] = $shopID;
-                $proAvail['product_id'] = $productID;
+            $firstShopID        = null;
 
-               //  dd($qty);
+            foreach ($deliveryProducts as $deliverProduct) {
+                $shopID                 = $deliverProduct->shop_id;
+                if (!$firstShopID) {
+                    $firstShopID = $shopID;
+                }
+                $productID              = $deliverProduct->product_id;
+                $qty                    = $deliverProduct->quantity;
+                $deliverProduct->status = 1;
+                $deliverProduct->stock_delivery_id = $stockDeliveryID;
+                $deliverProduct->save();
 
                 Product::where(['id' => $productID])->update(['cost_price' => $deliverProduct->unit_price]);
 
-                ProductAvailable::manageStockByShopAndProductId($qty, StockAudit::STOCK_ACTION_ADD, $productID, $shopID, StockAudit::STOCK_OBJECT_TYPE_PURCHASE, $stockDeliveryID );
+                ProductAvailable::manageStockByShopAndProductId(
+                    $qty, 
+                    StockAudit::STOCK_ACTION_ADD, 
+                    $productID, 
+                    $shopID, 
+                    StockAudit::STOCK_OBJECT_TYPE_PURCHASE, 
+                    $stockDeliveryID
+                );
+            }
 
-                /*
-                $productAvailable = ProductAvailable::where($proAvail)->first();
-                $qtyWhenAdjust = 0;
-                $newQty = 0; 
-                if(isset($productAvailable->product_id)){
-                    $newQty = $productAvailable->qty + $qty;
-                    $productAvailable->qty      = $newQty;
-                    $productAvailable->save();
-                    $qtyWhenAdjust = $productAvailable->qty;
-                }else{
-                    $proAvail['qty'] = $qty;
-                    ProductAvailable::create($proAvail);
-                }
-                */
+            // Record Double-Entry Ledger Transaction for Vendor Purchase
+            if ($totalAmount > 0) {
+                $ledgerService = app(LedgerService::class);
+                $ledgerService->recordPurchaseLedger($row, [
+                    'total_amount' => $totalAmount,
+                    'paid_amount' => $paidAmount,
+                    'due_amount' => $dueAmount,
+                    'payment_method' => $paymentMethod,
+                    'shop_id' => $firstShopID,
+                ]);
             }
+
             DB::commit();
-            if($request->ajax()){
-                return response(['status' => true, 'data' => $row, 'message' => 'Product Add successfully.' ]);
-            }else{
-                return redirect(route('product.list'))->with('success','Product added successful!');
+            if ($request->ajax()) {
+                return response(['status' => true, 'data' => $row, 'message' => 'Product and Purchase Ledger recorded successfully.']);
+            } else {
+                return redirect(route('product.list'))->with('success', 'Product added successful!');
             }
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => $e->getLine().' Error : '. $e->getMessage(). '. Please Contact to Developer'], 500);
+            return response()->json(['message' => $e->getLine() . ' Error : ' . $e->getMessage() . '. Please Contact Developer'], 500);
         }
     }
 

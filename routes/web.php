@@ -19,6 +19,8 @@ use App\Http\Controllers\Web\Product\ProductController;
 use App\Http\Controllers\Stock\StockDeliveryProductController;
 use App\Http\Controllers\Stock\StockController;
 use App\Http\Controllers\Stock\ShopWiseProductStockController;
+use App\Http\Controllers\Ledger\CustomerLedgerController;
+use App\Http\Controllers\Ledger\SupplierLedgerController;
 
 
 
@@ -54,6 +56,7 @@ use App\Http\Controllers\StockExchange\StockExchangeController;
 
 use App\Http\Controllers\Report\ProductStockController;
 use App\Http\Controllers\Sale\Report\SaleReportController;
+use App\Http\Controllers\Sale\Report\DailySalesReportController;
 use App\Http\Controllers\Web\Product\SimpleProductController;
 use App\Models\StockItem;
 
@@ -254,6 +257,15 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::get('/status/{id}', [SupplierController::class, 'status'])->name('status')->middleware('permission:supplier.status');
         Route::get('/delete/{id}', [SupplierController::class, 'destroy'])->name('delete')->middleware('permission:supplier.delete');
         Route::get('/view/{id}', [SupplierController::class, 'show'])->name('view')->middleware('permission:supplier.read');
+        
+        // Supplier Ledger Routes
+        Route::group(['prefix' => 'ledger', 'as' => 'ledger.'], function () {
+            Route::get('/list', [SupplierLedgerController::class, 'index'])->name('index');
+            Route::get('/statement/{id}', [SupplierLedgerController::class, 'show'])->name('show');
+            Route::get('/balance/{id}', [SupplierLedgerController::class, 'getBalance'])->name('balance');
+            Route::post('/payment/{id}', [SupplierLedgerController::class, 'recordPayment'])->name('payment');
+            Route::get('/voucher/{paymentId}', [SupplierLedgerController::class, 'printVoucher'])->name('voucher');
+        });
     });
 
 
@@ -271,6 +283,15 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::get('/search_select2', [CustomerController::class, 'searchSelectTwo'])->name('search_select2');
 
         Route::get('/create_view_modal', [CustomerController::class, 'createViewModal'])->name('create_view_modal'); //->middleware('permission:supplier.create');
+
+        // Customer Ledger Routes
+        Route::group(['prefix' => 'ledger', 'as' => 'ledger.'], function () {
+            Route::get('/list', [CustomerLedgerController::class, 'index'])->name('index');
+            Route::get('/statement/{id}', [CustomerLedgerController::class, 'show'])->name('show');
+            Route::get('/balance/{id}', [CustomerLedgerController::class, 'getBalance'])->name('balance');
+            Route::post('/payment/{id}', [CustomerLedgerController::class, 'recordPayment'])->name('payment');
+            Route::get('/voucher/{paymentId}', [CustomerLedgerController::class, 'printVoucher'])->name('voucher');
+        });
     });
 
 
@@ -310,10 +331,10 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::get('change-status/{eid}', [LocationController::class, 'changeStatus']);
     });
 
-    Route::prefix('stock')->group(function () {
-        Route::get('list', [AddStockController::class, 'list']);
-        Route::get('create', [AddStockController::class, 'create']);
-    });
+    // Route::prefix('stock')->group(function () {
+    //     Route::get('list', [AddStockController::class, 'list']);
+    //     Route::get('create', [AddStockController::class, 'create']);
+    // });
 
     Route::prefix('ajax_view')->group(function () {
         Route::get('location_child', [LocationController::class, 'location_child']);
@@ -540,6 +561,10 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::group(['prefix' => 'report/', 'as' => 'report.'], function () {
         Route::group(['prefix' => 'sale/', 'as' => 'sale.'], function () {
             Route::get('all', [SaleReportController::class, 'all'])->name('all');
+            Route::get('daily-summary', [DailySalesReportController::class, 'index'])->name('daily_summary');
+            Route::get('daily-summary/data', [DailySalesReportController::class, 'data'])->name('daily_summary.data');
+            Route::get('daily-summary/details', [DailySalesReportController::class, 'details'])->name('daily_summary.details');
+            Route::get('daily-summary/export', [DailySalesReportController::class, 'exportCsv'])->name('daily_summary.export');
         });
 
         // OLD
@@ -547,13 +572,5 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::get('product_wise', [ProductStockController::class, 'productWise'])->name('product_wise');
         Route::get('product_order_table', [ProductStockController::class, 'saleOrder'])->name('product_order_table');
         Route::get('product_purchase_table', [ProductStockController::class, 'purchase'])->name('product_purchase_table');
-    });
-
-
-
-    Route::group(['prefix' => 'report/', 'as' => 'report.'], function () {
-        Route::group(['prefix' => 'sale/', 'as' => 'sale.'], function () {
-            Route::get('all', [SaleReportController::class, 'all'])->name('all');
-        });
     });
 }); // main auth end

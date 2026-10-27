@@ -164,6 +164,9 @@
                         <a href="{{ route('supplier.create') }}"><i class="menu-icon fa fa-caret-right"></i>Add New</a><b class="arrow"></b>
                     </li>
                     @endcan
+                    <li class="{{request()->is('supplier/ledger*') ? 'active' : '' }}">
+                        <a href="{{ route('supplier.ledger.index') }}"><i class="menu-icon fa fa-caret-right"></i>Supplier Ledgers</a><b class="arrow"></b>
+                    </li>
                 </ul>
             </li>
             <!--------------- End Suppliers-------------------->
@@ -186,6 +189,9 @@
                     </li>
                     <li class="{{request()->is('customer/create*') ? 'active' : '' }}">
                         <a href="{{ route('customer.create') }}"><i class="menu-icon fa fa-caret-right"></i>Add New</a><b class="arrow"></b>
+                    </li>
+                    <li class="{{request()->is('customer/ledger*') ? 'active' : '' }}">
+                        <a href="{{ route('customer.ledger.index') }}"><i class="menu-icon fa fa-caret-right"></i>Customer Ledgers</a><b class="arrow"></b>
                     </li>
                     @can('customer.read')
                     
@@ -381,7 +387,7 @@
            
 
              <!--------------- Reports -------------------->
-             <li class="{{request()->is('reports*') ? 'active open' : '' }} ">
+             <li class="{{request()->is('report*') || request()->is('reports*') ? 'active open' : '' }} ">
                 <a href="#" class="dropdown-toggle ">
                     <i class="menu-icon fa fa-bar-chart-o "></i>
                     <span class="menu-text">
@@ -392,15 +398,19 @@
                 <b class="arrow"></b>
                 <ul class="submenu">
                     
-                    <li class="{{request()->is('report*') ? 'active' : '' }}">
+                    <li class="{{request()->is('report/sale/daily-summary*') ? 'active' : '' }}">
+                        <a href="{{ route('report.sale.daily_summary') }}"><i class="menu-icon fa fa-caret-right"></i>Daily Sales Summary</a><b class="arrow"></b>
+                    </li>
+
+                    <li class="{{request()->is('report/sale/all*') ? 'active' : '' }}">
                         <a href="{{ route('report.sale.all') }}"><i class="menu-icon fa fa-caret-right"></i>Sale</a><b class="arrow"></b>
                     </li>    
 
-                    <li class="{{request()->is('report*') ? 'active' : '' }}">
+                    <li class="{{request()->is('report/product') ? 'active' : '' }}">
                         <a href="{{ route('report.product') }}"><i class="menu-icon fa fa-caret-right"></i>Product</a><b class="arrow"></b>
                     </li>
 
-                    <li class="{{request()->is('report*') ? 'active' : '' }}">
+                    <li class="{{request()->is('report/product_wise') ? 'active' : '' }}">
                         <a href="{{ route('report.product_wise') }}"><i class="menu-icon fa fa-caret-right"></i>Product Report</a><b class="arrow"></b>
                     </li>
 

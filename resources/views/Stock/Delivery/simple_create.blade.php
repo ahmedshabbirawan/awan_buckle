@@ -118,6 +118,13 @@ $qty = '';
                         <option value="<?= $key ?>"><?= $val ?></option>
                       <?php endforeach; ?>
                     </select>
+                    <div id="supplier_ledger_info" style="margin-top: 6px; display: none;">
+                      <div class="alert alert-info" style="margin-bottom: 0; padding: 4px 8px; font-size: 11px; border-radius: 3px;">
+                        <i class="fa fa-university"></i> <strong>Payable:</strong>
+                        <span id="supplier_balance_text" style="font-weight: bold;">Rs. 0.00</span>
+                        <span id="supplier_balance_badge" class="label label-sm label-success pull-right" style="margin-top:-1px;">Settled</span>
+                      </div>
+                    </div>
                   </div>
 
                   <div class="col-lg-3 col-sm-12">
@@ -136,8 +143,44 @@ $qty = '';
                   </div>
 
                   <div class="col-lg-3 col-sm-12">
-                    <label for="delivery_amount" >Delivery Amount</label>
+                    <label for="delivery_amount" >Total Delivery / Purchase Amount</label>
                     <input type="text" required class="input-sm col-sm-12 form-control" value="{{ $amount_delivery }}" name="delivery_amount" id="delivery_amount" placeholder="Delivery Amount">
+                  </div>
+                </div>
+
+                <!-- Financial Settlement Block -->
+                <div class="row" style="margin-top: 14px; background-color: #f7f9fa; border: 1px solid #dce4ec; border-radius: 4px; padding: 12px 10px 8px 10px;">
+                  <div class="col-lg-3 col-sm-12">
+                    <label for="payment_method" style="font-weight: bold;"><i class="fa fa-credit-card text-primary"></i> Payment Method / Account</label>
+                    <select name="payment_method" id="payment_method" class="form-control" onchange="calculatePurchaseSettlement();">
+                      <option value="cash" selected>Cash Account (Settled in Full)</option>
+                      <option value="bank_transfer">Bank Account (Settled in Full)</option>
+                      <option value="credit">Credit / On Account (Full Amount Payable)</option>
+                      <option value="split">Split Payment (Part Cash/Bank, Part Credit)</option>
+                    </select>
+                  </div>
+
+                  <div class="col-lg-3 col-sm-12">
+                    <label for="paid_amount" style="font-weight: bold;"><i class="fa fa-money text-success"></i> Paid Amount (Now)</label>
+                    <div class="input-group">
+                      <span class="input-group-addon">Rs</span>
+                      <input type="number" step="0.01" class="form-control" name="paid_amount" id="paid_amount" placeholder="0.00" oninput="calculatePurchaseSettlement();">
+                    </div>
+                  </div>
+
+                  <div class="col-lg-3 col-sm-12">
+                    <label for="due_amount" style="font-weight: bold;"><i class="fa fa-book text-danger"></i> Balance to Ledger (Due AP)</label>
+                    <div class="input-group">
+                      <span class="input-group-addon">Rs</span>
+                      <input type="number" step="0.01" class="form-control" name="due_amount" id="due_amount" readonly placeholder="0.00" style="background-color: #fdf5f5; color: #d15b47; font-weight: bold;">
+                    </div>
+                  </div>
+
+                  <div class="col-lg-3 col-sm-12">
+                    <label style="font-weight: bold;"><i class="fa fa-info-circle text-info"></i> Posting Summary</label>
+                    <div id="settlement_summary_badge" class="alert alert-success" style="padding: 6px 10px; margin-bottom: 0; font-size: 11px; border-radius: 3px;">
+                      <span id="settlement_summary_text">Full Settlement: Paid Rs. 0.00 | Due Rs. 0.00</span>
+                    </div>
                   </div>
                 </div>
                 <div class="space"></div>
@@ -512,20 +555,92 @@ $qty = '';
       type: 'get',
       url: "{{ route('stocks.dp.list') }}",
       success: function(res) {
-        // product_list
         var html = '';
         var sr = 1;
+        var totalCost = 0.00;
         if (res.data.length > 0) {
-          $(res.data).each(function(index, ele) { // product_category_name
-            console.log(ele);
+          $(res.data).each(function(index, ele) {
             html += '<tr><td>' + (sr) + '</td><td>' + ele.product_category_name + '</td><td>' + ele.product_name + '</td><td>' + ele.product_description + '</td><td>' + ele.quantity + ' (' + ele.uom_code + ') </td><td>' + ele.unit_price + '</td><td>' + ele.total_price + '</td><td>' + ele.action + '</td></tr>';
             sr++;
+            totalCost += parseFloat(ele.total_price) || 0;
           });
           $('#product_list').html(html);
         } else {
           $('#product_list').html('<tr><td colspan="7" style="text-align: center;" >No record found</td></tr>');
         }
+        if (totalCost > 0 || !$('#delivery_amount').val()) {
+          $('#delivery_amount').val(totalCost.toFixed(2));
+        }
+        calculatePurchaseSettlement();
+      }
+    });
+  }
 
+  function calculatePurchaseSettlement() {
+    var deliveryAmount = parseFloat($('#delivery_amount').val()) || 0;
+    var method = $('#payment_method').val() || 'cash';
+    var paidInput = $('#paid_amount');
+    var dueInput = $('#due_amount');
+    var badge = $('#settlement_summary_badge');
+    var text = $('#settlement_summary_text');
+
+    var paid = 0;
+    var due = 0;
+
+    if (method === 'cash' || method === 'bank_transfer') {
+      paid = deliveryAmount;
+      due = 0;
+      paidInput.val(paid.toFixed(2)).attr('readonly', 'on');
+      dueInput.val(due.toFixed(2));
+      badge.removeClass('alert-warning alert-danger').addClass('alert-success');
+      text.html('<strong>Full Settlement:</strong> Paid Rs. ' + paid.toFixed(2) + ' | Due Rs. 0.00');
+    } else if (method === 'credit') {
+      paid = 0;
+      due = deliveryAmount;
+      paidInput.val('0.00').attr('readonly', 'on');
+      dueInput.val(due.toFixed(2));
+      badge.removeClass('alert-success alert-warning').addClass('alert-danger');
+      text.html('<strong>Full Credit / AP:</strong> Paid Rs. 0.00 | Added to Payable Rs. ' + due.toFixed(2));
+    } else if (method === 'split') {
+      paidInput.removeAttr('readonly');
+      var enteredPaid = parseFloat(paidInput.val());
+      if (isNaN(enteredPaid)) {
+        enteredPaid = 0;
+      }
+      if (enteredPaid > deliveryAmount) {
+        enteredPaid = deliveryAmount;
+        paidInput.val(deliveryAmount.toFixed(2));
+      }
+      paid = enteredPaid;
+      due = Math.max(0, deliveryAmount - paid);
+      dueInput.val(due.toFixed(2));
+      badge.removeClass('alert-success alert-danger').addClass('alert-warning');
+      text.html('<strong>Split Settlement:</strong> Paid Rs. ' + paid.toFixed(2) + ' | Added to Payable Rs. ' + due.toFixed(2));
+    }
+  }
+
+  function fetchSupplierBalance(supplierId) {
+    if (!supplierId || parseInt(supplierId) <= 0) {
+      $('#supplier_ledger_info').hide();
+      return;
+    }
+
+    $.ajax({
+      url: "{{ route('supplier.ledger.balance', '') }}/" + supplierId,
+      type: 'GET',
+      dataType: 'json',
+      success: function(res) {
+        $('#supplier_ledger_info').show();
+        $('#supplier_balance_text').text(res.formatted_balance);
+        var badge = $('#supplier_balance_badge');
+        badge.removeClass('label-success label-danger label-warning');
+        if (res.balance > 0) {
+          badge.addClass('label-danger').text(res.status || 'Payable Liability');
+        } else if (res.balance < 0) {
+          badge.addClass('label-warning').text(res.status || 'Advance Debit');
+        } else {
+          badge.addClass('label-success').text('Settled (0.00)');
+        }
       }
     });
   }
@@ -791,6 +906,20 @@ $qty = '';
     });
 
     // project_change($('#project_id'));
+
+    $(document).on('change', '#supplier_id', function() {
+      fetchSupplierBalance($(this).val());
+    });
+
+    $(document).on('input change', '#delivery_amount', function() {
+      calculatePurchaseSettlement();
+    });
+
+    if ($('#supplier_id').val()) {
+      fetchSupplierBalance($('#supplier_id').val());
+    }
+
+    calculatePurchaseSettlement();
 
     $('#is_invoice_delivery').change(function() {
       if ($(this).is(':checked')) {

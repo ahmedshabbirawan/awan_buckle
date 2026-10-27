@@ -13,14 +13,20 @@ use Attribute;
         parent::boot();
 
         static::creating(function (&$model) {
-            $model->created_by = auth()->user()->id;
+            if (empty($model->created_by)) {
+                $model->created_by = auth()->check() ? auth()->user()->id : 1;
+            }
         });
 
         static::updating(function (&$model) {
-            $model->updated_by = auth()->user()->id;
+            if (empty($model->updated_by)) {
+                $model->updated_by = auth()->check() ? auth()->user()->id : 1;
+            }
         });
         static::deleting(function (&$model) {
-            $model->delete_by = auth()->user()->id;
+            if (empty($model->delete_by)) {
+                $model->delete_by = auth()->check() ? auth()->user()->id : 1;
+            }
         });
     }
 
