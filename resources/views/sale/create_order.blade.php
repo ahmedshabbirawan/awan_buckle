@@ -110,7 +110,17 @@ Issuance Items
 
 <div class="col-6 col-lg-6" >
     <div class="widget-box widget-color-blue ui-sortable-handle" >
-    <div class="widget-header"><h4 class="widget-title">Cart</h4></div>
+    <div class="widget-header">
+        <h4 class="widget-title">Cart</h4>
+        <div class="widget-toolbar">
+            <button type="button" class="btn btn-xs btn-success" onclick="applyAllCommissions('apply');" title="Apply commissions configured on all products in cart">
+                <i class="ace-icon fa fa-percent"></i> Apply All Commissions
+            </button>
+            <button type="button" class="btn btn-xs btn-default" onclick="applyAllCommissions('clear');" title="Remove commission deductions from cart">
+                <i class="ace-icon fa fa-times"></i> Clear Commissions
+            </button>
+        </div>
+    </div>
     <div class="card radius-10 border-top border-0 border-4 border-danger">
     <form id="order_form" action="javascript:void(0);" >
     <input type="hidden" name="sale_key" value="{{ $salekey }}" >
@@ -124,6 +134,7 @@ Issuance Items
                 <tr><td class="total-label" >Total Item</td><td id="total_item" class="total-label" > -- </td></tr>
                 <tr><td class="total-label" >Sub Total</td><td id="sub_total" class="total-label" > -- </td></tr>
                 <tr><td class="total-label" >Total Discount</td> <td class="total-label"> <input type="text" id="total_discount" name="total_discount" class="form-control" readonly > </td></tr>
+                <tr><td class="total-label" style="color: #2e8965;" >Total Commission</td> <td class="total-label"> <input type="text" id="total_commission" name="total_commission" class="form-control" readonly style="font-weight: bold; color: #2e8965; background-color: #f6fbf8;" > </td></tr>
                 <tr><td class="total-label" >Grand Total / BillAmount </td><td   id="billAmount" class="total-label" > -- </td></tr>
                 <tr><td class="total-label" > Cash Received </td><td   id="" class="total-label" >  <input type="text" id="cash_received" onkeyup="calculateCash();" onblur="calculateCash();" name="cash_received" class="form-control" > </td></tr>
                 <tr><td class="total-label" > Cash Return </td><td   id="" class="total-label" > <input type="text" id="cash_returned" name="cash_returned" class="form-control disabledInput" readonly > </td></tr>
@@ -421,10 +432,13 @@ Issuance Items
     }
 
     function calculateSingleProduct(productID){
-        var qty         = $('#'+productID+'_qty').val();
-        var price       = $('#'+productID+'_price').val();
-        var discount    = $('#'+productID+'_discount').val();
-        var displayPrice = (qty * price) - (qty * discount);
+        var qty         = parseFloat($('#'+productID+'_qty').val()) || 0;
+        var price       = parseFloat($('#'+productID+'_price').val()) || 0;
+        var discount    = parseFloat($('#'+productID+'_discount').val()) || 0;
+        var isCommApplied = $('#'+productID+'_apply_comm').is(':checked');
+        var commPct     = parseFloat($('#'+productID+'_commission_pct').val()) || 0;
+        var lineComm    = isCommApplied ? ((price * qty * commPct) / 100) : 0;
+        var displayPrice = (qty * price) - (qty * discount) - lineComm;
         if(isFloat(displayPrice)){
             displayPrice = parseFloat(displayPrice).toFixed(2);
         }
@@ -441,18 +455,15 @@ Issuance Items
             error:ajaxFailBlock,
             success: function(res) {
                 var data = res; // ['responseJSON'];
-                    $('#total_item').html(data.recordsTotal);
-                    
-                    $('#sub_total').html(data.subTotal);
-                    $('#total_discount').val(data.totalDiscount);
-                    $('#billAmount').html(data.billAmount);
-                    billAmount = data.billAmount;
-
-
+                $('#total_item').html(data.recordsTotal);
+                $('#sub_total').html(parseFloat(data.subTotal || 0).toFixed(2));
+                $('#total_discount').val(parseFloat(data.totalDiscount || 0).toFixed(2));
+                $('#total_commission').val(parseFloat(data.totalCommission || 0).toFixed(2));
+                $('#billAmount').html(parseFloat(data.billAmount || 0).toFixed(2));
+                billAmount = data.billAmount;
+                calculateCash();
             }
         });
-
-
     }
 
 
@@ -529,8 +540,71 @@ Issuance Items
     
     function updateCartProductPrice(productID, $inputField){
         var productPrice = $($inputField).val();
-     updateProductPrice(productID, productPrice);
-        
+        updateProductPrice(productID, productPrice);
+    }
+
+    function toggleCartCommission(productID, isApplied){
+        var saleKey = $('#sale_key').val();
+        var commPct = $('#'+productID+'_commission_pct').val();
+        $.ajax({
+            type: 'post',
+            data:{
+                'product_id': productID, 
+                'sale_key': saleKey,
+                'apply_commission': isApplied ? 1 : 0,
+                'commission_percentage': commPct
+            },
+            url: "{{ route('sale.cart.apply_commission_single') }}",
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            error: ajaxFailBlock,
+            success: function(res) {
+                cartDataTable.ajax.reload();
+            }
+        });
+    }
+
+    function updateCartCommissionPct(productID, ele){
+        var commPct = $(ele).val();
+        var saleKey = $('#sale_key').val();
+        var isApplied = $('#'+productID+'_apply_comm').is(':checked');
+        $.ajax({
+            type: 'post',
+            data:{
+                'product_id': productID, 
+                'sale_key': saleKey,
+                'apply_commission': isApplied ? 1 : 0,
+                'commission_percentage': commPct
+            },
+            url: "{{ route('sale.cart.apply_commission_single') }}",
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            error: ajaxFailBlock,
+            success: function(res) {
+                cartDataTable.ajax.reload();
+            }
+        });
+    }
+
+    function applyAllCommissions(action){
+        var saleKey = $('#sale_key').val();
+        $.ajax({
+            type: 'post',
+            data:{
+                'sale_key': saleKey,
+                'action': action
+            },
+            url: "{{ route('sale.cart.apply_all_commissions') }}",
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            error: ajaxFailBlock,
+            success: function(res) {
+                cartDataTable.ajax.reload();
+            }
+        });
     }
 
 
@@ -842,19 +916,22 @@ Issuance Items
                //  },
                 complete:function(res){
                     var data = res['responseJSON'];
-                    $('#total_item').html(data.recordsTotal);
-                    
-                    $('#sub_total').html(data.subTotal);
-                    $('#total_discount').html(data.totalDiscount);
-                    $('#billAmount').html(data.billAmount);
-                    billAmount = data.billAmount;
+                    if (data) {
+                        $('#total_item').html(data.recordsTotal || 0);
+                        $('#sub_total').html(parseFloat(data.subTotal || 0).toFixed(2));
+                        $('#total_discount').val(parseFloat(data.totalDiscount || 0).toFixed(2));
+                        $('#total_commission').val(parseFloat(data.totalCommission || 0).toFixed(2));
+                        $('#billAmount').html(parseFloat(data.billAmount || 0).toFixed(2));
+                        billAmount = data.billAmount;
+                        calculateCash();
+                    }
                 }
             },
             columns: [
                 {
                     "data": "id",
                     title: 'Sr.',
-                    width:'5%',
+                    width:'4%',
                     render: function(data, type, row, meta) {
                         return meta.row + meta.settings._iDisplayStart + 1;
                     }
@@ -862,20 +939,20 @@ Issuance Items
                     data: 'product_name',
                     name: 'product_name',
                     title: 'Product',
-                    width:'35%',
+                    width:'26%',
                 },{
                     data: 'qty',
                     name: 'qty',
                     title: 'Qty',
-                    width:'15%',
+                    width:'9%',
                     render: function(data, type, row, meta) {
                         return '<input type="text" id="'+row.product_id+'_qty"  onblur="updateToCart('+row.product_id+',this)" autocomplete="off" class="input-sm col-xs-12" tabindex="'+(row.id+0.1)+'" value="'+data+'" >';
                     }
                 },{
                     data: 'offer_price',
                     name: 'offer_price',
-                    title: 'Offer Price',
-                    width:'15%',
+                    title: 'Price',
+                    width:'13%',
                     render: function(data, type, row, meta) {
                         return '<input type="text" id="'+row.product_id+'_price" onblur="updateCartProductPrice('+row.product_id+',this)" autocomplete="off" value="'+data+'" tabindex="'+(row.id+0.2)+'" class="input-sm col-xs-12" >';
                     }
@@ -890,14 +967,36 @@ Issuance Items
                     }
                 },
                 {
+                    data: 'commission_percentage',
+                    name: 'commission_percentage',
+                    title: 'Commission',
+                    width:'20%',
+                    render: function(data, type, row, meta) {
+                        var isApplied = row.is_commission_applied == 1 || row.is_commission_applied === true;
+                        var commAmt = row.commission_amount ? parseFloat(row.commission_amount).toFixed(2) : '0.00';
+                        var html = '<div style="display:flex; align-items:center; gap:3px;">';
+                        html += '<input type="number" step="0.01" min="0" max="100" id="'+row.product_id+'_commission_pct" onblur="updateCartCommissionPct('+row.product_id+',this)" autocomplete="off" value="'+(data || 0)+'" class="input-sm" style="width:48px; padding:2px;" title="Commission %">';
+                        html += '<span style="font-size:11px;">%</span>';
+                        html += '<label style="margin:0 0 0 4px; font-size:11px; font-weight:normal; cursor:pointer;" title="Toggle Commission">';
+                        html += '<input type="checkbox" id="'+row.product_id+'_apply_comm" '+(isApplied ? 'checked' : '')+' onchange="toggleCartCommission('+row.product_id+', this.checked)"> Apply';
+                        html += '</label>';
+                        html += '</div>';
+                        if (isApplied && parseFloat(commAmt) > 0) {
+                            html += '<span style="font-size:10px; color:#2e8965; font-weight:bold; display:block;">- Rs. '+commAmt+'</span>';
+                        }
+                        return html;
+                    }
+                },
+                {
                     data: 'product_total_price',
                     name: 'product_total_price',
                     title: 'Bill Price',
+                    width:'12%',
                     render: function(data, type, row, meta) {
-                        return '<b id="'+row.product_id+'_sub_price" >'+data+'</b>';
+                        return '<b id="'+row.product_id+'_sub_price" >'+parseFloat(data || 0).toFixed(2)+'</b>';
                     }
                 },
-                { data: 'action',name: 'action',title: 'Action' },
+                { data: 'action', name: 'action', title: 'Action', width:'6%' },
             ]
            //  ,order: [[0, 'desc']]
         });

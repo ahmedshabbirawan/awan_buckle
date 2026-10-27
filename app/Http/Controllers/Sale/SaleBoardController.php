@@ -80,7 +80,7 @@ class SaleBoardController extends Controller
 
 
             $items = ProductAvailable::select('*',DB::raw('sum(qty) as total_qty'))
-            ->with(['product:id,name,price,image','shop:id,name'])
+            ->with(['product:id,name,price,commission_percentage,image','shop:id,name'])
             ->where('shop_id',$shopID)
             ->groupBy(DB::raw('product_id'))->get();
 
@@ -88,8 +88,12 @@ class SaleBoardController extends Controller
             ->addColumn('image_url', function ($row) {
                 return optional($row->product)->image_url;
             })->addColumn('product_detail', function ($row) {
-                return optional($row->product)->name;
-                // return count($row->returnItem); // (isset($row->issuanceItem))?$row->item_count:'';
+                $name = optional($row->product)->name;
+                $comm = (float)(optional($row->product)->commission_percentage ?? 0);
+                if ($comm > 0) {
+                    $name .= ' <span class="label label-sm label-info" title="Configured Commission"><i class="fa fa-percent"></i> ' . $comm . '% Comm</span>';
+                }
+                return $name;
             })->addColumn('shop_name', function ($row) {
                 return ''; //$row->shop->name;
             })->addColumn('action', function ($row) {

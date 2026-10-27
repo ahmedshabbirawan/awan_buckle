@@ -29,20 +29,27 @@ $actionURL =  route('simple_product.store');
         <div class="card-body">
 
 
-        <div class="col-lg-4 col-sm-4">
+        <div class="col-lg-3 col-sm-3">
                 <label for="form-field-1"> Product Name: </label>
                 <div class="">
                     <input type="text" required class="form-control @error('name') is-invalid @enderror" value="{{old('name', (isset($product))? $product->name : '' )}}" name="name" id="name" placeholder="Name">
                 </div>
         </div>
-        <div class="col-lg-4 col-sm-4" >
+        <div class="col-lg-2 col-sm-2" >
             <label class="" for="form-field-1"> Price:</label>
             <div class="">
                 <input type="text" class="col-xs-10 col-sm-5 form-control @error('price') is-invalid @enderror" value="{{ old('price',(isset($price))? $product->price : '') }}" name="price" id="price" placeholder="Price">
             </div>
         </div>
 
-        <div class="col-lg-4 col-sm-4" >
+        <div class="col-lg-2 col-sm-2" >
+            <label class="" for="commission_percentage"> Commission (%):</label>
+            <div class="">
+                <input type="number" step="0.01" min="0" max="100" class="col-xs-10 col-sm-5 form-control @error('commission_percentage') is-invalid @enderror" value="{{ old('commission_percentage', '0') }}" name="commission_percentage" id="commission_percentage" placeholder="Commission %">
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-sm-3" >
             <label class="" for="form-field-1"> UOM:</label>
             <div class="">
             <select name="uom_id" id="uom_id" class="col-xs-10 col-sm-5 form-control">
@@ -53,7 +60,7 @@ $actionURL =  route('simple_product.store');
             </div>
         </div>
 
-        <div class="col-lg-4 col-sm-4" >
+        <div class="col-lg-2 col-sm-2" >
             <label class="" for="form-field-1"> &nbsp; </label>
             <div class="">
             <button class="btn btn-info" onclick="checkValidation();" type="button">
@@ -235,6 +242,15 @@ var listTable;
 @endif
 
             { data: 'price', name: 'price', title: 'Sale Price',},
+            { 
+                data: 'commission_percentage', 
+                name: 'commission_percentage', 
+                title: 'Commission (%)', 
+                width: '10%',
+                render: function(data, type, row, meta) {
+                    return (data ? parseFloat(data).toFixed(2) : '0.00') + '%';
+                }
+            },
             { data: 'code', name: 'code', title: 'UOM', width: '10%'  },
             { data: 'stock_available', name: 'stock_available', title: 'Total Stock', width: '10%'  }
         ];

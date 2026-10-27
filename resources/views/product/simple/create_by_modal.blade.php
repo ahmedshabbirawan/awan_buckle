@@ -66,8 +66,12 @@
                                         </div>
                                     </div>
 
-
-
+                                    <div class="col-lg-6 col-sm-6" >
+                                        <label class="" for="commission_percentage"> Commission Percentage (%):</label>
+                                        <div class="">
+                                            <input type="number" step="0.01" min="0" max="100" class="col-xs-10 col-sm-5 form-control @error('commission_percentage') is-invalid @enderror" value="{{ old('commission_percentage', (isset($product->commission_percentage)) ? $product->commission_percentage : '0') }}" name="commission_percentage" id="commission_percentage" placeholder="Commission %">
+                                        </div>
+                                    </div>
 
                                     <div class="col-lg-6 col-sm-6">
                                         <label class="" for="form-field-1"> Status </label>

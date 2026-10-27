@@ -47,6 +47,7 @@ class ProductFromRequest extends FormRequest
         // }
         $rules['name']      =  'required';
         $rules['price']     =  'required|numeric';
+        $rules['commission_percentage'] = 'nullable|numeric|min:0|max:100';
 
         // $rules['description']   =  'required';
         $rules['uom_id']        =  'required';

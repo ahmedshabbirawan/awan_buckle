@@ -17,6 +17,7 @@ class SaleOrder extends Model
         'item_count', 
         'total_offer_price', 
         'total_discount',
+        'total_commission',
         'shop_id', 
         'total_price', 
         'total_amount',
@@ -29,6 +30,7 @@ class SaleOrder extends Model
     ]; 
 
     protected $casts = [
+        'total_commission' => 'decimal:2',
         'total_amount' => 'decimal:2',
         'paid_amount' => 'decimal:2',
         'due_amount' => 'decimal:2',

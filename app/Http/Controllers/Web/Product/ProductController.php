@@ -169,14 +169,15 @@ class ProductController extends Controller
         }
 
         $array = array(
-            'name'           => $name,
-            'description'    => $description,
-            'uom_id'         => $uom_id,
-            'code'           => Uom::find($uom_id)->code,
-            'image'          => $imageName,
-            'price'          => $price,
-            'product_cat_id' => $request->get('product_category_id'),
-            'status'         => $status,
+            'name'                  => $name,
+            'description'           => $description,
+            'uom_id'                => $uom_id,
+            'code'                  => Uom::find($uom_id)->code,
+            'image'                 => $imageName,
+            'price'                 => $price,
+            'commission_percentage' => max(0, min(100, (float)$request->get('commission_percentage', 0))),
+            'product_cat_id'        => $request->get('product_category_id'),
+            'status'                => $status,
         );
 
 
@@ -280,15 +281,16 @@ class ProductController extends Controller
         }
 
         $array = array(
-            'name'          => $name,
-            'description'   => $description,
-            'uom_id'        => $uom_id,
-            'code'        => Uom::find($uom_id)->code,
-            'threshold_qty' => $qty,
-            'image'          => $imageName,
-            'price'          => $price,
-            'product_cat_id' => $request->get('product_category_id'),
-            'status'        => $status,
+            'name'                  => $name,
+            'description'           => $description,
+            'uom_id'                => $uom_id,
+            'code'                  => Uom::find($uom_id)->code,
+            'threshold_qty'         => $qty,
+            'image'                 => $imageName,
+            'price'                 => $price,
+            'commission_percentage' => max(0, min(100, (float)$request->get('commission_percentage', 0))),
+            'product_cat_id'        => $request->get('product_category_id'),
+            'status'                => $status,
         );
 
 

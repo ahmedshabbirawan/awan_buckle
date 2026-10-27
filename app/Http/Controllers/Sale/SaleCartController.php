@@ -54,23 +54,31 @@ class SaleCartController extends Controller{
 
                 $totalBill = 0; 
                 $totalDiscount = 0;
+                $totalCommission = 0;
                 $subTotal = 0;
                 $billAmount = 0;
 
                 foreach($items as $res ){
                     $subTotal       += $res->offer_price * $res->qty;
-                    $grandTotal     =  ( ($res->offer_price - $res->discount) * $res->qty);
                     $totalDiscount  += $res->discount * $res->qty;
-
+                    $lineComm = $res->is_commission_applied ? round(($res->offer_price * ($res->commission_percentage ?? 0) / 100) * $res->qty, 2) : 0.00;
+                    $totalCommission += $lineComm;
                 }
-                $billAmount = $subTotal - $totalDiscount; 
+                $billAmount = round($subTotal - $totalDiscount - $totalCommission, 2); 
                 return Datatables::of($items)
                 ->addColumn('discount', function ($row){
                     return ($row->discount)?$row->discount:0;
                 })->addColumn('offer_price', function ($row) {
                     return $row->offer_price;
+                })->addColumn('commission_percentage', function ($row) {
+                    return (float) ($row->commission_percentage ?? 0);
+                })->addColumn('commission_amount', function ($row) {
+                    return $row->is_commission_applied ? round(($row->offer_price * ($row->commission_percentage ?? 0) / 100) * $row->qty, 2) : 0.00;
+                })->addColumn('is_commission_applied', function ($row) {
+                    return $row->is_commission_applied ? 1 : 0;
                 })->addColumn('product_total_price', function ($row) {
-                    return  round( ($row->offer_price - $row->discount) * $row->qty);    
+                    $lineComm = $row->is_commission_applied ? round(($row->offer_price * ($row->commission_percentage ?? 0) / 100) * $row->qty, 2) : 0.00;
+                    return round((($row->offer_price - $row->discount) * $row->qty) - $lineComm, 2);    
                 })->addColumn('action', function ($row) {
                     $dd =  '<a href="javascript:void(0);" onclick="deleteCartItem('.$row->id.');" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Delete" ><i class="ace-icon fa fa-trash-o bigger-120"></i></a>';
                     return $dd;
@@ -79,11 +87,13 @@ class SaleCartController extends Controller{
                 ->with('totalPrice', function() use ($totalBill) {
                     return round($totalBill);
                 })->with('billAmount', function() use ($billAmount) {
-                    return round($billAmount);
+                    return round($billAmount, 2);
                 })->with('subTotal', function() use ($subTotal) {
-                    return round($subTotal);
+                    return round($subTotal, 2);
                 })->with('totalDiscount', function() use ($totalDiscount) {
-                    return round($totalDiscount);
+                    return round($totalDiscount, 2);
+                })->with('totalCommission', function() use ($totalCommission) {
+                    return round($totalCommission, 2);
                 })
                 ->make(true);
             }
@@ -95,52 +105,30 @@ class SaleCartController extends Controller{
     function getBillTotalAmounts(Request $request){
         $saleKey = $request->get('sale_key');
 
-        $items = SaleCart::where('sale_key', $saleKey)->where(function($query) use ($request) {
-            //     $empID      = $request->get('emp_id');
-            //     if( $empID != '' ){
-            //         $query->where('emp_id',$empID);
-            //     }
-        })->orderBy('id','ASC');
-        
-        $items = $items->get();
+        $items = SaleCart::where('sale_key', $saleKey)->orderBy('id','ASC')->get();
 
         $totalBill = 0; 
         $totalDiscount = 0;
+        $totalCommission = 0;
         $subTotal = 0;
         $billAmount = 0;
 
         foreach($items as $res ){
-            $subTotal       += $res->offer_price * $res->qty;
-            $grandTotal     =  ( ($res->offer_price - $res->discount) * $res->qty);
-            $totalDiscount  += $res->discount * $res->qty;
-
+            $subTotal        += $res->offer_price * $res->qty;
+            $totalDiscount   += $res->discount * $res->qty;
+            $lineComm        = $res->is_commission_applied ? round(($res->offer_price * ($res->commission_percentage ?? 0) / 100) * $res->qty, 2) : 0.00;
+            $totalCommission += $lineComm;
         }
-        $billAmount = $subTotal - $totalDiscount;
-
-
-        /*
-        
-        ->with('totalPrice', function() use ($totalBill) {
-                    return $totalBill;
-                })->with('billAmount', function() use ($billAmount) {
-                    return $billAmount;
-                })->with('subTotal', function() use ($subTotal) {
-                    return $subTotal;
-                })->with('totalDiscount', function() use ($totalDiscount) {
-                    return $totalDiscount;
-                })
-        
-        */
+        $billAmount = round($subTotal - $totalDiscount - $totalCommission, 2);
 
         return response()->json([
-            'totalPrice' => $totalBill,
-            'billAmount' => $billAmount,
-            'subTotal' => $subTotal,
-            'totalDiscount' => $totalDiscount
-
+            'totalPrice'      => $totalBill,
+            'billAmount'      => $billAmount,
+            'subTotal'        => $subTotal,
+            'totalDiscount'   => $totalDiscount,
+            'totalCommission' => $totalCommission,
+            'recordsTotal'    => count($items)
         ]);
-
-
     }
     
     
@@ -199,24 +187,33 @@ class SaleCartController extends Controller{
 
         if ($itemObj) {
             $finalPrice = $itemObj->offer_price - $itemObj->discount;
+            $commPct = (float) ($itemObj->commission_percentage ?? 0);
+            $unitComm = round(($itemObj->offer_price * $commPct) / 100, 2);
+            $commAmount = $itemObj->is_commission_applied ? round($unitComm * $targetQty, 2) : 0.00;
 
             $item = SaleCart::where(['product_id' => $productID, 'sale_key' => $saleKey])->update([
-                'product_id'  => $product->id,
-                'final_price' => $finalPrice, 
-                'qty'         => $targetQty,
-                'sale_key'    => $saleKey,
-                'shop_id'     => $shopID
+                'product_id'        => $product->id,
+                'final_price'       => $finalPrice, 
+                'commission_amount' => $commAmount,
+                'qty'               => $targetQty,
+                'sale_key'          => $saleKey,
+                'shop_id'           => $shopID
             ]);
         } else {
+            $commPct = ($product && $product->commission_percentage > 0) ? (float)$product->commission_percentage : 0.00;
             $item = SaleCart::create([
-                'product_id'    => $product->id,
-                'product_name'  => $product->name,
-                'orignal_price' => $product->price,
-                'offer_price'   => $product->price,
-                'final_price'   => $product->price,
-                'qty'           => $targetQty,
-                'sale_key'      => $saleKey,
-                'shop_id'       => $shopID
+                'product_id'            => $product->id,
+                'product_name'          => $product->name,
+                'orignal_price'         => $product->price,
+                'offer_price'           => $product->price,
+                'discount'              => 0,
+                'commission_percentage' => $commPct,
+                'commission_amount'     => 0.00,
+                'is_commission_applied' => false,
+                'final_price'           => $product->price,
+                'qty'                   => $targetQty,
+                'sale_key'              => $saleKey,
+                'shop_id'               => $shopID
             ]);
         }
         return response()->json(['status' => true, 'data' => $item , 'message' => 'Done']);
@@ -257,6 +254,79 @@ class SaleCartController extends Controller{
         return response()->json(['status' => true, 'data' => $itemObj , 'message' => 'Done']);
     }
 
+    function applyCommissionOnSingleProduct(Request $request){
+        $validator = Validator::make($request->all(), [
+            'product_id' => 'required',
+            'sale_key'   => 'required',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()], 406);
+        }
+        $productID = $request->get('product_id');
+        $saleKey   = $request->get('sale_key');
+        $shopID    = auth()->user()->shop_id;
+
+        if (!$shopID) {
+            return response()->json(['status' => false, 'message' => 'User has no shop assigned. Please select shop first'], 406);
+        }
+
+        $itemObj = SaleCart::where('product_id', $productID)->where('sale_key', $saleKey)->first();
+        if (!$itemObj) {
+            return response()->json(['status' => false, 'message' => 'Cart item not found.'], 404);
+        }
+
+        if ($request->has('commission_percentage')) {
+            $itemObj->commission_percentage = max(0, min(100, (float)$request->get('commission_percentage')));
+        }
+
+        if ($request->has('apply_commission')) {
+            $val = $request->get('apply_commission');
+            $itemObj->is_commission_applied = ($val === true || $val === 'true' || $val === 1 || $val === '1');
+        }
+
+        $unitCommission = round(($itemObj->offer_price * ($itemObj->commission_percentage ?? 0)) / 100, 2);
+        $itemObj->commission_amount = $itemObj->is_commission_applied ? round($unitCommission * $itemObj->qty, 2) : 0.00;
+        $itemObj->save();
+
+        return response()->json([
+            'status' => true,
+            'data' => $itemObj,
+            'message' => $itemObj->is_commission_applied ? 'Commission applied successfully.' : 'Commission removed.'
+        ]);
+    }
+
+    function applyAllCommissions(Request $request){
+        $validator = Validator::make($request->all(), [
+            'sale_key' => 'required',
+            'action'   => 'required|in:apply,clear'
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first()], 406);
+        }
+        $saleKey = $request->get('sale_key');
+        $action  = $request->get('action');
+
+        $items = SaleCart::where('sale_key', $saleKey)->get();
+        foreach ($items as $item) {
+            if ($action === 'apply') {
+                if ($item->commission_percentage > 0) {
+                    $item->is_commission_applied = true;
+                    $unitComm = round(($item->offer_price * $item->commission_percentage) / 100, 2);
+                    $item->commission_amount = round($unitComm * $item->qty, 2);
+                }
+            } else {
+                $item->is_commission_applied = false;
+                $item->commission_amount = 0.00;
+            }
+            $item->save();
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => ($action === 'apply') ? 'All eligible product commissions applied.' : 'All commissions cleared.'
+        ]);
+    }
+
     function updatePriceOnSingleProduct(Request $request){
         $validator = Validator::make($request->all(), [
             'product_id'    => 'required',
@@ -284,6 +354,8 @@ class SaleCartController extends Controller{
        // $itemObj->discount =  $discountAmount;
         $itemObj->offer_price =  $productPrice; // - $discountAmount;
         $itemObj->final_price = $finalPrice;
+        $unitComm = round(($productPrice * ($itemObj->commission_percentage ?? 0)) / 100, 2);
+        $itemObj->commission_amount = $itemObj->is_commission_applied ? round($unitComm * $itemObj->qty, 2) : 0.00;
         $itemObj->save();
         return response()->json(['status' => true, 'data' => $itemObj , 'message' => 'Done']);
     }
@@ -312,7 +384,7 @@ class SaleCartController extends Controller{
                 'total_qty' => $row->total_qty, 
                 'product_id' => $row->product_id,
                 'product_img_url' => 'http://devlocal.pos.com/assets/images/placeholder/noimage.png',
-                'text' => $row->product->name
+                'text' => $row->product->name . ($row->product && $row->product->commission_percentage > 0 ? ' (' . (float)$row->product->commission_percentage . '% Comm)' : '')
             ];
         endforeach;
         return ['results' => $results]; 
@@ -336,17 +408,18 @@ class SaleCartController extends Controller{
 
         $totalBill = 0; 
         $totalDiscount = 0;
+        $totalCommission = 0;
         $subTotal = 0;
         $billAmount = 0;
 
         foreach($items as $res ){
-            $subTotal       += $res->price * $res->qty;
-            $grandTotal     =  ( ($res->offer_price - $res->discount) * $res->qty);
-            $totalDiscount  += $res->discount;
-
+            $subTotal        += $res->offer_price * $res->qty;
+            $totalDiscount   += ($res->discount * $res->qty);
+            $lineComm        = $res->is_commission_applied ? round(($res->offer_price * ($res->commission_percentage ?? 0) / 100) * $res->qty, 2) : 0.00;
+            $totalCommission += $lineComm;
         }
 
-        $billAmount = $subTotal - $totalDiscount; 
+        $billAmount = round($subTotal - $totalDiscount - $totalCommission, 2); 
 
         $shop = Shop::find(auth()->user()->shop_id);
 
@@ -369,6 +442,7 @@ class SaleCartController extends Controller{
             'products' => $items,
             'sub_total' => $subTotal,
             'discount_total' => $totalDiscount,
+            'commission_total' => $totalCommission,
             'bill_amount' => $billAmount
         ]);
 
@@ -491,6 +565,7 @@ class SaleCartController extends Controller{
             $totalOfferPrice = 0;
             $totalPrice = 0;
             $totalDiscount = 0;
+            $totalCommission = 0;
             $totalCogs = 0;
             $itemWillDelete = [];
 
@@ -509,21 +584,29 @@ class SaleCartController extends Controller{
 
                 $costPrice = ($product && $product->cost_price > 0) ? (float) $product->cost_price : 0.00;
 
+                $commPct = (float) ($tItem->commission_percentage ?? 0);
+                $unitComm = round(($tItem->offer_price * $commPct) / 100, 2);
+                $lineCommission = $tItem->is_commission_applied ? round($unitComm * $tItem->qty, 2) : 0.00;
+
                 $itemData = [
-                    'product_id' => $tItem->product_id,
-                    'order_id' => $saleOrder->id,
-                    'customer_id' => $saleOrder->customer_id,
-                    'qty' => $tItem->qty,
-                    'offer_price' => $tItem->offer_price,
-                    'discount' => $tItem->discount,
-                    'price' => $tItem->final_price,
-                    'cost_price' => $costPrice,
+                    'product_id'            => $tItem->product_id,
+                    'order_id'              => $saleOrder->id,
+                    'customer_id'           => $saleOrder->customer_id,
+                    'qty'                   => $tItem->qty,
+                    'offer_price'           => $tItem->offer_price,
+                    'discount'              => $tItem->discount,
+                    'commission_percentage' => $commPct,
+                    'commission_amount'     => $lineCommission,
+                    'is_commission_applied' => $tItem->is_commission_applied ? 1 : 0,
+                    'price'                 => $tItem->final_price,
+                    'cost_price'            => $costPrice,
                 ];
 
-                $lineTotal = ($tItem->final_price * $tItem->qty);
+                $lineTotal = ($tItem->final_price * $tItem->qty) - $lineCommission;
                 $totalOfferPrice += ($tItem->offer_price * $tItem->qty);
                 $totalPrice += $lineTotal;
                 $totalDiscount += ($tItem->discount * $tItem->qty);
+                $totalCommission += $lineCommission;
                 $totalCogs += ($costPrice * $tItem->qty);
 
                 SaleOrderItem::create($itemData);
@@ -540,7 +623,7 @@ class SaleCartController extends Controller{
                 $itemWillDelete[] = $tItem->id;
             }
 
-            $totalPrice = round($totalPrice, 2);
+            $totalPrice = round($totalOfferPrice - $totalDiscount - $totalCommission, 2);
 
             // Determine financial distribution
             if ($paymentMethod === 'credit') {
@@ -559,6 +642,7 @@ class SaleCartController extends Controller{
 
             $saleOrder->total_offer_price = $totalOfferPrice;
             $saleOrder->total_discount = $totalDiscount;
+            $saleOrder->total_commission = $totalCommission;
             $saleOrder->total_price = (int) $totalPrice;
             $saleOrder->total_amount = $totalPrice;
             $saleOrder->paid_amount = $paidAmount;

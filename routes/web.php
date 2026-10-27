@@ -486,6 +486,8 @@ Route::middleware(['web', 'auth'])->group(function () {
             Route::post('attach_customer_with_cart', [SaleCartController::class, 'attachCustomerWithCart'])->name('attach_customer_with_cart');
             Route::get('search_product', [SaleCartController::class, 'searchProducts'])->name('search_product');
             Route::post('apply_dicount_on_single_product', [SaleCartController::class, 'applyDiscountOnSingleProduct'])->name('apply_dicount_single');
+            Route::post('apply_commission_on_single_product', [SaleCartController::class, 'applyCommissionOnSingleProduct'])->name('apply_commission_single');
+            Route::post('apply_all_commissions', [SaleCartController::class, 'applyAllCommissions'])->name('apply_all_commissions');
             Route::post('update_price_on_single_product', [SaleCartController::class, 'updatePriceOnSingleProduct'])->name('update_product_price');
         });
 

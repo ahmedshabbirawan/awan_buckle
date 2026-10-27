@@ -170,9 +170,12 @@ body{ margin : 0px;}
                 <table class="item_listing">
                     
                     <tr class="heading item">
-                        <td width="50%">Item</td>
+                        <td width="{{ $order->total_commission > 0 ? '38%' : '50%' }}">Item</td>
                         <td>Price</td>
                         <td>Discount</td>
+                        @if($order->total_commission > 0)
+                        <td>Commission</td>
+                        @endif
                         <td>Qty</td>
                         <td width="20%" >Total</td>
                     </tr>
@@ -183,33 +186,51 @@ body{ margin : 0px;}
                         <td>{{ optional($item->product)->name }}</td>
                         <td>{{ $item->price }}</td>
                         <td>{{ $item->discount }}</td>
+                        @if($order->total_commission > 0)
+                        <td>
+                            @if($item->is_commission_applied && $item->commission_amount > 0)
+                                {{ $item->commission_percentage }}% (-{{ number_format($item->commission_amount, 2) }})
+                            @else
+                                -
+                            @endif
+                        </td>
+                        @endif
                         <td>{{ $item->qty }}</td>
-                        <td>{{ round( ($item->offer_price - $item->discount) * $item->qty ) }}</td>
+                        <td>{{ round( ($item->offer_price - $item->discount) * $item->qty - ($item->is_commission_applied ? $item->commission_amount : 0) ) }}</td>
                     </tr>
                     <?php endforeach; ?>
 
 					<tr class="total">
-                        <td colspan="2" >Total Amount:</td>
+                        <td colspan="{{ $order->total_commission > 0 ? 3 : 2 }}" >Total Amount:</td>
                         <td></td>
-						
                         <td></td>
                         <td style="text-align: right;"> <b>{{ round( $order->total_offer_price ) }} </b> </td>
                     </tr>
 
 					<tr class="total">
-                        <td>Discount:</td>
+                        <td colspan="{{ $order->total_commission > 0 ? 2 : 1 }}">Discount:</td>
                         <td></td>
                         <td></td>
                         <td></td>
-                        <td> - {{ $order->total_discount }}</td>
+                        <td style="text-align: right;"> - {{ $order->total_discount }}</td>
                     </tr>
 
+					@if($order->total_commission > 0)
+					<tr class="total">
+                        <td colspan="{{ $order->total_commission > 0 ? 2 : 1 }}">Commission:</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td style="text-align: right; color: #2e8965;"> - {{ number_format($order->total_commission, 2) }}</td>
+                    </tr>
+					@endif
+
 					<tr class="heading item" >
-                        <td colspan="4"> Grand Total / Net Payable :</td>
-                        <td> <b> {{ number_format($order->total_amount ?: $order->total_price, 2) }} </b> </td>
+                        <td colspan="{{ $order->total_commission > 0 ? 5 : 4 }}"> Grand Total / Net Payable :</td>
+                        <td style="text-align: right;"> <b> {{ number_format($order->total_amount ?: $order->total_price, 2) }} </b> </td>
                     </tr>
 					<tr class="">
-                        <td colspan="3"> Payment Method :</td>
+                        <td colspan="{{ $order->total_commission > 0 ? 4 : 3 }}"> Payment Method :</td>
                         <td colspan="2" style="text-align: right;">
                             <b>
                             @if($order->payment_method == 'credit')
@@ -226,30 +247,30 @@ body{ margin : 0px;}
                         </td>
                     </tr>
 					<tr class="">
-                        <td colspan="3"> Amount Paid :</td>
+                        <td colspan="{{ $order->total_commission > 0 ? 4 : 3 }}"> Amount Paid :</td>
                         <td colspan="2" style="text-align: right; color: #2e8965;"> <b>Rs. {{ number_format($order->paid_amount !== null ? $order->paid_amount : $order->total_price, 2) }}</b> </td>
                     </tr>
                     @if($order->due_amount > 0)
 					<tr class="item" style="background-color: #fff2f2;">
-                        <td colspan="3" style="color: #c9302c;"> <b>Balance to Ledger (Due Receivable) :</b></td>
+                        <td colspan="{{ $order->total_commission > 0 ? 4 : 3 }}" style="color: #c9302c;"> <b>Balance to Ledger (Due Receivable) :</b></td>
                         <td colspan="2" style="text-align: right; color: #c9302c;"> <b>Rs. {{ number_format($order->due_amount, 2) }}</b> </td>
                     </tr>
                     @endif
 
                     @if($order->payment_method == 'cash' || empty($order->payment_method))
 					<tr class="">
-                        <td colspan="3"> Cash Tendered / Received :</td>
+                        <td colspan="{{ $order->total_commission > 0 ? 4 : 3 }}"> Cash Tendered / Received :</td>
                         <td colspan="2" style="text-align: right;"> Rs. {{ number_format($order->cash_received, 2) }} </td>
                     </tr>
 					<tr class="total">
-                        <td colspan="3"> Change Return :</td>
+                        <td colspan="{{ $order->total_commission > 0 ? 4 : 3 }}"> Change Return :</td>
                         <td colspan="2" style="text-align: right;"> Rs. {{ number_format($order->cash_returned, 2) }} </td>
                     </tr>
                     @endif
 
                     @if($customer && $customer->current_balance)
 					<tr class="" style="font-size: 11px; border-top: 1px dashed #ddd;">
-                        <td colspan="3"> Customer Outstanding Ledger Balance :</td>
+                        <td colspan="{{ $order->total_commission > 0 ? 4 : 3 }}"> Customer Outstanding Ledger Balance :</td>
                         <td colspan="2" style="text-align: right;"> <b>Rs. {{ number_format($customer->current_balance, 2) }}</b> </td>
                     </tr>
                     @endif

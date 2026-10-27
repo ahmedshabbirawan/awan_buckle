@@ -68,6 +68,7 @@ class SimpleProductController extends Controller
         $uom = Uom::find($uom_id);
         $status         = $request->get('status', 1);
         $price          = $request->get('price');
+        $commissionPercentage = max(0, min(100, (float)$request->get('commission_percentage', 0)));
         $imageName      = null;
         if ($request->hasFile('product_image')) {
             $imageObj = $this->uploadProductImage($request);
@@ -78,14 +79,15 @@ class SimpleProductController extends Controller
             }
         }
         $array = array(
-            'name'           => $name,
-            'description'    => $description,
-            'uom_id'         => $uom_id,
-            'code'           => $uom->code,
-            'image'          => $imageName,
-            'price'          => $price,
+            'name'                  => $name,
+            'description'           => $description,
+            'uom_id'                => $uom_id,
+            'code'                  => $uom->code,
+            'image'                 => $imageName,
+            'price'                 => $price,
+            'commission_percentage' => $commissionPercentage,
             //   'product_cat_id' => $request->get('product_category_id'),
-            'status'         => $status,
+            'status'                => $status,
         );
         try {
             DB::beginTransaction();
@@ -168,6 +170,7 @@ class SimpleProductController extends Controller
 
         $imageName = null;
         $price          = $request->get('price');
+        $commissionPercentage = max(0, min(100, (float)$request->get('commission_percentage', 0)));
 
         if ($request->hasFile('product_image')) {
             $imageObj = $this->uploadProductImage($request);
@@ -179,15 +182,16 @@ class SimpleProductController extends Controller
         }
 
         $array = array(
-            'name'          => $name,
-            'description'   => $description,
-            'uom_id'        => $uom_id,
-            'code'        => Uom::find($uom_id)->code,
-            'threshold_qty' => $qty,
-            'image'          => $imageName,
-            'price'          => $price,
-            'product_cat_id' => $request->get('product_category_id'),
-            'status'        => $status,
+            'name'                  => $name,
+            'description'           => $description,
+            'uom_id'                => $uom_id,
+            'code'                  => Uom::find($uom_id)->code,
+            'threshold_qty'         => $qty,
+            'image'                 => $imageName,
+            'price'                 => $price,
+            'commission_percentage' => $commissionPercentage,
+            'product_cat_id'        => $request->get('product_category_id'),
+            'status'                => $status,
         );
 
 

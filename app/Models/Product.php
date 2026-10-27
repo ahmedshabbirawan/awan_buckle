@@ -24,7 +24,11 @@ class Product extends Model implements Auditable{
     use HasFactory, Definitions, CurdBy, \OwenIt\Auditing\Auditable, SoftDeletes;
     protected $table="products";
 
-    protected $fillable = ['name','code','description','cost_price','product_cat_id','price','uom_id','threshold_qty','status','created_at','updated_at','image'];
+    protected $fillable = ['name','code','description','cost_price','product_cat_id','price','commission_percentage','uom_id','threshold_qty','status','created_at','updated_at','image'];
+
+    protected $casts = [
+        'commission_percentage' => 'decimal:2',
+    ];
 
     protected $appends = ['status_label','image_url'];
 

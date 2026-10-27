@@ -177,61 +177,72 @@
                 <table>
                     
                     <tr class="heading">
-                        <td width="50%">Item</td>
+                        <td width="35%">Item</td>
                         <td>Offer</td>
                         <td>Discount</td>
+                        <td>Commission</td>
                         <td>Qty</td>
                         <td width="20%" >Total</td>
                     </tr>
     
                     <?php
-						$subTotal = 0;
-						$totalDiscount = 0;
-						$finalBill = 0; 
+						$calcSubTotal = 0;
+						$calcTotalDiscount = 0;
+						$calcTotalCommission = 0;
 						foreach($products as $product): 
-							$subTotal = $subTotal + $product->offer_price; 
-							$totalDiscount = $totalDiscount + ( $product->qty * $product->discount);
-							
+							$lineCommission = ($product->is_commission_applied && $product->commission_amount > 0) ? (float)$product->commission_amount : 0.00;
+							$calcSubTotal += ($product->offer_price * $product->qty); 
+							$calcTotalDiscount += ($product->qty * $product->discount);
+							$calcTotalCommission += $lineCommission;
+							$lineTotal = ($product->offer_price - $product->discount) * $product->qty - $lineCommission;
 					?>
     
                     <tr class="item">
                         <td>{{ $product->product_name }}</td>
                         <td>{{ $product->offer_price }}</td>
                         <td>{{ $product->discount }}</td>
+                        <td>
+                            @if($product->is_commission_applied && $product->commission_amount > 0)
+                                {{ $product->commission_percentage }}% (-{{ number_format($product->commission_amount, 2) }})
+                            @else
+                                -
+                            @endif
+                        </td>
                         <td>{{ $product->qty }}</td>
-                        <td>{{ $product->offer_price * $product->qty }}</td>
+                        <td>{{ number_format($lineTotal, 2) }}</td>
                     </tr>
     
                     <?php endforeach; ?>
 
 					<?php 
-						$finalBill = $subTotal - $totalDiscount;
+						$displaySubTotal = isset($sub_total) ? $sub_total : $calcSubTotal;
+						$displayDiscount = isset($discount_total) ? $discount_total : $calcTotalDiscount;
+						$displayCommission = isset($commission_total) ? $commission_total : $calcTotalCommission;
+						$displayFinalBill = isset($bill_amount) ? $bill_amount : ($displaySubTotal - $displayDiscount - $displayCommission);
 					?>
     
                     <!-- class="item last" -->
     
                     <tr class="total">
-                        <td>Sub Total:</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td> {{ $subTotal }}</td>
+                        <td colspan="5">Sub Total:</td>
+                        <td> {{ number_format($displaySubTotal, 2) }}</td>
                     </tr>
 
 					<tr class="total">
-                        <td>Discount:</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td> {{ $totalDiscount }}</td>
+                        <td colspan="5">Discount:</td>
+                        <td> - {{ number_format($displayDiscount, 2) }}</td>
                     </tr>
 
+					@if($displayCommission > 0)
 					<tr class="total">
-                        <td>Total:</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td> {{ $finalBill   }}</td>
+                        <td colspan="5">Commission:</td>
+                        <td style="color: #2e8965;"> - {{ number_format($displayCommission, 2) }}</td>
+                    </tr>
+					@endif
+
+					<tr class="total">
+                        <td colspan="5">Total:</td>
+                        <td> <b>{{ number_format($displayFinalBill, 2) }}</b></td>
                     </tr>
     
                     </table>
