@@ -189,18 +189,24 @@ class SaleCartController extends Controller{
             $finalPrice = $itemObj->offer_price - $itemObj->discount;
             $commPct = (float) ($itemObj->commission_percentage ?? 0);
             $unitComm = round(($itemObj->offer_price * $commPct) / 100, 2);
-            $commAmount = $itemObj->is_commission_applied ? round($unitComm * $targetQty, 2) : 0.00;
+            $isApplied = ($commPct > 0);
+            $commAmount = $isApplied ? round($unitComm * $targetQty, 2) : 0.00;
 
             $item = SaleCart::where(['product_id' => $productID, 'sale_key' => $saleKey])->update([
-                'product_id'        => $product->id,
-                'final_price'       => $finalPrice, 
-                'commission_amount' => $commAmount,
-                'qty'               => $targetQty,
-                'sale_key'          => $saleKey,
-                'shop_id'           => $shopID
+                'product_id'            => $product->id,
+                'final_price'           => $finalPrice, 
+                'commission_percentage' => $commPct,
+                'commission_amount'     => $commAmount,
+                'is_commission_applied' => $isApplied,
+                'qty'                   => $targetQty,
+                'sale_key'              => $saleKey,
+                'shop_id'               => $shopID
             ]);
         } else {
             $commPct = ($product && $product->commission_percentage > 0) ? (float)$product->commission_percentage : 0.00;
+            $unitComm = round(($product->price * $commPct) / 100, 2);
+            $isApplied = ($commPct > 0);
+            $commAmount = $isApplied ? round($unitComm * $targetQty, 2) : 0.00;
             $item = SaleCart::create([
                 'product_id'            => $product->id,
                 'product_name'          => $product->name,
@@ -208,8 +214,8 @@ class SaleCartController extends Controller{
                 'offer_price'           => $product->price,
                 'discount'              => 0,
                 'commission_percentage' => $commPct,
-                'commission_amount'     => 0.00,
-                'is_commission_applied' => false,
+                'commission_amount'     => $commAmount,
+                'is_commission_applied' => $isApplied,
                 'final_price'           => $product->price,
                 'qty'                   => $targetQty,
                 'sale_key'              => $saleKey,
@@ -279,11 +285,7 @@ class SaleCartController extends Controller{
             $itemObj->commission_percentage = max(0, min(100, (float)$request->get('commission_percentage')));
         }
 
-        if ($request->has('apply_commission')) {
-            $val = $request->get('apply_commission');
-            $itemObj->is_commission_applied = ($val === true || $val === 'true' || $val === 1 || $val === '1');
-        }
-
+        $itemObj->is_commission_applied = ($itemObj->commission_percentage > 0);
         $unitCommission = round(($itemObj->offer_price * ($itemObj->commission_percentage ?? 0)) / 100, 2);
         $itemObj->commission_amount = $itemObj->is_commission_applied ? round($unitCommission * $itemObj->qty, 2) : 0.00;
         $itemObj->save();
@@ -585,8 +587,9 @@ class SaleCartController extends Controller{
                 $costPrice = ($product && $product->cost_price > 0) ? (float) $product->cost_price : 0.00;
 
                 $commPct = (float) ($tItem->commission_percentage ?? 0);
+                $isApplied = ($commPct > 0);
                 $unitComm = round(($tItem->offer_price * $commPct) / 100, 2);
-                $lineCommission = $tItem->is_commission_applied ? round($unitComm * $tItem->qty, 2) : 0.00;
+                $lineCommission = $isApplied ? round($unitComm * $tItem->qty, 2) : 0.00;
 
                 $itemData = [
                     'product_id'            => $tItem->product_id,
@@ -597,7 +600,7 @@ class SaleCartController extends Controller{
                     'discount'              => $tItem->discount,
                     'commission_percentage' => $commPct,
                     'commission_amount'     => $lineCommission,
-                    'is_commission_applied' => $tItem->is_commission_applied ? 1 : 0,
+                    'is_commission_applied' => $isApplied ? 1 : 0,
                     'price'                 => $tItem->final_price,
                     'cost_price'            => $costPrice,
                 ];

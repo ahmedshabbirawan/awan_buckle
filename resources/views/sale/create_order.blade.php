@@ -435,9 +435,8 @@ Issuance Items
         var qty         = parseFloat($('#'+productID+'_qty').val()) || 0;
         var price       = parseFloat($('#'+productID+'_price').val()) || 0;
         var discount    = parseFloat($('#'+productID+'_discount').val()) || 0;
-        var isCommApplied = $('#'+productID+'_apply_comm').is(':checked');
         var commPct     = parseFloat($('#'+productID+'_commission_pct').val()) || 0;
-        var lineComm    = isCommApplied ? ((price * qty * commPct) / 100) : 0;
+        var lineComm    = (commPct > 0) ? ((price * qty * commPct) / 100) : 0;
         var displayPrice = (qty * price) - (qty * discount) - lineComm;
         if(isFloat(displayPrice)){
             displayPrice = parseFloat(displayPrice).toFixed(2);
@@ -543,38 +542,15 @@ Issuance Items
         updateProductPrice(productID, productPrice);
     }
 
-    function toggleCartCommission(productID, isApplied){
-        var saleKey = $('#sale_key').val();
-        var commPct = $('#'+productID+'_commission_pct').val();
-        $.ajax({
-            type: 'post',
-            data:{
-                'product_id': productID, 
-                'sale_key': saleKey,
-                'apply_commission': isApplied ? 1 : 0,
-                'commission_percentage': commPct
-            },
-            url: "{{ route('sale.cart.apply_commission_single') }}",
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            error: ajaxFailBlock,
-            success: function(res) {
-                cartDataTable.ajax.reload();
-            }
-        });
-    }
-
     function updateCartCommissionPct(productID, ele){
-        var commPct = $(ele).val();
+        var commPct = parseFloat($(ele).val()) || 0;
         var saleKey = $('#sale_key').val();
-        var isApplied = $('#'+productID+'_apply_comm').is(':checked');
         $.ajax({
             type: 'post',
             data:{
                 'product_id': productID, 
                 'sale_key': saleKey,
-                'apply_commission': isApplied ? 1 : 0,
+                'apply_commission': (commPct > 0) ? 1 : 0,
                 'commission_percentage': commPct
             },
             url: "{{ route('sale.cart.apply_commission_single') }}",
@@ -939,7 +915,7 @@ Issuance Items
                     data: 'product_name',
                     name: 'product_name',
                     title: 'Product',
-                    width:'26%',
+                    width:'30%',
                 },{
                     data: 'qty',
                     name: 'qty',
@@ -961,7 +937,7 @@ Issuance Items
                     data: 'discount',
                     name: 'discount',
                     title: 'Discount',
-                    width:'10%',
+                    width:'14%',
                     render: function(data, type, row, meta) {
                         return '<input type="text" id="'+row.product_id+'_discount" onblur="applyDiscountOnSingleProduct('+row.product_id+',this)" autocomplete="off" value="'+data+'" tabindex="'+(row.id+0.3)+'" class="input-sm col-xs-12" >';
                     }
@@ -970,18 +946,15 @@ Issuance Items
                     data: 'commission_percentage',
                     name: 'commission_percentage',
                     title: 'Commission',
-                    width:'20%',
+                    width:'11%',
                     render: function(data, type, row, meta) {
-                        var isApplied = row.is_commission_applied == 1 || row.is_commission_applied === true;
+                        var commPct = parseFloat(data || 0);
                         var commAmt = row.commission_amount ? parseFloat(row.commission_amount).toFixed(2) : '0.00';
-                        var html = '<div style="display:flex; align-items:center; gap:3px;">';
-                        html += '<input type="number" step="0.01" min="0" max="100" id="'+row.product_id+'_commission_pct" onblur="updateCartCommissionPct('+row.product_id+',this)" autocomplete="off" value="'+(data || 0)+'" class="input-sm" style="width:48px; padding:2px;" title="Commission %">';
+                        var html = '<div style="display:flex; align-items:center; gap:2px;">';
+                        html += '<input type="number" step="0.01" min="0" max="100" id="'+row.product_id+'_commission_pct" onblur="updateCartCommissionPct('+row.product_id+',this)" autocomplete="off" value="'+commPct+'" class="input-sm col-xs-12" style="width:52px; padding:2px;" title="Commission %">';
                         html += '<span style="font-size:11px;">%</span>';
-                        html += '<label style="margin:0 0 0 4px; font-size:11px; font-weight:normal; cursor:pointer;" title="Toggle Commission">';
-                        html += '<input type="checkbox" id="'+row.product_id+'_apply_comm" '+(isApplied ? 'checked' : '')+' onchange="toggleCartCommission('+row.product_id+', this.checked)"> Apply';
-                        html += '</label>';
                         html += '</div>';
-                        if (isApplied && parseFloat(commAmt) > 0) {
+                        if (commPct > 0 && parseFloat(commAmt) > 0) {
                             html += '<span style="font-size:10px; color:#2e8965; font-weight:bold; display:block;">- Rs. '+commAmt+'</span>';
                         }
                         return html;
