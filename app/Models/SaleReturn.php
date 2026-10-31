@@ -10,4 +10,19 @@ class SaleReturn extends Model
     use HasFactory;
     protected $table        = "sale_return";
     protected $fillable     = ['customer_id', 'order_id', 'shop_id', 'description', 'status', 'created_by', 'updated_by', 'deleted_by', 'deleted_at', 'created_at', 'updated_at'];
+
+    public function items()
+    {
+        return $this->hasMany(SaleReturnItem::class, 'sale_return_id');
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
+    }
+
+    public function order()
+    {
+        return $this->belongsTo(SaleOrder::class, 'order_id');
+    }
 }

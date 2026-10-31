@@ -402,6 +402,10 @@
                         <a href="{{ route('report.sale.daily_summary') }}"><i class="menu-icon fa fa-caret-right"></i>Daily Sales Summary</a><b class="arrow"></b>
                     </li>
 
+                    <li class="{{request()->is('report/customer-sales*') || request()->is('report/sale/customer-sales*') ? 'active' : '' }}">
+                        <a href="{{ route('report.customer_sales') }}"><i class="menu-icon fa fa-caret-right"></i>Customer Sales Report</a><b class="arrow"></b>
+                    </li>
+
                     <li class="{{request()->is('report/sale/all*') ? 'active' : '' }}">
                         <a href="{{ route('report.sale.all') }}"><i class="menu-icon fa fa-caret-right"></i>Sale</a><b class="arrow"></b>
                     </li>    

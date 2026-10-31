@@ -81,6 +81,9 @@ Customer Statement - {{ $customer->name }}
                 <i class="ace-icon fa fa-user"></i> Customer Profile & Account Status
             </h5>
             <div class="widget-toolbar no-print">
+                <a href="{{ route('report.customer_sales', ['customer_id' => $customer->id]) }}" class="btn btn-xs btn-purple" title="Product-wise Transaction Sales Report">
+                    <i class="fa fa-list-alt"></i> Product Sales Report
+                </a>
                 <button type="button" class="btn btn-xs btn-success" onclick="openPaymentModal();">
                     <i class="fa fa-money"></i> Record Payment / Collect Due
                 </button>

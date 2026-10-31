@@ -57,6 +57,7 @@ use App\Http\Controllers\StockExchange\StockExchangeController;
 use App\Http\Controllers\Report\ProductStockController;
 use App\Http\Controllers\Sale\Report\SaleReportController;
 use App\Http\Controllers\Sale\Report\DailySalesReportController;
+use App\Http\Controllers\Sale\Report\CustomerProductSalesReportController;
 use App\Http\Controllers\Web\Product\SimpleProductController;
 use App\Models\StockItem;
 
@@ -570,7 +571,17 @@ Route::middleware(['web', 'auth'])->group(function () {
             Route::get('daily-summary/data', [DailySalesReportController::class, 'data'])->name('daily_summary.data');
             Route::get('daily-summary/details', [DailySalesReportController::class, 'details'])->name('daily_summary.details');
             Route::get('daily-summary/export', [DailySalesReportController::class, 'exportCsv'])->name('daily_summary.export');
+
+            // Customer-wise Product & Transaction Sales Report
+            Route::get('customer-sales', [CustomerProductSalesReportController::class, 'index'])->name('customer_sales');
+            Route::get('customer-sales/pdf', [CustomerProductSalesReportController::class, 'exportPdf'])->name('customer_sales.pdf');
+            Route::get('customer-sales/csv', [CustomerProductSalesReportController::class, 'exportCsv'])->name('customer_sales.csv');
         });
+
+        // Convenient direct aliases
+        Route::get('customer-sales', [CustomerProductSalesReportController::class, 'index'])->name('customer_sales');
+        Route::get('customer-sales/pdf', [CustomerProductSalesReportController::class, 'exportPdf'])->name('customer_sales.pdf');
+        Route::get('customer-sales/csv', [CustomerProductSalesReportController::class, 'exportCsv'])->name('customer_sales.csv');
 
         // OLD
         Route::get('product', [ProductStockController::class, 'product'])->name('product');

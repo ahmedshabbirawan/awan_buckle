@@ -39,6 +39,11 @@ class Customer extends Model{
         return $this->hasMany(SaleOrder::class, 'customer_id');
     }
 
+    public function saleOrders()
+    {
+        return $this->hasMany(SaleOrder::class, 'customer_id');
+    }
+
     public function payments()
     {
         return $this->hasMany(Payment::class, 'party_id')

@@ -51,9 +51,11 @@ class CustomerLedgerController extends Controller
                 })
                 ->addColumn('action', function ($row) {
                     $statementUrl = route('customer.ledger.show', $row->id);
+                    $reportUrl = route('report.customer_sales', ['customer_id' => $row->id]);
                     $bal = $this->ledgerService->getCustomerBalance($row->id);
                     $html = '<div class="btn-group">';
                     $html .= '<a href="' . $statementUrl . '" class="btn btn-xs btn-info" title="View Statement"><i class="fa fa-book"></i> Statement</a> ';
+                    $html .= '<a href="' . $reportUrl . '" class="btn btn-xs btn-purple" title="Product Sales Report"><i class="fa fa-list-alt"></i> Sales Report</a> ';
                     $html .= '<button type="button" class="btn btn-xs btn-success" onclick="openCustomerPaymentModal(' . $row->id . ', \'' . addslashes($row->name) . '\', ' . $bal . ')" title="Collect Due"><i class="fa fa-money"></i> Collect Due</button>';
                     $html .= '</div>';
                     return $html;
