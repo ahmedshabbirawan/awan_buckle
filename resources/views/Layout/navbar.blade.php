@@ -24,7 +24,7 @@
 
             <li class="grey dropdown-modal">
                     <a  onclick="pos_app.changeCurrentShopModal();" href="javascript:void(0);">
-                        Shop : {{ optional(auth()->user()->shop)->name }} 
+                        Shop : {{ optional(optional(auth()->user())->shop)->name }} 
                     </a>
             </li>
 
@@ -288,7 +288,7 @@
                         <img class="nav-user-photo" src="{{asset('assets/images/avatars/avatar5.png')}}" alt="Jason's Photo" />
                         <span class="user-info">
                             <small>Welcome,</small>
-                            {{Auth()->user()->name}}
+                            {{ optional(Auth()->user())->name }}
                         </span>
 
                         <i class="ace-icon fa fa-caret-down"></i>

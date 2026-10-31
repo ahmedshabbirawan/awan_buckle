@@ -153,6 +153,17 @@ body{ margin : 0px;}
 								
 							</tr>
 
+							@if(!empty($order->vehicle_no) || !empty($order->bilty_no))
+							<tr>
+								<td colspan="2" style="text-align: left; padding-bottom:2px; font-size:12px; height:12px;">
+									Vehicle No : <b>{{ $order->vehicle_no ?: '-' }}</b>
+								</td>
+								<td colspan="2" style="text-align: right; padding-bottom:2px; font-size:12px; height:12px;">
+									Bilty No : <b>{{ $order->bilty_no ?: '-' }}</b>
+								</td>
+							</tr>
+							@endif
+
 						</table>
 					</td>
 				</tr>

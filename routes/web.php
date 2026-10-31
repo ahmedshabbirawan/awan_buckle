@@ -484,6 +484,7 @@ Route::middleware(['web', 'auth'])->group(function () {
             Route::post('place_order', [SaleCartController::class, 'finalPlaceOrder'])->name('place_order');
 
             Route::post('attach_customer_with_cart', [SaleCartController::class, 'attachCustomerWithCart'])->name('attach_customer_with_cart');
+            Route::post('attach_shipping_with_cart', [SaleCartController::class, 'attachShippingWithCart'])->name('attach_shipping_with_cart');
             Route::get('search_product', [SaleCartController::class, 'searchProducts'])->name('search_product');
             Route::post('apply_dicount_on_single_product', [SaleCartController::class, 'applyDiscountOnSingleProduct'])->name('apply_dicount_single');
             Route::post('apply_commission_on_single_product', [SaleCartController::class, 'applyCommissionOnSingleProduct'])->name('apply_commission_single');
@@ -504,6 +505,8 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::group(['prefix' => 'order/', 'as' => 'order.'], function () {
             Route::get('list', [SaleOrderController::class, 'index'])->name('list');
             Route::get('detail/{id}', [SaleOrderController::class, 'detail'])->name('detail');
+            Route::get('edit/{id}', [SaleOrderController::class, 'edit'])->name('edit');
+            Route::match(['post', 'put'], 'update/{id}', [SaleOrderController::class, 'update'])->name('update');
             Route::get('order/search_order', [SaleOrderController::class, 'detail'])->name('order.search_order');
             Route::get('order_back_search_modal', [SaleOrderController::class, 'OrderBackSearchModal'])->name('order_back_search_modal');
             Route::get('sale-return/{id}', [SaleOrderController::class, 'saleReturnView'])->name('sale_return_view');

@@ -146,6 +146,14 @@ Sale
                     title: 'Customer',
                  
                 },{
+                    data: 'vehicle_no',
+                    name: 'vehicle_no',
+                    title: 'Vehicle No',
+                },{
+                    data: 'bilty_no',
+                    name: 'bilty_no',
+                    title: 'Bilty No',
+                },{
                     data: 'item_count',
                     name: 'item_count',
                     title: 'Items',

@@ -49,6 +49,16 @@ Order Detail
 			@endif
 		</td>
 	</tr>
+	@if(!empty($order->vehicle_no) || !empty($order->bilty_no))
+	<tr>
+		<td>
+			Vehicle No : <b>{{ $order->vehicle_no ?: '-' }}</b>
+		</td>
+		<td>
+			Bilty No : <b>{{ $order->bilty_no ?: '-' }}</b>
+		</td>
+	</tr>
+	@endif
 	</table>
 	</div>
 		<div class="widget-header widget-header-blue widget-header-flat" style="padding:0px;">

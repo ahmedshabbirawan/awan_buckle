@@ -55,6 +55,23 @@ Issuance Items
                 </div>
             </div>
         </div>
+
+        <div class="row" style="margin-top: 10px;">
+            <div class="col-xs-12 col-sm-6">
+                <label for="vehicle_no" style="font-weight: 600; font-size: 12px;"><i class="fa fa-truck text-primary"></i> Vehicle Number</label>
+                <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-truck"></i></span>
+                    <input type="text" class="form-control" name="vehicle_no" id="vehicle_no" placeholder="e.g. LES-1234 / Truck" value="{{ old('vehicle_no', optional($saleCartObj)->vehicle_no) }}" onblur="saveShippingInfo();">
+                </div>
+            </div>
+            <div class="col-xs-12 col-sm-6">
+                <label for="bilty_no" style="font-weight: 600; font-size: 12px;"><i class="fa fa-file-text-o text-primary"></i> Bilty Number</label>
+                <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-file-text-o"></i></span>
+                    <input type="text" class="form-control" name="bilty_no" id="bilty_no" placeholder="e.g. BL-98765" value="{{ old('bilty_no', optional($saleCartObj)->bilty_no) }}" onblur="saveShippingInfo();">
+                </div>
+            </div>
+        </div>
         </form>
         </div>
 </div>
@@ -67,7 +84,7 @@ Issuance Items
                 <h5 class="widget-title smaller"> Sale Order</h5>
                 <div class="widget-toolbar">
                     <a href="javascript:void(0);" onclick="pos_app.showOnHoldListModal();" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-plus-o"></i> OnHolds </a> 
-                    <a href="{{ route('sale.board.create') }}" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-plus-o"></i> Create New Order </a> 
+                    <a href="javascript:void(0);" onclick="resetPosBoard();" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-plus-o"></i> Create New Order </a> 
                     <a href="{{ route('stock_exchange.req_form') }}" class="btn btn-xs btn-light bigger"><i class="ace-icon fa fa-plus-o"></i> Request Stock Exchange </a> 
                 </div>
             </div>
@@ -325,6 +342,33 @@ Issuance Items
                 <div id="panel_pay_bank" class="payment-method-panel" style="display: none;">
                     <div class="alert alert-info" style="margin-bottom: 15px;">
                         <i class="fa fa-university"></i> Full bill amount will be settled via <strong>Bank Transfer Account</strong>. Paid: <strong><span class="modal_bank_preview">Rs. 0.00</span></strong>, Due: <strong>Rs. 0.00</strong>.
+                    </div>
+                </div>
+
+                <!-- Transport & Delivery Info Panel (Vehicle No & Bilty No) -->
+                <div class="well well-sm" style="margin-top: 15px; margin-bottom: 0; background-color: #fcfcfc; border-left: 4px solid #438EB9;">
+                    <label style="font-weight: bold; font-size: 13px; margin-bottom: 8px; display: block;">
+                        <i class="fa fa-truck text-primary"></i> Transport / Logistics Details (Optional):
+                    </label>
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label style="font-size: 12px; font-weight: 600;">Vehicle Number:</label>
+                                <div class="input-group">
+                                    <span class="input-group-addon"><i class="fa fa-truck"></i></span>
+                                    <input type="text" class="form-control" id="modal_vehicle_no" placeholder="e.g. LES-1234">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label style="font-size: 12px; font-weight: 600;">Bilty Number:</label>
+                                <div class="input-group">
+                                    <span class="input-group-addon"><i class="fa fa-file-text-o"></i></span>
+                                    <input type="text" class="form-control" id="modal_bilty_no" placeholder="e.g. BL-98765">
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -665,8 +709,35 @@ Issuance Items
         $('#checkout_split_paid').val('');
         $('#checkout_split_due').val(bill.toFixed(2));
 
+        // Sync shipping / transport values
+        $('#modal_vehicle_no').val($('#vehicle_no').val() || '');
+        $('#modal_bilty_no').val($('#bilty_no').val() || '');
+
         switchPaymentMethod('cash');
         $('#posCheckoutModal').modal('show');
+    }
+
+    function saveShippingInfo() {
+        var saleKey = $('#sale_key').val();
+        var vehicleNo = $('#vehicle_no').val() || $('#modal_vehicle_no').val() || '';
+        var biltyNo = $('#bilty_no').val() || $('#modal_bilty_no').val() || '';
+        if (saleKey) {
+            $.ajax({
+                type: 'POST',
+                url: "{{ route('sale.cart.attach_shipping_with_cart') }}",
+                data: {
+                    'sale_key': saleKey,
+                    'vehicle_no': vehicleNo,
+                    'bilty_no': biltyNo
+                },
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(res) {
+                    // Synced
+                }
+            });
+        }
     }
 
     function switchPaymentMethod(method) {
@@ -741,6 +812,62 @@ Issuance Items
         $('#summary_due_amount').text('Rs. 0.00');
     }
 
+    function resetPosBoard() {
+        var newSaleKey = Math.floor(Date.now() / 1000);
+        $('#sale_key').val(newSaleKey);
+        $('input[name="sale_key"]').val(newSaleKey);
+
+        // Reset customer selection & balance
+        if ($('#customer_select2').data('select2')) {
+            $('#customer_select2').val(null).trigger('change');
+        } else {
+            $('#customer_select2').val('');
+        }
+        fetchCustomerBalance(null, null);
+
+        // Reset transport & shipping fields
+        $('#vehicle_no, #bilty_no, #modal_vehicle_no, #modal_bilty_no').val('');
+
+        // Reset product selector
+        if ($('#product_select2').data('select2')) {
+            $('#product_select2').val(null).trigger('change');
+        }
+
+        // Reset financial numbers
+        billAmount = 0;
+        $('#total_item').html('0');
+        $('#sub_total').html('0.00');
+        $('#total_discount').val('0.00');
+        $('#total_commission').val('0.00');
+        $('#billAmount').html('0.00');
+        $('#cash_received').val('');
+        $('#cash_returned').val('');
+        $('#checkout_cash_received').val('');
+        $('#checkout_cash_return').val('0.00');
+        $('#checkout_credit_due').val('0.00');
+        $('#checkout_split_paid').val('');
+        $('#checkout_split_due').val('0.00');
+        $('#summary_total_bill').text('Rs. 0.00');
+        $('#summary_paid_amount').text('Rs. 0.00');
+        $('#summary_due_amount').text('Rs. 0.00');
+
+        // Reset checkout button
+        $('#btn_confirm_checkout').removeAttr('disabled').html('<i class="fa fa-check-circle"></i> Confirm & Finalize Order');
+
+        // Reload DataTables with the new sale_key
+        if (typeof cartDataTable !== 'undefined' && cartDataTable) {
+            cartDataTable.ajax.url("{{ route('sale.cart.index', [], false) }}?for=datatable&sale_key=" + newSaleKey).load();
+        }
+        if (typeof table !== 'undefined' && table) {
+            table.ajax.url("{{ route('sale.board.product_items', [], false) }}?sale_key=" + newSaleKey).load();
+        }
+
+        // Keep browser URL updated smoothly without page reload
+        if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, '', "{{ route('sale.board.create', '', false) }}/" + newSaleKey);
+        }
+    }
+
     function executeFinalCheckout() {
         var bill = parseFloat(billAmount) || 0;
         var customerId = currentCustomer.id;
@@ -789,6 +916,13 @@ Issuance Items
         formData.append('cash_received', cashReceived);
         formData.append('cash_returned', cashReturned);
 
+        var vehicleNo = $('#modal_vehicle_no').val() || $('#vehicle_no').val() || '';
+        var biltyNo = $('#modal_bilty_no').val() || $('#bilty_no').val() || '';
+        formData.append('vehicle_no', vehicleNo);
+        formData.append('vehicle_number', vehicleNo);
+        formData.append('bilty_no', biltyNo);
+        formData.append('bilty_number', biltyNo);
+
         $('#btn_confirm_checkout').attr('disabled', 'disabled').html('<i class="fa fa-spinner fa-spin"></i> Processing Order...');
 
         $.ajax({
@@ -806,11 +940,30 @@ Issuance Items
                 ajaxFailBlock(jqXHR, textStatus, errorThrown);
             },
             success: function(res) {
+                // 1. Cleanly hide modal and remove backdrop so POS background is fully visible
                 $('#posCheckoutModal').modal('hide');
-                if (res.status) {
-                    var url = "{{ route('sale.order.detail', '') }}/" + res.data.id + '?view=print';
-                    window.open(url, '_blank').focus();
-                    window.location = "{{ route('sale.board.create') }}";
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open').css('padding-right', '');
+
+                if (res.status && res.data) {
+                    // 2. Open print screen as usual in separate window
+                    var printUrl = "{{ route('sale.order.detail', '', false) }}/" + res.data.id + '?view=print';
+                    var printWindow = window.open(printUrl, '_blank');
+                    if (printWindow) {
+                        try {
+                            printWindow.focus();
+                        } catch (e) {}
+                    }
+
+                    // 3. Keep POS screen visible in the background and reset state in-place without page refresh
+                    resetPosBoard();
+                } else {
+                    $('#btn_confirm_checkout').removeAttr('disabled').html('<i class="fa fa-check-circle"></i> Confirm & Finalize Order');
+                    $.confirm({
+                        title: 'Error Placing Order',
+                        content: (res && res.message) ? res.message : 'Unknown error placing order.',
+                        type: 'red'
+                    });
                 }
             }
         });
@@ -1058,8 +1211,19 @@ function formatRepoSelection (repo) {
     });
 
 
-    //$("#customer_select2").select2('val',2);
-
+    // Two-way sync between page and modal transport fields
+    $('#modal_vehicle_no').on('input change', function() {
+        $('#vehicle_no').val($(this).val());
+    });
+    $('#modal_bilty_no').on('input change', function() {
+        $('#bilty_no').val($(this).val());
+    });
+    $('#vehicle_no').on('input change', function() {
+        $('#modal_vehicle_no').val($(this).val());
+    });
+    $('#bilty_no').on('input change', function() {
+        $('#modal_bilty_no').val($(this).val());
+    });
 
     });
 

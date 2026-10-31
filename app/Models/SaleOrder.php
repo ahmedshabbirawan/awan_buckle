@@ -25,9 +25,33 @@ class SaleOrder extends Model
         'due_amount',
         'payment_status',
         'payment_method',
+        'vehicle_no',
+        'bilty_no',
+        'vehicle_number',
+        'bilty_number',
         'status', 
         'created_by'
     ]; 
+
+    public function getVehicleNumberAttribute()
+    {
+        return $this->vehicle_no;
+    }
+
+    public function setVehicleNumberAttribute($value)
+    {
+        $this->attributes['vehicle_no'] = $value;
+    }
+
+    public function getBiltyNumberAttribute()
+    {
+        return $this->bilty_no;
+    }
+
+    public function setBiltyNumberAttribute($value)
+    {
+        $this->attributes['bilty_no'] = $value;
+    } 
 
     protected $casts = [
         'total_commission' => 'decimal:2',

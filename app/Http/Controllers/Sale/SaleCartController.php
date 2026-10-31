@@ -442,6 +442,7 @@ class SaleCartController extends Controller{
             'customer' => $customer,
             'sale_key' => $saleKey,
             'products' => $items,
+            'cart_item' => $items->first(),
             'sub_total' => $subTotal,
             'discount_total' => $totalDiscount,
             'commission_total' => $totalCommission,
@@ -520,7 +521,11 @@ class SaleCartController extends Controller{
     
     public function finalPlaceOrder(Request $request){
         $validator = Validator::make($request->all(), [
-            'sale_key'   => 'required'
+            'sale_key'       => 'required',
+            'vehicle_no'     => 'nullable|string|max:191',
+            'vehicle_number' => 'nullable|string|max:191',
+            'bilty_no'       => 'nullable|string|max:191',
+            'bilty_number'   => 'nullable|string|max:191',
         ]);
 
         $customerID = $request->get('customer_id');
@@ -554,6 +559,10 @@ class SaleCartController extends Controller{
         $cashReturned = (float) $request->get('cash_returned', 0);
 
         try {
+            $firstCartItem = $cartItems->first();
+            $vehicleNo = $request->input('vehicle_no', $request->input('vehicle_number', optional($firstCartItem)->vehicle_no));
+            $biltyNo   = $request->input('bilty_no', $request->input('bilty_number', optional($firstCartItem)->bilty_no));
+
             $saleOrder = SaleOrder::create([
                 'sale_key' => $saleKey,
                 'item_count' => count($cartItems), 
@@ -562,6 +571,8 @@ class SaleCartController extends Controller{
                 'created_by' => auth()->user()->id,
                 'cash_received' => (int) $cashReceived,
                 'cash_returned' => (int) $cashReturned,
+                'vehicle_no' => $vehicleNo,
+                'bilty_no' => $biltyNo,
             ]);
 
             $totalOfferPrice = 0;
@@ -713,6 +724,25 @@ class SaleCartController extends Controller{
             return response()->json(['status' => false, 'message' => 'Information Missed!'],406);
         }
 
+    }
+
+    function attachShippingWithCart(Request $request){
+        $saleKey = $request->get('sale_key');
+        if($saleKey){
+            $updateData = [];
+            if ($request->exists('vehicle_no') || $request->exists('vehicle_number')) {
+                $updateData['vehicle_no'] = $request->input('vehicle_no', $request->input('vehicle_number'));
+            }
+            if ($request->exists('bilty_no') || $request->exists('bilty_number')) {
+                $updateData['bilty_no'] = $request->input('bilty_no', $request->input('bilty_number'));
+            }
+            if (!empty($updateData)) {
+                SaleCart::where('sale_key', $saleKey)->update($updateData);
+            }
+            return response()->json(['status' => true, 'message' => 'Shipping information updated successfully!']);
+        }else{
+            return response()->json(['status' => false, 'message' => 'Information Missed!'], 406);
+        }
     }
 
 

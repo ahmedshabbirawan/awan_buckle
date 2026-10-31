@@ -149,6 +149,14 @@
 								<td>
 								{{ optional($shop)->name }}<br />
 								{{ auth()->user()->name }}<br />
+								@if(isset($cart_item) && ($cart_item->vehicle_no || $cart_item->bilty_no))
+									@if($cart_item->vehicle_no)
+									Vehicle: <b>{{ $cart_item->vehicle_no }}</b><br />
+									@endif
+									@if($cart_item->bilty_no)
+									Bilty: <b>{{ $cart_item->bilty_no }}</b><br />
+									@endif
+								@endif
 								</td>
 							</tr>
 						</table>

@@ -61,9 +61,16 @@ class SaleOrderController extends Controller{
                         return Customer::find($row->customer_id)->name;
                     }
                 })
+                ->addColumn('vehicle_no', function ($row) {
+                    return $row->vehicle_no ?: '-';
+                })
+                ->addColumn('bilty_no', function ($row) {
+                    return $row->bilty_no ?: '-';
+                })
                 ->addColumn('action', function ($row) {
                     $action = '<div class="btn-group">';
                     $action .= '<a href="'.route('sale.order.detail',$row->id).'" class="btn btn-xs btn-success" data-toggle="tooltip" title="Detail" ><i class="ace-icon fa fa-eye bigger-120"></i></a>';
+                    $action .= '<a href="'.route('sale.order.edit',$row->id).'" class="btn btn-xs btn-warning" data-toggle="tooltip" title="Edit Order" ><i class="ace-icon fa fa-pencil bigger-120"></i></a>';
                     $action .= '<a href="'.route('sale.order.sale_return_view',$row->id).'" class="btn btn-xs btn-primary" data-toggle="tooltip" title="Sale Return" ><i class="ace-icon fa fa-undo bigger-120"></i></a>';
                    //  $action .= '<a href="javascript:void(0);" onclick="deleteConfirmation('.$row->sale_key.');" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Delete" ><i class="ace-icon fa fa-trash-o bigger-120"></i></a>';
                     
@@ -76,6 +83,69 @@ class SaleOrderController extends Controller{
             }else{
                 return view('order.lists');
             }     
+        }
+
+        public function edit($orderID){
+            $order      = SaleOrder::findOrFail($orderID);
+            $orderItem  = SaleOrderItem::with('product')->where('order_id',$order->id)->get();
+            $customer   = Customer::find($order->customer_id);
+            $shop       = Shop::find($order->shop_id);
+            $manager    = User::find($order->created_by);
+
+            return view('order.edit', [
+                'order' => $order,
+                'orderItem' => $orderItem,
+                'customer' => $customer,
+                'shop' => $shop,
+                'manager' => $manager
+            ]);
+        }
+
+        public function update(Request $request, $orderID){
+            $validator = Validator::make($request->all(), [
+                'vehicle_no'     => 'nullable|string|max:191',
+                'vehicle_number' => 'nullable|string|max:191',
+                'bilty_no'       => 'nullable|string|max:191',
+                'bilty_number'   => 'nullable|string|max:191',
+            ]);
+
+            if ($validator->fails()) {
+                if ($request->ajax()) {
+                    return response()->json(['status' => false, 'message' => $validator->errors()->first()], 422);
+                }
+                return redirect()->back()->withErrors($validator)->withInput();
+            }
+
+            $order = SaleOrder::findOrFail($orderID);
+
+            // Ensure the values remain unchanged when updating an existing order unless explicitly edited
+            if ($request->exists('vehicle_no')) {
+                $order->vehicle_no = $request->input('vehicle_no');
+            } elseif ($request->exists('vehicle_number')) {
+                $order->vehicle_no = $request->input('vehicle_number');
+            }
+
+            if ($request->exists('bilty_no')) {
+                $order->bilty_no = $request->input('bilty_no');
+            } elseif ($request->exists('bilty_number')) {
+                $order->bilty_no = $request->input('bilty_number');
+            }
+
+            $order->save();
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Order updated successfully!',
+                    'data' => [
+                        'id' => $order->id,
+                        'vehicle_no' => $order->vehicle_no,
+                        'bilty_no' => $order->bilty_no,
+                    ]
+                ]);
+            }
+
+            return redirect()->route('sale.order.detail', $order->id)->with('success', 'Order updated successfully!');
         }
 
         function detail($orderID,Request $request){
