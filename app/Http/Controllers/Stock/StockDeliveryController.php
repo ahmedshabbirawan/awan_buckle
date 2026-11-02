@@ -370,4 +370,20 @@ class StockDeliveryController extends Controller
 
         return view('Stock.Delivery.detail', $data);
     }
+
+    /**
+     * Convert Cash/Bank purchase to Credit terms
+     */
+    public function convertToCredit($deliveryID)
+    {
+        try {
+            $ledgerService = app(\App\Services\LedgerService::class);
+            $delivery = $ledgerService->convertPurchaseToCredit($deliveryID);
+
+            return redirect()->back()->with('success', "Purchase #{$delivery->id} successfully converted to Credit terms! Supplier Ledger and Cash account balances have been synchronized.");
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', "Failed to convert purchase: " . $e->getMessage());
+        }
+    }
 }
+

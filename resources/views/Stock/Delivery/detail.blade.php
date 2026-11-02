@@ -51,6 +51,20 @@ Supplier Detail
             <a href="{{ route('stocks.delivery.list') }}" class="btn btn-xs btn-light bigger hard_copy"><i class="ace-icon "></i> Back </a>
         </div>
     </div>
+
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible" style="margin: 10px 0;">
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+            <i class="ace-icon fa fa-check"></i> {{ session('success') }}
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible" style="margin: 10px 0;">
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+            <i class="ace-icon fa fa-times"></i> {{ session('error') }}
+        </div>
+    @endif
+
     <div class="row ">
         
 
@@ -161,7 +175,17 @@ Supplier Detail
                                                     <span class="label {{ $row->payment_status == 'paid' ? 'label-success' : ($row->payment_status == 'partial' ? 'label-warning' : 'label-danger') }}">
                                                         {{ strtoupper($row->payment_status ?: 'paid') }}
                                                     </span>
+
+                                                    @if(strtolower($row->payment_method ?: 'cash') !== 'credit' && $row->supplier_id)
+                                                        <form action="{{ route('stocks.delivery.convert_to_credit', $row->id) }}" method="POST" style="display:inline-block; margin-left:10px;" onsubmit="return confirm('Are you sure you want to change Purchase #{{ $row->id }} from CASH to CREDIT?\n\nThis will:\n1. Update payment terms to Credit (Full Amount Due).\n2. Update Supplier Ledger to reflect this payable balance.\n3. Restore Cash drawer account by reversing the cash deduction.');">
+                                                            @csrf
+                                                            <button type="submit" class="btn btn-xs btn-warning" title="Correct this purchase to Credit terms">
+                                                                <i class="ace-icon fa fa-exchange"></i> Change to Credit
+                                                            </button>
+                                                        </form>
+                                                    @endif
                                                 </div>
+
                                             </div>
                                             <div class="profile-info-row">
                                                 <div class="profile-info-name"> Handed Over By </div>

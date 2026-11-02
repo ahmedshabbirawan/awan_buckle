@@ -401,6 +401,7 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::get('delivery/list', [StockDeliveryController::class, 'index'])->name('delivery.list');
         Route::get('delivery/{id}', [StockDeliveryController::class, 'detail'])->name('delivery.detail');
         Route::post('delivery/upload_document', [StockDeliveryController::class, 'upload_document'])->name('delivery.upload_document');
+        Route::post('delivery/convert-to-credit/{id}', [StockDeliveryController::class, 'convertToCredit'])->name('delivery.convert_to_credit');
 
 
         //////

@@ -1244,4 +1244,124 @@ class LedgerService
 
         return $tx->reference_type . ' #' . ($tx->reference_id ?? $tx->id);
     }
+
+    /**
+     * Convert an existing purchase from Cash/Bank to Credit.
+     * Replaces Cash/Bank credit with Supplier AP credit in Double-Entry Ledger,
+     * updates stock_deliveries attributes, and resyncs all affected account balances.
+     *
+     * @param int $deliveryId
+     * @return StockDelivery
+     */
+    public function convertPurchaseToCredit(int $deliveryId): StockDelivery
+    {
+        return DB::transaction(function () use ($deliveryId) {
+            $delivery = StockDelivery::findOrFail($deliveryId);
+
+            if (!$delivery->supplier_id) {
+                throw new InvalidArgumentException("Cannot convert purchase to credit without an assigned supplier.");
+            }
+
+            $totalAmount = round((float) ($delivery->total_amount ?: $delivery->delivery_amount ?: 0), 2);
+            if ($totalAmount <= 0) {
+                throw new InvalidArgumentException("Purchase total amount must be greater than zero.");
+            }
+
+            // Collect affected accounts for balance resync
+            $affectedAccountIds = [];
+
+            // 1. Remove old ledger transaction and entries if present
+            $oldTx = LedgerTransaction::where('reference_type', LedgerTransaction::REF_PURCHASE)
+                ->where('reference_id', $delivery->id)
+                ->first();
+
+            $shopId = null;
+            if ($oldTx) {
+                $shopId = $oldTx->shop_id;
+                foreach ($oldTx->entries as $entry) {
+                    $affectedAccountIds[] = $entry->account_id;
+                }
+                $oldTx->entries()->delete();
+                $oldTx->delete();
+            }
+
+            // 2. Update StockDelivery fields to Credit terms
+            $delivery->payment_method = 'credit';
+            $delivery->paid_amount = 0.00;
+            $delivery->due_amount = $totalAmount;
+            $delivery->payment_status = 'due';
+            $delivery->save();
+
+            // 3. Record new double-entry ledger entries for Credit purchase
+            $newTx = $this->recordPurchaseLedger($delivery, [
+                'total_amount' => $totalAmount,
+                'paid_amount' => 0.00,
+                'due_amount' => $totalAmount,
+                'payment_method' => 'credit',
+                'shop_id' => $shopId,
+            ]);
+
+            foreach ($newTx->entries as $entry) {
+                $affectedAccountIds[] = $entry->account_id;
+            }
+
+            // 4. Resync all affected accounts
+            $affectedAccountIds = array_unique($affectedAccountIds);
+            foreach ($affectedAccountIds as $accId) {
+                $acc = Account::find($accId);
+                if ($acc) {
+                    $acc->syncBalance();
+                }
+            }
+
+            return $delivery;
+        });
+    }
+
+    /**
+     * Safely void/delete an erroneous Payment or Receipt Voucher and reverse ledger entries.
+     *
+     * @param int $paymentId
+     * @return bool
+     */
+    public function voidPayment(int $paymentId): bool
+    {
+        return DB::transaction(function () use ($paymentId) {
+            $payment = Payment::findOrFail($paymentId);
+
+            $affectedAccountIds = [];
+
+            $tx = null;
+            if ($payment->ledger_transaction_id) {
+                $tx = LedgerTransaction::find($payment->ledger_transaction_id);
+            }
+            if (!$tx) {
+                $refType = ($payment->payment_type === Payment::TYPE_RECEIPT) ? LedgerTransaction::REF_RECEIPT : LedgerTransaction::REF_PAYMENT;
+                $tx = LedgerTransaction::where('reference_type', $refType)
+                    ->where('reference_id', $payment->id)
+                    ->first();
+            }
+
+            if ($tx) {
+                foreach ($tx->entries as $entry) {
+                    $affectedAccountIds[] = $entry->account_id;
+                }
+                $tx->entries()->delete();
+                $tx->delete();
+            }
+
+            $payment->delete();
+
+            $affectedAccountIds = array_unique($affectedAccountIds);
+            foreach ($affectedAccountIds as $accId) {
+                $acc = Account::find($accId);
+                if ($acc) {
+                    $acc->syncBalance();
+                }
+            }
+
+            return true;
+        });
+    }
 }
+
