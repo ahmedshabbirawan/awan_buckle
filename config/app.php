@@ -13,7 +13,9 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    'name' => env('APP_NAME', 'MS Cattle Feed Mills'),
+    'address' => env('APP_ADDRESS', 'MS Cattle Feed Mills'),
+    'phone' => env('APP_PHONE', ''),
 
     /*
     |--------------------------------------------------------------------------

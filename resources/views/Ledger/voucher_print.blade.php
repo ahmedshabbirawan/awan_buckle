@@ -112,8 +112,8 @@
 
     <div class="voucher-container">
         <div class="header">
-            <div class="company-name">AWAN BUCKLE</div>
-            <div style="font-size: 13px; color: #666; margin-top: 3px;">Specialized Retail POS & Double-Entry Financial Engine</div>
+            <div class="company-name">{{ config('app.name') }}</div>
+            <div style="font-size: 13px; color: #666; margin-top: 3px;">{{ config('app.address') }}</div>
             <div class="voucher-title">{{ $voucherTitle }}</div>
         </div>
 

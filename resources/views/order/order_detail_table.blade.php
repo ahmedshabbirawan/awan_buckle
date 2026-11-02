@@ -120,14 +120,14 @@ body{ margin : 0px;}
 						<table>
 
 							<tr>
-								<td colspan="4" style="padding-bottom:2px; text-align:center; " > <h1 style="padding: 0px; margin : 0px;">Awan Buckle</h1> </td>
+								<td colspan="4" style="padding-bottom:2px; text-align:center; " > <h1 style="padding: 0px; margin : 0px;">{{ config('app.name') }}</h1> </td>
 							</tr>
 
 							<tr>
 								<td colspan="6" style="padding-bottom:2px; text-align:center;" >
-									<span>H#1846 Bazar Ali Center Doctor Line Shoes Market Shah Alam Lahore.</span>
+									<span>{{ config('app.address') }}</span>
 									<br/>
-									<b> 0321-9999668 / 042-37659668</b> 
+									<b>{{ config('app.phone') }}</b> 
 								</td>
 								
 
