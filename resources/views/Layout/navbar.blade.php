@@ -13,8 +13,8 @@
         <div class="navbar-header pull-left">
             <a href="<?=url('/')?>" class="navbar-brand">
                 <small>
-                    <i class="fa fa-book"></i>
-                    POS
+                    <i class="fa fa-shopping-cart"></i>
+                    {{ setting('business_name', 'POS') }}
                 </small>
             </a>
         </div>

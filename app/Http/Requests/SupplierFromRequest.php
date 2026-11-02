@@ -33,7 +33,7 @@ class SupplierFromRequest extends FormRequest
         }
         $rules['address']  =  'required';
         $rules['phone']  =  'required';
-        $rules['city_id']  =  'required';
+        // $rules['city_id']  =  'required';
         if($email != ''){
             $rules['email']  =  'email';
         }
