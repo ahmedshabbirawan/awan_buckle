@@ -128,14 +128,14 @@
 @if(!empty($isHtml))
 <div class="print-btn-bar no-print">
     <span style="float: left; font-size: 13px; font-weight: bold; line-height: 28px;">
-        AWAN AGRO - Customer Sales Report (Print / PDF Preview)
+        {{ $customer->name }} - Sales Report (Print / PDF Preview)
     </span>
     <button onclick="window.print();"><i class="fa fa-print"></i> Print Report / Save PDF</button>
 </div>
 @endif
 
 <div class="header-section">
-    <div class="company-title">AWAN AGRO</div>
+    <div class="company-title">{{ $customer->name }}</div>
     <div class="report-subtitle">Customer-wise Product & Transaction Sales Report</div>
 </div>
 
