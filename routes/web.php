@@ -11,13 +11,14 @@ use App\Http\Controllers\Project\ProjectLedgerController;
 use App\Http\Controllers\Warehouse\WarehouseController;
 use App\Http\Controllers\Location\LocationController;
 use App\Http\Controllers\Uom\UomController;
+use App\Http\Controllers\Setting\SettingController;
 use App\Http\Controllers\Manager\ManagerController;
 use App\Http\Controllers\Category\CategoryController;
 use App\Http\Controllers\Employee\EmployeeController;
 use App\Http\Controllers\Employee\DesignationController;
 use App\Http\Controllers\Web\Product\ProductController;
 use App\Http\Controllers\Stock\StockDeliveryProductController;
-use App\Http\Controllers\Stock\StockController;
+// use App\Http\Controllers\Stock\StockController;
 use App\Http\Controllers\Stock\ShopWiseProductStockController;
 use App\Http\Controllers\Ledger\CustomerLedgerController;
 use App\Http\Controllers\Ledger\SupplierLedgerController;
@@ -199,6 +200,17 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::resource('location', LocationController::class)->middleware('permission:warehouse.read');
         Route::resource('uom', UomController::class)->middleware('permission:warehouse.read');
         Route::get('/uom/status/{id}', [UomController::class, 'changeStatus'])->name('uom.changeStatus');
+
+        Route::group(['prefix' => 'system', 'as' => 'setting.'], function () {
+            Route::get('/', [SettingController::class, 'index'])->name('index')->middleware('permission:setting.read');
+            Route::get('/create', [SettingController::class, 'create'])->name('create')->middleware('permission:setting.create');
+            Route::post('/store', [SettingController::class, 'store'])->name('store')->middleware('permission:setting.create');
+            Route::get('/edit/{id}', [SettingController::class, 'edit'])->name('edit')->middleware('permission:setting.update');
+            Route::post('/update/{id}', [SettingController::class, 'update'])->name('update')->middleware('permission:setting.update');
+            Route::delete('/delete/{id}', [SettingController::class, 'destroy'])->name('destroy')->middleware('permission:setting.delete');
+            Route::post('/quick-update', [SettingController::class, 'quickUpdate'])->name('quick_update')->middleware('permission:setting.update');
+            Route::get('/clear-cache', [SettingController::class, 'clearCache'])->name('clear_cache')->middleware('permission:setting.update');
+        });
 
         Route::group(['prefix' => 'employee', 'as' => 'employee.'], function () {
             Route::get('/list', [EmployeeController::class, 'index'])->name('index')->middleware('permission:employee.read');

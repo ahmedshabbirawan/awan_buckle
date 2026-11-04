@@ -120,18 +120,25 @@ body{ margin : 0px;}
 						<table>
 
 							<tr>
+<<<<<<< HEAD
 								<td colspan="4" style="padding-bottom:2px; text-align:center; " > <h1 style="padding: 0px; margin : 0px;">{{ config('app.name') }}</h1> </td>
+=======
+								<td colspan="4" style="padding-bottom:2px; text-align:center; " > <h1 style="padding: 0px; margin : 0px;">{{ setting('business_name', 'Awan Buckle') }}</h1> </td>
+>>>>>>> improve/main-3
 							</tr>
 
 							<tr>
 								<td colspan="6" style="padding-bottom:2px; text-align:center;" >
+<<<<<<< HEAD
 									<span>{{ config('app.address') }}</span>
 									<br/>
 									<b>{{ config('app.phone') }}</b> 
+=======
+									<span>{{ setting('business_address', 'H#1846 Bazar Ali Center Doctor Line Shoes Market Shah Alam Lahore.') }}</span>
+									<br/>
+									<b> {{ setting('business_phone', '0321-9999668 / 042-37659668') }}</b> 
+>>>>>>> improve/main-3
 								</td>
-								
-
-								
 							</tr>
 
 							<tr>

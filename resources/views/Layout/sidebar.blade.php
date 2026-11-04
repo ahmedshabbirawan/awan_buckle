@@ -347,6 +347,15 @@
                         <b class="arrow"></b>
                     </li>
                     @endcan
+                    @if(auth()->user()->can('setting.read') || auth()->user()->hasRole('Super Admin'))
+                    <li class="{{request()->is('Settings/system*') ? 'active' : '' }}">
+                        <a href="{{ route('Settings.setting.index') }}">
+                            <i class="menu-icon fa fa-caret-right"></i>
+                            System Settings
+                        </a>
+                        <b class="arrow"></b>
+                    </li>
+                    @endif
                 </ul>
             </li>
             <!--------------- End Settings-------------------->
