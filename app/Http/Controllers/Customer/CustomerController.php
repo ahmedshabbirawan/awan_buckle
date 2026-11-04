@@ -14,6 +14,9 @@ use App\Http\Requests\CustomerFromRequest;
 use App\Models\Location;
 use Illuminate\Support\Facades\DB;
 use App\Models\SaleOrder;
+use App\Models\LedgerTransaction;
+use App\Models\Payment;
+use App\Services\LedgerService;
 
 class CustomerController extends Controller{
 
@@ -145,10 +148,18 @@ class CustomerController extends Controller{
      * @return \Illuminate\Http\Response
      */
     public function show($id, Customer $customer){
-        $this->viewData['row'] = Customer::findOrFail($id);
-        $this->viewData['payments'] = []; // CustomerPayment::where('customer_id', $id)->get();
-        $this->viewData['stats'] = $this->getCustomerStats($id);
-        return view($this->view.'detail',$this->viewData);
+        $customer = Customer::findOrFail($id);
+        $this->viewData['row'] = $customer;
+        $ledgerService = app(LedgerService::class);
+        $this->viewData['balance'] = $ledgerService->getCustomerBalance($id);
+        $this->viewData['stats'] = $this->getCustomerStats($id, $this->viewData['balance']);
+        $this->viewData['creditTransactions'] = LedgerTransaction::where('reference_type', LedgerTransaction::REF_CUSTOMER_CREDIT)
+            ->where('reference_id', $id)
+            ->with(['creator', 'entries'])
+            ->orderBy('transaction_date', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
+        return view($this->view.'detail', $this->viewData);
     }
 
     /**
@@ -292,16 +303,26 @@ class CustomerController extends Controller{
         ]);
     }
 
-    function getCustomerStats($customerId){    
-        // $pay = CustomerPayment::where('customer_id',$customerId)->where('type','cash')->sum('amount');
-        // $due = CustomerPayment::where('customer_id',$customerId)->where('type','late_payment')->sum('amount');
-        $orders = SaleOrder::where('customer_id',$customerId)->count();
-        $ordersAmount = SaleOrder::where('customer_id',$customerId)->sum('total_price');
+    function getCustomerStats($customerId, $balance = null){    
+        $orders = SaleOrder::where('customer_id', $customerId)->count();
+        $ordersAmount = (float) SaleOrder::where('customer_id', $customerId)->sum('total_price');
+
+        $posPaid = (float) SaleOrder::where('customer_id', $customerId)->sum('paid_amount');
+        $voucherPaid = (float) Payment::where('party_type', Payment::PARTY_CUSTOMER)
+            ->where('party_id', $customerId)
+            ->sum('amount');
+        $totalPaid = $posPaid + $voucherPaid;
+
+        if ($balance === null) {
+            $balance = app(LedgerService::class)->getCustomerBalance($customerId);
+        }
+
         return [
-            'pay' => 'N/A', //$pay,
-            'due' => 'N/A', //$due,
+            'pay' => 'PKR ' . number_format($totalPaid, 2),
+            'due' => 'PKR ' . number_format($balance, 2),
+            'raw_due' => $balance,
             'orders' => $orders,
-            'orders_amount' => $ordersAmount
+            'orders_amount' => 'PKR ' . number_format($ordersAmount, 2),
         ];
      }
 

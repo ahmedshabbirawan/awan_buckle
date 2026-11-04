@@ -42,7 +42,8 @@ class CreateDoubleEntryLedgerTables extends Migration
                 $table->date('transaction_date');
                 $table->string('reference_type', 50); // Sale, Purchase, Payment, Receipt, Adjustment
                 $table->unsignedBigInteger('reference_id')->nullable();
-                $table->string('description', 255)->nullable();
+                $table->text('description')->nullable();
+                $table->json('metadata')->nullable();
                 $table->unsignedBigInteger('shop_id')->nullable();
                 $table->unsignedBigInteger('created_by')->nullable();
                 $table->timestamps();

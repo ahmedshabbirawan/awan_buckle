@@ -84,6 +84,9 @@ Customer Statement - {{ $customer->name }}
                 <a href="{{ route('report.customer_sales', ['customer_id' => $customer->id]) }}" class="btn btn-xs btn-purple" title="Product-wise Transaction Sales Report">
                     <i class="fa fa-list-alt"></i> Product Sales Report
                 </a>
+                <button type="button" class="btn btn-xs btn-danger" onclick="openCreditTransactionModal();">
+                    <i class="fa fa-plus-circle"></i> Create Credit Transaction
+                </button>
                 <button type="button" class="btn btn-xs btn-success" onclick="openPaymentModal();">
                     <i class="fa fa-money"></i> Record Payment / Collect Due
                 </button>
@@ -278,6 +281,10 @@ Customer Statement - {{ $customer->name }}
                                             <a href="{{ route('customer.ledger.voucher', $row['reference_id']) }}" target="_blank" class="no-print" title="Print Receipt Voucher" style="margin-left: 4px;">
                                                 <i class="fa fa-print"></i>
                                             </a>
+                                        @elseif($row['reference_type'] === 'CustomerCredit' && $row['reference_id'])
+                                            <a href="javascript:void(0);" onclick="viewTransactionDetails({{ $row['reference_id'] }});" class="no-print" title="View Credit Transaction Details" style="margin-left: 4px;">
+                                                <i class="fa fa-eye blue"></i>
+                                            </a>
                                         @endif
                                     </td>
                                     <td>
@@ -464,6 +471,177 @@ Customer Statement - {{ $customer->name }}
         </div>
     </div>
 </div>
+
+<!-- Modal: Create Credit Transaction Modal -->
+<div class="modal fade no-print" id="createCreditModal" tabindex="-1" role="dialog" aria-labelledby="createCreditModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form id="create_credit_form" method="POST" action="{{ route('customer.credit_transaction.store', $customer->id) }}" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-header bg-danger" style="background-color: #d9534f; color: #fff;">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: #fff; opacity: 0.9;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="createCreditModalLabel">
+                        <i class="fa fa-plus-circle"></i> Create Customer Credit Transaction
+                    </h4>
+                </div>
+
+                <div class="modal-body" style="padding: 20px;">
+                    <div class="alert alert-info" style="font-size: 13px;">
+                        <i class="fa fa-info-circle"></i> Recording this credit increases customer receivable without creating a sales order or altering inventory.
+                    </div>
+
+                    <div class="form-group">
+                        <label><strong>Customer Name</strong></label>
+                        <input type="text" class="form-control" value="{{ $customer->name }} (ID: #{{ $customer->id }})" readonly style="background-color: #eee; font-weight: bold;">
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label><strong>Transaction Date <span class="text-danger">*</span></strong></label>
+                                <input type="date" class="form-control" name="transaction_date" value="{{ date('Y-m-d') }}" required>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label><strong>Transaction Type</strong></label>
+                                <input type="text" class="form-control" value="Credit / Amount Receivable" readonly style="background-color: #fce8e6; color: #d9534f; font-weight: bold;">
+                                <input type="hidden" name="type" value="credit">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><strong>Amount (PKR) <span class="text-danger">*</span></strong></label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><strong>PKR</strong></span>
+                            <input type="number" step="0.01" min="0.01" class="form-control" name="amount" placeholder="0.00" required style="font-size: 16px; font-weight: bold;">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><strong>Description / Remarks</strong></label>
+                        <textarea class="form-control" name="description" rows="3" placeholder="Enter remarks for this receivable credit transaction..."></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Reference Number <small class="text-muted">(Optional)</small></label>
+                                <input type="text" class="form-control" name="reference_no" placeholder="Optional slip/reference">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Attachment <small class="text-muted">(Optional)</small></label>
+                                <input type="file" class="form-control" name="attachment" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="submit" id="btn_save_credit_modal" class="btn btn-danger">
+                        <i class="fa fa-save"></i> Save Credit Transaction
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: View Transaction Details Modal -->
+<div class="modal fade no-print" id="viewTransactionModal" tabindex="-1" role="dialog" aria-labelledby="viewTransactionModalLabel">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-info" style="background-color: #5bc0de; color: #fff;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: #fff; opacity: 0.9;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="viewTransactionModalLabel">
+                    <i class="fa fa-file-text-o"></i> Transaction Details
+                </h4>
+            </div>
+
+            <div class="modal-body" style="padding: 20px;">
+                <div id="tx_modal_loading" class="text-center" style="padding: 30px;">
+                    <i class="fa fa-spinner fa-spin fa-2x blue"></i>
+                    <p style="margin-top: 10px;">Loading transaction details...</p>
+                </div>
+
+                <div id="tx_modal_content" style="display: none;">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <table class="table table-bordered table-striped">
+                                <tbody>
+                                    <tr>
+                                        <th style="width: 40%;">Transaction ID</th>
+                                        <td><span class="label label-primary" id="v_tx_id" style="font-size: 13px;"></span></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Party Type & Name</th>
+                                        <td><strong id="v_party_name"></strong> (<span id="v_party_type"></span>)</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Transaction Date</th>
+                                        <td id="v_tx_date"></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Transaction Type</th>
+                                        <td><span class="label label-danger" id="v_tx_type"></span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-sm-6">
+                            <table class="table table-bordered table-striped">
+                                <tbody>
+                                    <tr>
+                                        <th style="width: 40%;">Amount</th>
+                                        <td><strong class="text-danger" style="font-size: 16px;" id="v_amount"></strong></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Debit</th>
+                                        <td id="v_debit" style="font-weight: bold; color: #d9534f;"></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Credit</th>
+                                        <td id="v_credit"></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Balance After Posting</th>
+                                        <td><strong id="v_balance_after"></strong></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Reference Number</th>
+                                        <td id="v_reference_no"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="well well-sm" style="margin-top: 10px; margin-bottom: 10px;">
+                        <strong>Description / Remarks:</strong>
+                        <p id="v_description" style="margin-top: 5px; margin-bottom: 0; white-space: pre-wrap;"></p>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <small class="text-muted">Created By: <span id="v_created_by"></span> | Created At: <span id="v_created_at"></span></small>
+                        </div>
+                        <div class="col-sm-6 text-right" id="v_attachment_container"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('script')
@@ -471,6 +649,84 @@ Customer Statement - {{ $customer->name }}
 function openPaymentModal() {
     $('#collectPaymentModal').modal('show');
 }
+
+function openCreditTransactionModal() {
+    $('#create_credit_form')[0].reset();
+    $('#createCreditModal').modal('show');
+}
+
+function viewTransactionDetails(id) {
+    $('#tx_modal_loading').show();
+    $('#tx_modal_content').hide();
+    $('#viewTransactionModal').modal('show');
+
+    $.ajax({
+        url: "{{ url('/credit-debt-transaction') }}/" + id,
+        type: "GET",
+        dataType: "json",
+        success: function(res) {
+            $('#tx_modal_loading').hide();
+            $('#tx_modal_content').show();
+
+            $('#v_tx_id').text(res.transaction_id);
+            $('#v_party_name').text(res.party_name);
+            $('#v_party_type').text(res.party_type);
+            $('#v_tx_date').text(res.transaction_date);
+            $('#v_tx_type').text(res.type_label);
+            $('#v_amount').text(res.formatted_amount);
+            $('#v_debit').text(res.formatted_debit);
+            $('#v_credit').text(res.formatted_credit);
+            $('#v_balance_after').text(res.formatted_balance_after);
+            $('#v_reference_no').text(res.reference_no);
+            $('#v_description').text(res.description);
+            $('#v_created_by').text(res.created_by_name);
+            $('#v_created_at').text(res.created_at);
+
+            if (res.has_attachment && res.attachment_url) {
+                $('#v_attachment_container').html(
+                    '<a href="' + res.attachment_url + '" target="_blank" class="btn btn-xs btn-warning">' +
+                    '<i class="fa fa-download"></i> Download Attachment (' + res.attachment_name + ')' +
+                    '</a>'
+                );
+            } else {
+                $('#v_attachment_container').html('<span class="text-muted"><i class="fa fa-ban"></i> No Attachment</span>');
+            }
+        },
+        error: function() {
+            $('#tx_modal_loading').html('<div class="alert alert-danger">Failed to load transaction details.</div>');
+        }
+    });
+}
+
+$(document).ready(function() {
+    $('#create_credit_form').on('submit', function(e) {
+        e.preventDefault();
+        var formData = new FormData(this);
+        var $btn = $('#btn_save_credit_modal');
+        $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Saving...');
+
+        $.ajax({
+            url: $(this).attr('action'),
+            type: "POST",
+            data: formData,
+            contentType: false,
+            processData: false,
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(res) {
+                $btn.prop('disabled', false).html('<i class="fa fa-save"></i> Save Credit Transaction');
+                $('#createCreditModal').modal('hide');
+                window.location.reload();
+            },
+            error: function(xhr) {
+                $btn.prop('disabled', false).html('<i class="fa fa-save"></i> Save Credit Transaction');
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Failed to record credit transaction.';
+                alert(msg);
+            }
+        });
+    });
+});
 
 @if($isPrint)
 window.onload = function() {

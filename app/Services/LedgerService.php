@@ -124,6 +124,7 @@ class LedgerService
                 'reference_type' => $txData['reference_type'],
                 'reference_id' => $txData['reference_id'] ?? null,
                 'description' => $txData['description'] ?? null,
+                'metadata' => $txData['metadata'] ?? null,
                 'shop_id' => $txData['shop_id'] ?? null,
                 'created_by' => $txData['created_by'] ?? (auth()->check() ? auth()->id() : null),
             ]);
@@ -436,6 +437,216 @@ class LedgerService
             $tx->save();
 
             return $payment;
+        });
+    }
+
+    /**
+     * Record a manual Credit / Receivable Transaction for a Customer
+     * Increases customer receivable without affecting sales orders or inventory.
+     *
+     * Rules:
+     * - Debit: Customer Accounts Receivable (Asset) -> increases customer balance
+     * - Credit: Manual Adjustment Clearing / Equity Account -> balances GL without cash/inventory
+     */
+    public function recordCustomerCredit(Customer $customer, array $data): LedgerTransaction
+    {
+        return DB::transaction(function () use ($customer, $data) {
+            $amount = round((float) $data['amount'], 2);
+            $transactionDate = $data['transaction_date'] ?? now()->toDateString();
+
+            if ($amount <= 0) {
+                throw new InvalidArgumentException("Credit amount must be greater than zero.");
+            }
+
+            // Generate unique transaction ID: CR-YYYYMMDD-XXXX
+            $datePrefix = Carbon::parse($transactionDate)->format('Ymd');
+            $countToday = LedgerTransaction::where('reference_type', LedgerTransaction::REF_CUSTOMER_CREDIT)
+                ->whereDate('transaction_date', $transactionDate)
+                ->count() + 1;
+            $txNumber = "CR-{$datePrefix}-" . str_pad($countToday, 4, '0', STR_PAD_LEFT);
+
+            while (LedgerTransaction::where('reference_type', LedgerTransaction::REF_CUSTOMER_CREDIT)
+                ->where(function ($q) use ($txNumber) {
+                    $q->where('description', 'like', "%{$txNumber}%")
+                      ->orWhere('metadata->tx_code', $txNumber);
+                })
+                ->exists()) {
+                $countToday++;
+                $txNumber = "CR-{$datePrefix}-" . str_pad($countToday, 4, '0', STR_PAD_LEFT);
+            }
+
+            // 1. Customer AR Account (Asset)
+            $customerAccount = $this->getOrCreateAccount(Account::HOLDER_CUSTOMER, $customer->id);
+
+            // 2. Balancing Account (Internal Equity / Adjustment Clearing)
+            $balancingAccount = $this->getOrCreateAccount(
+                Account::HOLDER_INTERNAL,
+                null,
+                Account::TYPE_EQUITY,
+                'Manual Credit/Debt Adjustment Clearing',
+                'MANUAL_ADJUSTMENT'
+            );
+
+            // Double Entry: Debit Customer AR, Credit Balancing Equity
+            $entries = [
+                [
+                    'account_id' => $customerAccount->id,
+                    'debit' => $amount,
+                    'credit' => 0.00,
+                ],
+                [
+                    'account_id' => $balancingAccount->id,
+                    'debit' => 0.00,
+                    'credit' => $amount,
+                ],
+            ];
+
+            // Outstanding balance after this transaction (current balance + this amount)
+            $balanceAfter = round($this->getCustomerBalance($customer->id) + $amount, 2);
+
+            $desc = "Customer Credit: {$txNumber}";
+            if (!empty($data['description'])) {
+                $desc .= " - " . $data['description'];
+            }
+            if (!empty($data['reference_no'])) {
+                $desc .= " (Ref: " . $data['reference_no'] . ")";
+            }
+
+            $metadata = [
+                'tx_code' => $txNumber,
+                'party_type' => 'customer',
+                'party_id' => $customer->id,
+                'type' => 'credit',
+                'category' => $data['category'] ?? 'receivable',
+                'amount' => $amount,
+                'balance_after' => $balanceAfter,
+                'remarks' => $data['description'] ?? null,
+                'description' => $data['description'] ?? null,
+                'reference_no' => $data['reference_no'] ?? null,
+                'attachment' => $data['attachment'] ?? null,
+                'attachment_name' => $data['attachment_name'] ?? null,
+            ];
+
+            $txData = [
+                'transaction_date' => $transactionDate,
+                'reference_type' => LedgerTransaction::REF_CUSTOMER_CREDIT,
+                'reference_id' => $customer->id,
+                'description' => $desc,
+                'metadata' => $metadata,
+                'shop_id' => $data['shop_id'] ?? (auth()->check() ? auth()->user()->shop_id : null),
+                'created_by' => auth()->check() ? auth()->id() : null,
+            ];
+
+            return $this->recordTransaction($txData, $entries);
+        });
+    }
+
+    /**
+     * Record a manual Debt / Payable Transaction for a Supplier
+     * Increases supplier payable without creating purchase orders or updating inventory.
+     *
+     * Rules:
+     * - Debit: Manual Adjustment Clearing / Equity Account -> balances GL without cash/inventory
+     * - Credit: Supplier Accounts Payable (Liability) -> increases supplier balance
+     */
+    public function recordSupplierDebt(Supplier $supplier, array $data): LedgerTransaction
+    {
+        return DB::transaction(function () use ($supplier, $data) {
+            $amount = round((float) $data['amount'], 2);
+            $transactionDate = $data['transaction_date'] ?? now()->toDateString();
+            $category = $data['category'] ?? LedgerTransaction::CATEGORY_OTHER_PAYABLE;
+
+            if ($amount <= 0) {
+                throw new InvalidArgumentException("Debt amount must be greater than zero.");
+            }
+
+            // Generate unique transaction ID: DB-YYYYMMDD-XXXX
+            $datePrefix = Carbon::parse($transactionDate)->format('Ymd');
+            $countToday = LedgerTransaction::where('reference_type', LedgerTransaction::REF_SUPPLIER_DEBT)
+                ->whereDate('transaction_date', $transactionDate)
+                ->count() + 1;
+            $txNumber = "DB-{$datePrefix}-" . str_pad($countToday, 4, '0', STR_PAD_LEFT);
+
+            while (LedgerTransaction::where('reference_type', LedgerTransaction::REF_SUPPLIER_DEBT)
+                ->where(function ($q) use ($txNumber) {
+                    $q->where('description', 'like', "%{$txNumber}%")
+                      ->orWhere('metadata->tx_code', $txNumber);
+                })
+                ->exists()) {
+                $countToday++;
+                $txNumber = "DB-{$datePrefix}-" . str_pad($countToday, 4, '0', STR_PAD_LEFT);
+            }
+
+            // 1. Supplier AP Account (Liability)
+            $supplierAccount = $this->getOrCreateAccount(Account::HOLDER_SUPPLIER, $supplier->id);
+
+            // 2. Balancing Account (Internal Equity / Adjustment Clearing)
+            $balancingAccount = $this->getOrCreateAccount(
+                Account::HOLDER_INTERNAL,
+                null,
+                Account::TYPE_EQUITY,
+                'Manual Credit/Debt Adjustment Clearing',
+                'MANUAL_ADJUSTMENT'
+            );
+
+            // Double Entry: Debit Balancing Equity, Credit Supplier AP
+            $entries = [
+                [
+                    'account_id' => $balancingAccount->id,
+                    'debit' => $amount,
+                    'credit' => 0.00,
+                ],
+                [
+                    'account_id' => $supplierAccount->id,
+                    'debit' => 0.00,
+                    'credit' => $amount,
+                ],
+            ];
+
+            // Outstanding balance after this transaction (current balance + this amount)
+            $balanceAfter = round($this->getSupplierBalance($supplier->id) + $amount, 2);
+
+            $catLabels = [
+                LedgerTransaction::CATEGORY_BORROWED_MONEY => 'Borrowed Money',
+                LedgerTransaction::CATEGORY_BORROWED_GOODS => 'Borrowed Goods',
+                LedgerTransaction::CATEGORY_OTHER_PAYABLE => 'Other Payable',
+            ];
+            $catLabel = $catLabels[$category] ?? ucwords(str_replace('_', ' ', $category));
+
+            $desc = "Supplier Debt ({$catLabel}): {$txNumber}";
+            if (!empty($data['description'])) {
+                $desc .= " - " . $data['description'];
+            }
+            if (!empty($data['reference_no'])) {
+                $desc .= " (Ref: " . $data['reference_no'] . ")";
+            }
+
+            $metadata = [
+                'tx_code' => $txNumber,
+                'party_type' => 'supplier',
+                'party_id' => $supplier->id,
+                'type' => 'debt',
+                'category' => $category,
+                'amount' => $amount,
+                'balance_after' => $balanceAfter,
+                'remarks' => $data['description'] ?? null,
+                'description' => $data['description'] ?? null,
+                'reference_no' => $data['reference_no'] ?? null,
+                'attachment' => $data['attachment'] ?? null,
+                'attachment_name' => $data['attachment_name'] ?? null,
+            ];
+
+            $txData = [
+                'transaction_date' => $transactionDate,
+                'reference_type' => LedgerTransaction::REF_SUPPLIER_DEBT,
+                'reference_id' => $supplier->id,
+                'description' => $desc,
+                'metadata' => $metadata,
+                'shop_id' => $data['shop_id'] ?? (auth()->check() ? auth()->user()->shop_id : null),
+                'created_by' => auth()->check() ? auth()->id() : null,
+            ];
+
+            return $this->recordTransaction($txData, $entries);
         });
     }
 
@@ -754,9 +965,17 @@ class LedgerService
 
         foreach ($adjustments as $adj) {
             $tx = $adj->transaction;
+            $isCredit = ($tx && $tx->reference_type === LedgerTransaction::REF_CUSTOMER_CREDIT);
+
             $adjDate = $tx ? Carbon::parse($tx->transaction_date)->toDateString() : now()->toDateString();
             $deb = (float) $adj->debit;
             $crd = (float) $adj->credit;
+
+            $invNo = $isCredit ? $tx->transaction_id : ($tx ? ($tx->reference_type . ' #' . ($tx->reference_id ?? $tx->id)) : 'ADJ-' . $adj->id);
+            $refNo = $isCredit ? ($tx->reference_no ? $tx->transaction_id . ' (' . $tx->reference_no . ')' : $tx->transaction_id) : $invNo;
+            $typeLabel = $isCredit ? 'Credit / Receivable' : 'Adjustment';
+            $typeBadge = $isCredit ? 'danger' : 'inverse';
+            $methodLabel = $isCredit ? 'Manual Credit' : 'Adjustment';
 
             $rawItems[] = [
                 'sort_date' => $adjDate,
@@ -764,15 +983,15 @@ class LedgerService
                 'id' => $adj->id,
                 'date' => Carbon::parse($adjDate)->format('d-m-Y'),
                 'raw_date' => $adjDate,
-                'invoice_no' => $tx ? ($tx->reference_type . ' #' . ($tx->reference_id ?? $tx->id)) : 'ADJ-' . $adj->id,
-                'reference_no' => $tx ? ($tx->reference_type . ' #' . ($tx->reference_id ?? $tx->id)) : 'ADJ-' . $adj->id,
-                'reference_type' => 'Adjustment',
-                'reference_id' => $tx->id ?? null,
-                'type_badge' => 'inverse',
-                'type_label' => 'Adjustment',
-                'payment_method' => 'Adjustment',
-                'raw_payment_method' => 'adjustment',
-                'description' => $tx->description ?? 'Ledger Adjustment',
+                'invoice_no' => $invNo,
+                'reference_no' => $refNo,
+                'reference_type' => $isCredit ? 'CustomerCredit' : ($tx->reference_type ?? 'Adjustment'),
+                'reference_id' => $tx ? $tx->id : null,
+                'type_badge' => $typeBadge,
+                'type_label' => $typeLabel,
+                'payment_method' => $methodLabel,
+                'raw_payment_method' => 'credit_adjustment',
+                'description' => $tx ? $tx->display_description : 'Customer Credit Transaction',
                 'total_amount' => 0.00,
                 'paid_amount' => $crd > 0 ? $crd : 0.00,
                 'due_amount' => $deb > 0 ? $deb : 0.00,
@@ -1103,10 +1322,17 @@ class LedgerService
 
         foreach ($adjustments as $adj) {
             $tx = $adj->transaction;
+            $isDebt = ($tx && $tx->reference_type === LedgerTransaction::REF_SUPPLIER_DEBT);
+
             $adjDate = $tx ? Carbon::parse($tx->transaction_date)->toDateString() : now()->toDateString();
             $deb = (float) $adj->debit;
             $crd = (float) $adj->credit;
-            $net = round($crd - $deb, 2);
+
+            $invNo = $isDebt ? $tx->transaction_id : ($tx ? ($tx->reference_type . ' #' . ($tx->reference_id ?? $tx->id)) : 'ADJ-' . $adj->id);
+            $refNo = $isDebt ? ($tx->reference_no ? $tx->transaction_id . ' (' . $tx->reference_no . ')' : $tx->transaction_id) : $invNo;
+            $typeLabel = $isDebt ? ('Debt: ' . $tx->category_label) : 'Adjustment';
+            $typeBadge = $isDebt ? 'danger' : 'inverse';
+            $methodLabel = $isDebt ? 'Manual Debt' : 'Adjustment';
 
             $rawItems[] = [
                 'sort_date' => $adjDate,
@@ -1114,14 +1340,15 @@ class LedgerService
                 'id' => $adj->id,
                 'date' => Carbon::parse($adjDate)->format('d-m-Y'),
                 'raw_date' => $adjDate,
-                'invoice_no' => $tx->reference_type . ' #' . ($tx->reference_id ?? $tx->id),
-                'reference_no' => $tx->reference_type . ' #' . ($tx->reference_id ?? $tx->id),
-                'reference_type' => 'Adjustment',
-                'reference_id' => $tx->id ?? null,
-                'type_badge' => 'inverse',
-                'type_label' => 'Adjustment',
-                'payment_method' => 'Adjustment',
-                'description' => $tx->description ?? 'Ledger Adjustment',
+                'invoice_no' => $invNo,
+                'reference_no' => $refNo,
+                'reference_type' => $isDebt ? 'SupplierDebt' : ($tx->reference_type ?? 'Adjustment'),
+                'reference_id' => $tx ? $tx->id : null,
+                'type_badge' => $typeBadge,
+                'type_label' => $typeLabel,
+                'payment_method' => $methodLabel,
+                'raw_payment_method' => 'debt_adjustment',
+                'description' => $tx ? $tx->display_description : 'Supplier Debt Transaction',
                 'total_amount' => 0.00,
                 'paid_amount' => $deb > 0 ? $deb : 0.00,
                 'due_amount' => $crd > 0 ? $crd : 0.00,
@@ -1196,7 +1423,7 @@ class LedgerService
             ->sum('amount');
 
         $lifetimeTotalPaid = round($lifetimeCashPaid + $lifetimeVoucherPaid, 2);
-        $currentBalance = round($lifetimePurchased - $lifetimeTotalPaid, 2);
+        $currentBalance = $this->getSupplierBalance($supplier->id);
 
         return [
             'supplier' => $supplier,

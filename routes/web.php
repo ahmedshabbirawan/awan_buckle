@@ -21,6 +21,7 @@ use App\Http\Controllers\Stock\StockController;
 use App\Http\Controllers\Stock\ShopWiseProductStockController;
 use App\Http\Controllers\Ledger\CustomerLedgerController;
 use App\Http\Controllers\Ledger\SupplierLedgerController;
+use App\Http\Controllers\Transaction\CreditDebtTransactionController;
 
 
 
@@ -267,6 +268,9 @@ Route::middleware(['web', 'auth'])->group(function () {
             Route::post('/payment/{id}', [SupplierLedgerController::class, 'recordPayment'])->name('payment');
             Route::get('/voucher/{paymentId}', [SupplierLedgerController::class, 'printVoucher'])->name('voucher');
         });
+
+        // Supplier Debt Transactions (Manual)
+        Route::post('/debt-transaction/{id}', [CreditDebtTransactionController::class, 'storeSupplierDebt'])->name('debt_transaction.store');
     });
 
 
@@ -293,7 +297,14 @@ Route::middleware(['web', 'auth'])->group(function () {
             Route::post('/payment/{id}', [CustomerLedgerController::class, 'recordPayment'])->name('payment');
             Route::get('/voucher/{paymentId}', [CustomerLedgerController::class, 'printVoucher'])->name('voucher');
         });
+
+        // Customer Credit Transactions (Manual)
+        Route::post('/credit-transaction/{id}', [CreditDebtTransactionController::class, 'storeCustomerCredit'])->name('credit_transaction.store');
     });
+
+    // Credit and Debt Transaction Details & Attachment
+    Route::get('/credit-debt-transaction/{id}', [CreditDebtTransactionController::class, 'show'])->name('credit_debt_transaction.show');
+    Route::get('/credit-debt-transaction/{id}/attachment', [CreditDebtTransactionController::class, 'downloadAttachment'])->name('credit_debt_transaction.attachment');
 
 
     Route::group(['prefix' => 'shop', 'as' => 'shop.'], function () {

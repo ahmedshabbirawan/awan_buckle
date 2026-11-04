@@ -12,6 +12,10 @@ use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\SupplierFromRequest;
 use App\Models\Location;
 use Illuminate\Support\Facades\DB;
+use App\Models\LedgerTransaction;
+use App\Models\Payment;
+use App\Models\StockDelivery;
+use App\Services\LedgerService;
 
 class SupplierController extends Controller
 {
@@ -140,8 +144,45 @@ class SupplierController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function show($id, Supplier $supplier){
-        $this->viewData['row'] = Supplier::findOrFail($id);
-        return view($this->view.'detail',$this->viewData);
+        $supplier = Supplier::findOrFail($id);
+        $this->viewData['row'] = $supplier;
+        $ledgerService = app(LedgerService::class);
+        $this->viewData['balance'] = $ledgerService->getSupplierBalance($id);
+
+        $totalPurchased = (float) StockDelivery::where('supplier_id', $id)
+            ->where(function ($q) {
+                $q->where('total_amount', '>', 0)->orWhere('delivery_amount', '>', 0);
+            })
+            ->sum('total_amount');
+
+        $cashPaid = (float) StockDelivery::where('supplier_id', $id)
+            ->where(function ($q) {
+                $q->where('total_amount', '>', 0)->orWhere('delivery_amount', '>', 0);
+            })
+            ->sum('paid_amount');
+
+        $voucherPaid = (float) Payment::where('party_type', Payment::PARTY_SUPPLIER)
+            ->where('party_id', $id)
+            ->sum('amount');
+
+        $totalPaid = $cashPaid + $voucherPaid;
+
+        $this->viewData['stats'] = [
+            'purchased' => 'PKR ' . number_format($totalPurchased, 2),
+            'paid' => 'PKR ' . number_format($totalPaid, 2),
+            'due' => 'PKR ' . number_format($this->viewData['balance'], 2),
+            'raw_due' => $this->viewData['balance'],
+            'purchases_count' => StockDelivery::where('supplier_id', $id)->count(),
+        ];
+
+        $this->viewData['debtTransactions'] = LedgerTransaction::where('reference_type', LedgerTransaction::REF_SUPPLIER_DEBT)
+            ->where('reference_id', $id)
+            ->with(['creator', 'entries'])
+            ->orderBy('transaction_date', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        return view($this->view.'detail', $this->viewData);
     }
 
     /**
