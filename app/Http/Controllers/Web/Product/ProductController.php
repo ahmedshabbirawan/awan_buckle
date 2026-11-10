@@ -92,7 +92,6 @@ class ProductController extends Controller
             })->addColumn('attributes_tags', function ($row) {
                 return '';
             })->addColumn('action', function ($row) {
-               //  return $row;
                     $statusIcon = 'fa fa-ban';
                     if($row->status == 1){
                     $statusIcon = 'fa fa-check-circle-o';
@@ -114,10 +113,7 @@ class ProductController extends Controller
                             ->first()->total_qty;
                     return ($qty)?$qty:0;
                 });
-                // $dt->addColumn($request->field, 'content here');
             endforeach;
-
-            //  ->orderColumn('id', 'DESC')
             return $datatable->make(true);
     }
 
@@ -128,17 +124,8 @@ class ProductController extends Controller
         return view($this->view.'lists',$this->viewData);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function create(){
         dd('stop');
-
-        // $product = Product::findOrFail(2);
-        // ProductCreate::dispatch($product);
-
         $this->viewData['sub_category']     = ParentCategory::with('subCategories')->orderBy('name','DESC')->get();
         $this->viewData['uoms']             = Uom::orderBy('code','ASC')->get()->pluck('code','id');
         return view($this->view.'create',$this->viewData);
@@ -179,10 +166,6 @@ class ProductController extends Controller
             'product_cat_id'        => $request->get('product_category_id'),
             'status'                => $status,
         );
-
-
-        
-
         try{
             DB::beginTransaction();
             $attributes = $request->get('attribute_value_ids');
@@ -194,28 +177,16 @@ class ProductController extends Controller
                     ProductAttribute::create(array('product_id' => $product->id, 'value_id' => $valueID));
                 endforeach;
             }   
-
-            
-
             DB::commit();
-
             if($request->ajax()){
                 return response(['status' => true, 'data' => ['product' => $product], 'message' => 'Product Add successfully.' ]);
             }else{
                 return redirect(route('product.list'))->with('success',$this->name.' added successful!');
             }
-            
-            
         }catch(\Exception $e){
             DB::rollBack();
             return response()->json(['message' => 'Error.Please Contact   Support'. $e->getMessage()], 500);
-            // return redirect()->route('category.sub.list')->with('error','Error.Please Contact   Support');
         }
-
-        
-
-
-       // return redirect(route('product.list'))->with('success',$this->name.' added successful!');
     }
 
     /**
@@ -246,7 +217,6 @@ class ProductController extends Controller
         $this->viewData['product']      = Product::find($id);
         $this->viewData['categories']   = $product->categories_tree();
         $this->viewData['sub_category']     = ParentCategory::with('subCategories')->orderBy('name','DESC')->get();
-        // $this->viewData['parentCat']    = ParentCategory::all()->pluck('name','id');
         $this->viewData['attributeIDs']    = ProductAttribute::where('product_id',$id)->pluck('value_id')->toArray();
         $this->viewData['uoms']         = Uom::orderBy('code','ASC')->get()->pluck('code','id');
         return view($this->view.'edit',$this->viewData);
@@ -293,9 +263,6 @@ class ProductController extends Controller
             'status'                => $status,
         );
 
-
-   //     print_r($array); exit;
-
        try{
             DB::beginTransaction();
             $attributes         = $request->get('attribute_value_ids');
@@ -316,16 +283,9 @@ class ProductController extends Controller
         }catch(\Exception $e){
             DB::rollBack();
             return response()->json(['message' => 'Error.Please Contact   Support'], 500);
-            // return redirect()->route('category.sub.list')->with('error','Error.Please Contact   Support');
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Product  $product
-     * @return \Illuminate\Http\Response
-     */
     public function destroy($id,Product $product){
         dd('destory stop');
         $res = StockItem::where('product_id', $id)->get();
@@ -340,41 +300,25 @@ class ProductController extends Controller
 
 
     function getSubCategories(Request $request){
-        
         $parentID = $request->get('parent_id');
-
         $data['selected_id']    = $request->get('selected_id');
         $data['subCategories']  = SubCategory::where('parentCategoryId',$parentID)->pluck('name','id');
-        
-
         return view('product.ajax_view.sub_categories',$data);
     }
 
 
     function getProductCategories(Request $request){
         $subCatID = $request->get('sub_cat_id');
-
         $data['selected_id']    = $request->get('selected_id');
         $data['subCategories']  = ProductCategory::where('subCategoryId', $subCatID)->get()->pluck('name','id');
-
         return view('product.ajax_view.sub_categories',$data);
     }
 
     function getProductAttribute(Request $request){
         $productCatID           = $request->get('product_cat_id');
         $data['selected_id']    = explode(',',$request->get('selected_id'));
-
-      //   print_r($data['selected_id']); exit;
-
-        // $data['subCategories']  = ProductCategory::where('subCategoryId', $subCatID)->get()->pluck('name','id');
-        // $productCategory =  ProductCategory::where('id',$id)->first();
-        // $productCategoryAttributesArray = ProductCategoryAttribute::where('productCategoryId',$productCatID->id)->pluck('attributeName')->toArray();
-        // $productCategoryAttributes = AttributeType::all();
-
-
         $productCategoryAttributesArray     = ProductCategoryAttribute::with(['ProductCategoryAttributeName'])->where('productCategoryId',$productCatID)->pluck('attributeName')->toArray();
         $data['attributes']                 = AttributeType::with(['attributeValue'])->whereIn('id',$productCategoryAttributesArray)->get(); //->toArray();
-        // dd($data['attributes']); exit;
         return view('product.ajax_view.product_cat_attribute',$data);
     }
 
@@ -385,11 +329,7 @@ class ProductController extends Controller
         }else{
             $where['product_cat_id']              = $productCatID;
         }
-        // $data['products']   = Product::with(['product_Attribute_Value', 'product_Attribute_Value.attribute_type'])->where($where)->orderBy('name','ASC')->get();
         $data['products']   = Product::with(['productQtyShopWise'])->where($where)->orderBy('name','ASC')->get();
-
-        // print_r($data['products']);
-
         return view('product.ajax_view.product_with_attribute_select',$data);
     }
 
@@ -412,27 +352,11 @@ class ProductController extends Controller
                 $fileNameToStore = "product-".$productName.'-'.time().'.'.$extension;
                 //Upload Image
                 $path = $request->file('product_image')->storeAs('public/product_images', $fileNameToStore);
-
-
                 /*******   CREATE TUMBNAIL   *******/
-                
-               //  echo Storage::get($path); exit;
-
                 $path = Storage::path('public/product_images/'.$fileNameToStore);
-
-                // $publicPath = "public\product_images\"".$fileNameToStore;
-
                 $imgFile = Image::fromFile($path);
                 $imgFile->resize(150, 150, Image::EXACT );
                 $imgFile->cropAuto()->save($path);
-                // $imgFile->resize(150, 150, function ($constraint) {
-                //     // $constraint->aspectRatio();
-                //     $constraint->cropAuto();
-                // })->save($path);
-                // $destinationPath = public_path('/uploads');
-                //$image->move($destinationPath, $input['file']);
-                /**************/
-
                 return [true,$fileNameToStore];
             }catch(Exception $e){
                 return [false,$e->getMessage()];
@@ -452,82 +376,4 @@ class ProductController extends Controller
         $emp->save();
         return array('status' => true);
     }
-
-
-    /*
-    SET @runtot:=0;
-    SELECT 
-    q1.pro,
-    q1.avail_qty,
-    (@runtot := @runtot + q1.avail_qty) AS rt
- FROM 
-    (SELECT product_id AS pro,
-     available_qty AS avail_qty
-     FROM  stock_items 
-     WHERE available_qty > 0
-     ORDER  BY available_qty
-     ) AS q1
-WHERE @runtot + q1.avail_qty <= 200;
-    */
-
-    /*
-        SET @runtot:=0;
-    SELECT 
-    q1.pro,
-    q1.avail_qty,
-    (@runtot := @runtot + q1.avail_qty) AS rt
- FROM 
-    (SELECT product_id AS pro,
-     available_qty AS avail_qty
-     FROM  stock_items 
-     WHERE available_qty > 0
-     ORDER  BY available_qty
-     ) AS q1
-WHERE @runtot + q1.avail_qty < 130 ORDER BY rt DESC;
-    */
-
-
-    /*
-    
-     //->whereHas('product_Attribute_Value', function ($query) use ($request){
-                // $query->select(DB::raw("GROUP_CONCAT(value_id SEPARATOR ',') as attributes, product_id"))
-                // ->groupBy('product_id')->havingRaw(" 1= 1 AND attributes like '%16%' AND attributes like '%13%'");
-
-                /*
-                $attr = $request->get('attribute_idz');
-                $filterArr = [];
-                $str = ' 1 = 1 ';
-                if( is_array($attr) ){
-                //  $idFound = 0;
-                
-                    foreach($attr as $attrID){
-                        if($attrID == ''){ continue; }
-                        //  $filterArr['value_id'] = $attrID;
-                        //  $str .= ' AND value_id = '.$attrID;
-
-                        //  echo 'as'; exit;
-                        $filterArr[] = $attrID; 
-                    }
-
-                    if( count($filterArr) > 0 ){
-                        $query->whereIn('product_attributes.value_id',$filterArr);
-                        $query->groupBy('value_id3');
-                        $idz = implode(",",$filterArr);
-                    }
-                    
-                }
-                
-
-            // })
-    
-    */
-
-    /*
-     // productAvailable_sum_qty
-                // $productCat = $request->get('product_category_id');
-                // if($productCat != ''){
-                //     $query->where('product_cat_id', '=', $request->product_category_id);
-                // }
-    */
-
 }
